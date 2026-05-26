@@ -1,0 +1,31 @@
+# Video files - too large for git
+videos/
+
+# Backend
+backend/target/
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+backend/mvnwDebug
+backend/mvnwDebug.cmd
+backend/maven-wrapper.zip
+backend/*.log
+*.log
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+*.apk
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+*.mp4
+short-drama/

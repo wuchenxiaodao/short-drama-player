@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>短剧互动播放器</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--deep-black:#0A0A0A;--electric-purple:#8B5CF6;--purple-dark:#6D28D9;--purple-light:#A78BFA;--neon-pink:#FF2E6E;--cyan:#00F0FF;--dark-gray:#1A1A2E;--medium-gray:#2A2A3E;--light-gray:#9CA3AF;--card-bg:#16162A;--star-yellow:#FFC107;--highlight-gold:#FFD700}
+body{font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--deep-black);color:#fff;overflow-x:hidden;max-width:430px;margin:0 auto;min-height:100vh}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(26,26,46,.95);backdrop-filter:blur(20px);display:flex;justify-content:space-around;padding:8px 0 20px;z-index:100;border-top:1px solid rgba(255,255,255,.05)}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;opacity:.5;transition:all .2s;padding:4px 16px}
+.nav-item.active{opacity:1}.nav-item.active .nav-icon,.nav-item.active .nav-label{color:var(--cyan)}
+.nav-icon{font-size:22px;color:var(--light-gray)}.nav-label{font-size:10px;color:var(--light-gray)}
+.page{display:none;padding-bottom:70px}.page.active{display:block}
+.top-bar{display:flex;justify-content:space-between;align-items:center;padding:50px 16px 12px}
+.top-bar h1{font-size:22px;color:var(--cyan);font-weight:700}
+.search-bar{flex:1;margin:0 12px;height:36px;border-radius:18px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff;padding:0 16px;font-size:14px;outline:none}
+.search-bar:focus{border-color:var(--cyan)}
+.search-btn{background:none;border:none;color:var(--cyan);font-size:20px;cursor:pointer}
+.banner-container{position:relative;width:100%;height:220px;overflow:hidden;margin-bottom:16px}
+.banner-track{display:flex;transition:transform .5s ease;height:100%}
+.banner-slide{min-width:100%;height:100%;position:relative;overflow:hidden}
+.banner-slide svg{width:100%;height:100%}
+.banner-overlay{position:absolute;bottom:0;left:0;right:0;padding:16px;background:linear-gradient(transparent,rgba(10,10,10,.9))}
+.banner-overlay h2{font-size:24px;font-weight:700;text-shadow:0 0 10px rgba(139,92,246,.5)}
+.banner-overlay .meta{display:flex;align-items:center;gap:8px;margin-top:4px}
+.banner-overlay .rating{color:var(--star-yellow);font-size:14px}.banner-overlay .tag{color:var(--neon-pink);font-size:12px}
+.banner-btn{margin-top:10px;padding:8px 24px;background:linear-gradient(135deg,var(--electric-purple),var(--neon-pink));border:none;border-radius:20px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:transform .2s,box-shadow .2s}
+.banner-btn:hover{transform:scale(1.05);box-shadow:0 4px 20px rgba(139,92,246,.4)}
+.banner-dots{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:6px}
+.banner-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.4);transition:all .3s;cursor:pointer}
+.banner-dot.active{width:8px;height:8px;background:var(--cyan)}
+.tabs{display:flex;padding:0 16px;margin-bottom:12px;border-bottom:1px solid rgba(255,255,255,.05)}
+.tab{padding:10px 16px;font-size:14px;color:var(--light-gray);cursor:pointer;position:relative;transition:color .2s}
+.tab.active{color:var(--cyan);font-weight:600}
+.tab.active::after{content:'';position:absolute;bottom:-1px;left:20%;right:20%;height:3px;background:var(--cyan);border-radius:2px}
+.drama-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 12px}
+.drama-card{background:var(--card-bg);border-radius:16px;overflow:hidden;cursor:pointer;transition:transform .2s,box-shadow .2s}
+.drama-card:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.drama-card .cover{width:100%;aspect-ratio:16/9;position:relative;overflow:hidden}
+.drama-card .cover svg{width:100%;height:100%}
+.drama-card .cover .hot-badge{position:absolute;top:8px;right:8px;background:rgba(255,46,110,.85);border-radius:12px;padding:2px 8px;font-size:11px}
+.drama-card .cover .new-badge{position:absolute;top:8px;left:8px;background:rgba(0,240,255,.85);border-radius:8px;padding:2px 8px;font-size:10px;font-weight:700;color:var(--deep-black)}
+.drama-card .info{padding:10px}
+.drama-card .info h3{font-size:14px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.drama-card .info .meta{font-size:12px;color:var(--light-gray);margin-top:2px}
+.drama-card .info .rating{display:flex;align-items:center;gap:4px;margin-top:4px}
+.drama-card .info .rating span{color:var(--star-yellow);font-size:12px}
+.detail-page{display:none}.detail-page.active{display:block}
+.detail-header{position:relative;height:300px}
+.detail-header .bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(20px);transform:scale(1.1)}
+.detail-header .bg-overlay{position:absolute;inset:0;background:linear-gradient(rgba(10,10,10,.3),var(--deep-black))}
+.detail-header .back-btn{position:absolute;top:50px;left:12px;background:rgba(0,0,0,.3);border:none;color:#fff;width:40px;height:40px;border-radius:50%;font-size:20px;cursor:pointer;z-index:2;display:flex;align-items:center;justify-content:center}
+.detail-info{position:relative;z-index:2;display:flex;gap:16px;padding:0 16px;margin-top:-80px}
+.detail-info .poster{width:120px;height:170px;border-radius:12px;background-size:cover;background-position:center;box-shadow:0 8px 30px rgba(0,0,0,.5);flex-shrink:0;overflow:hidden}
+.detail-info .poster svg{width:100%;height:100%}
+.detail-info .text h2{font-size:22px;font-weight:700}
+.detail-info .text .stars{display:flex;align-items:center;gap:6px;margin-top:8px}
+.detail-info .text .stars span{color:var(--star-yellow)}
+.detail-info .text .category-tag{display:inline-block;margin-top:8px;padding:4px 12px;border-radius:12px;background:rgba(0,188,212,.2);color:#00BCD4;font-size:12px}
+.user-rating-row{display:flex;align-items:center;gap:8px;margin-top:10px}
+.user-rating-row label{font-size:13px;color:var(--light-gray)}
+.star-picker{display:flex;gap:2px}
+.star-picker .star{font-size:20px;cursor:pointer;color:rgba(255,255,255,.2);transition:color .15s}
+.star-picker .star.active{color:var(--star-yellow)}
+.star-picker .star:hover{color:var(--star-yellow)}
+.action-row{display:flex;gap:12px;padding:20px 16px}
+.action-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px;background:rgba(42,42,62,.5);border-radius:12px;cursor:pointer;transition:background .2s;border:none;color:var(--light-gray);font-size:12px}
+.action-btn:hover{background:rgba(42,42,62,.8)}.action-btn .icon{font-size:24px}
+.section-title{font-size:16px;font-weight:600;padding:0 16px;margin-bottom:12px}
+.desc-text{padding:0 16px;font-size:14px;color:var(--light-gray);line-height:1.6;margin-bottom:20px}
+.episode-scroll{display:flex;gap:12px;padding:0 16px;overflow-x:auto;scrollbar-width:none;margin-bottom:20px}
+.episode-scroll::-webkit-scrollbar{display:none}
+.episode-card{min-width:80px;height:80px;background:var(--card-bg);border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:background .2s;border:none;color:#fff;font-size:14px}
+.episode-card:hover{background:var(--medium-gray)}
+.related-scroll{display:flex;gap:12px;padding:0 16px;overflow-x:auto;scrollbar-width:none;margin-bottom:20px}
+.related-scroll::-webkit-scrollbar{display:none}
+.related-card{min-width:140px;background:var(--card-bg);border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .2s}
+.related-card:hover{transform:scale(1.03)}
+.related-card .rc-cover{width:140px;height:80px;overflow:hidden}.related-card .rc-cover svg{width:100%;height:100%}
+.related-card .rc-info{padding:8px}.related-card .rc-info h4{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.related-card .rc-info span{font-size:11px;color:var(--star-yellow)}
+.play-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(26,26,46,.95);backdrop-filter:blur(20px);display:flex;align-items:center;gap:12px;padding:12px 16px 28px;z-index:50;border-top:1px solid rgba(255,255,255,.05)}
+.play-bar .pb-cover{width:48px;height:48px;border-radius:8px;overflow:hidden}.play-bar .pb-cover svg{width:100%;height:100%}
+.play-bar .pb-text{flex:1}.play-bar .pb-text h4{font-size:14px}.play-bar .pb-text span{font-size:12px;color:var(--light-gray)}
+.play-bar .pb-btn{padding:8px 20px;border-radius:20px;border:none;background:var(--electric-purple);color:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:transform .2s}
+.play-bar .pb-btn:hover{transform:scale(1.05)}
+.player-page{display:none;background:#000}.player-page.active{display:block}
+.player-container{position:relative;width:100%;background:#000;overflow:hidden}
+video{width:100%;display:block;max-height:240px;object-fit:contain;background:#000}
+.player-controls{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.9));padding:20px 12px 12px}
+.progress-container{position:relative;width:100%;height:20px;cursor:pointer;margin-bottom:8px}
+.progress-bar{position:absolute;top:8px;left:0;right:0;height:4px;background:rgba(255,255,255,.2);border-radius:2px;overflow:visible}
+.progress-fill{height:100%;background:var(--cyan);border-radius:2px;width:0%;position:relative}
+.progress-fill::after{content:'';position:absolute;right:-6px;top:-4px;width:12px;height:12px;background:var(--cyan);border-radius:50%;box-shadow:0 0 10px var(--cyan)}
+.highlight-marker{position:absolute;top:-2px;width:8px;height:8px;background:var(--highlight-gold);border-radius:50%;transform:translateX(-50%);cursor:pointer;z-index:5;box-shadow:0 0 8px rgba(255,215,0,.6);transition:transform .2s}
+.highlight-marker:hover{transform:translateX(-50%) scale(1.3)}
+.highlight-tooltip{position:absolute;bottom:25px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.9);border:1px solid var(--highlight-gold);border-radius:8px;padding:8px 12px;white-space:nowrap;font-size:12px;color:var(--highlight-gold);display:none;z-index:10}
+.highlight-marker:hover .highlight-tooltip{display:block}
+.interaction-marker{position:absolute;top:-2px;width:8px;height:8px;background:var(--neon-pink);border-radius:50%;transform:translateX(-50%);cursor:pointer;z-index:5;box-shadow:0 0 8px rgba(255,46,110,.6)}
+.controls-row{display:flex;align-items:center;justify-content:space-between}
+.controls-left,.controls-right{display:flex;align-items:center;gap:16px}
+.ctrl-btn{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:4px;opacity:.8;transition:opacity .2s}
+.ctrl-btn:hover{opacity:1}
+.time-display{font-size:12px;color:rgba(255,255,255,.7);font-variant-numeric:tabular-nums}
+.player-back{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.5);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center}
+.episode-info-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--dark-gray)}
+.episode-info-bar h3{font-size:16px}.episode-info-bar .ep-nav{display:flex;gap:12px}
+.episode-info-bar .ep-nav button{padding:6px 16px;border-radius:16px;border:1px solid rgba(255,255,255,.2);background:transparent;color:#fff;font-size:12px;cursor:pointer}
+.episode-info-bar .ep-nav button:hover{background:rgba(255,255,255,.1)}
+.highlights-panel{background:var(--dark-gray);border-radius:12px;margin:12px 16px;padding:16px}
+.highlights-panel h4{font-size:14px;color:var(--highlight-gold);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.highlight-list{display:flex;flex-direction:column;gap:8px}
+.highlight-item{display:flex;align-items:center;gap:12px;padding:10px;background:rgba(255,215,0,.05);border-radius:8px;cursor:pointer;border:1px solid rgba(255,215,0,.1);transition:all .2s}
+.highlight-item:hover{background:rgba(255,215,0,.1);border-color:rgba(255,215,0,.3)}
+.highlight-item .hl-time{font-size:12px;color:var(--highlight-gold);background:rgba(255,215,0,.15);padding:4px 8px;border-radius:4px;font-variant-numeric:tabular-nums}
+.highlight-item .hl-text{font-size:13px;flex:1}
+.highlight-item .hl-icon{font-size:16px}
+/* Rating Bubble Cloud */
+.bubble-cloud{position:absolute;top:10px;right:10px;z-index:15;display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:none}
+.bubble{background:rgba(0,0,0,.7);border:1px solid var(--highlight-gold);border-radius:20px;padding:6px 14px;font-size:13px;color:var(--highlight-gold);pointer-events:auto;cursor:pointer;animation:bubbleIn .4s ease-out;transition:transform .2s;display:flex;align-items:center;gap:6px}
+.bubble:hover{transform:scale(1.1)}
+.bubble .heart{color:var(--neon-pink);font-size:16px}
+@keyframes bubbleIn{0%{opacity:0;transform:translateY(-20px) scale(.5)}100%{opacity:1;transform:translateY(0) scale(1)}}
+.like-count{font-size:11px;color:var(--light-gray);background:rgba(255,255,255,.1);border-radius:10px;padding:2px 8px}
+/* Non-intrusive floating interaction cards */
+.interaction-float{position:absolute;top:8px;right:8px;z-index:20;width:200px;animation:slideIn .4s ease-out}
+@keyframes slideIn{0%{opacity:0;transform:translateX(60px)}100%{opacity:1;transform:translateX(0)}}
+.if-card{background:rgba(10,10,20,.92);backdrop-filter:blur(12px);border-radius:14px;padding:12px;margin-bottom:8px;border:1px solid rgba(255,255,255,.08);box-shadow:0 4px 20px rgba(0,0,0,.5)}
+.if-card.vote{border-left:3px solid var(--electric-purple)}
+.if-card.quiz{border-left:3px solid var(--cyan)}
+.if-card.choice{border-left:3px solid var(--neon-pink)}
+.if-card.egg{border-left:3px solid var(--highlight-gold);animation:eggGlow 1.5s ease-in-out infinite alternate}
+@keyframes eggGlow{0%{box-shadow:0 0 8px rgba(255,215,0,.2)}100%{box-shadow:0 0 20px rgba(255,215,0,.5)}}
+.if-header{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.if-badge{font-size:10px;padding:2px 8px;border-radius:8px;font-weight:600}
+.if-badge.vote{background:rgba(139,92,246,.25);color:var(--electric-purple)}
+.if-badge.quiz{background:rgba(0,240,255,.25);color:var(--cyan)}
+.if-badge.choice{background:rgba(255,46,110,.25);color:var(--neon-pink)}
+.if-badge.egg{background:rgba(255,215,0,.25);color:var(--highlight-gold)}
+.if-close{background:none;border:none;color:rgba(255,255,255,.3);font-size:14px;cursor:pointer;margin-left:auto;padding:0 2px}
+.if-close:hover{color:#fff}
+.if-question{font-size:13px;line-height:1.4;margin-bottom:10px;color:rgba(255,255,255,.9)}
+.if-options{display:flex;flex-direction:column;gap:6px}
+.if-opt{padding:8px 10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#fff;font-size:12px;cursor:pointer;transition:all .15s;text-align:left}
+.if-opt:hover{background:rgba(139,92,246,.15);border-color:rgba(139,92,246,.3)}
+.if-opt.selected{background:rgba(139,92,246,.25);border-color:var(--electric-purple)}
+.if-opt.correct{background:rgba(0,255,0,.1);border-color:rgba(0,255,0,.4)}
+.if-opt.wrong{background:rgba(255,0,0,.1);border-color:rgba(255,0,0,.4)}
+.if-stats{margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.06)}
+.if-stat-row{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.if-stat-label{font-size:10px;width:40px;color:rgba(255,255,255,.5);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.if-stat-track{flex:1;height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
+.if-stat-fill{height:100%;border-radius:3px;transition:width .5s}
+.if-stat-pct{font-size:10px;width:30px;text-align:right;color:rgba(255,255,255,.4)}
+.if-egg-btn{width:100%;padding:10px;background:linear-gradient(135deg,rgba(255,215,0,.2),rgba(255,165,0,.2));border:1px solid rgba(255,215,0,.3);border-radius:10px;color:var(--highlight-gold);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.if-egg-btn:hover{background:linear-gradient(135deg,rgba(255,215,0,.3),rgba(255,165,0,.3))}
+.if-progress{height:2px;background:rgba(255,255,255,.1);border-radius:1px;margin-top:8px;overflow:hidden}
+.if-progress-fill{height:100%;background:var(--cyan);border-radius:1px;transition:width linear}
+.toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.9);color:#fff;padding:16px 24px;border-radius:12px;z-index:300;display:none;text-align:center;border:1px solid var(--electric-purple)}
+.toast.show{display:block;animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0;transform:translate(-50%,-50%) scale(.9)}}
+.points-popup{position:fixed;font-size:24px;font-weight:700;color:var(--highlight-gold);pointer-events:none;z-index:250;animation:floatUp 1.5s ease-out forwards}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-80px)}}
+/* Auth Page */
+.auth-page{padding:60px 24px 100px}.auth-page h2{text-align:center;color:var(--cyan);margin-bottom:30px}
+.auth-form{display:flex;flex-direction:column;gap:16px}
+.auth-form input{height:48px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff;padding:0 16px;font-size:15px;outline:none}
+.auth-form input:focus{border-color:var(--cyan)}
+.auth-form .btn-primary{height:48px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--electric-purple),var(--neon-pink));color:#fff;font-size:16px;font-weight:600;cursor:pointer}
+.auth-form .btn-primary:hover{opacity:.9}
+.auth-switch{text-align:center;margin-top:16px;color:var(--light-gray);font-size:13px}
+.auth-switch a{color:var(--cyan);cursor:pointer;text-decoration:none}
+/* Profile Page */
+.profile-page{padding:50px 16px 100px}
+.profile-header{display:flex;align-items:center;gap:16px;margin-bottom:24px}
+.profile-avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--electric-purple),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700}
+.profile-info h3{font-size:20px}.profile-info p{font-size:13px;color:var(--light-gray);margin-top:4px}
+.profile-stats{display:flex;gap:16px;margin-bottom:24px}
+.profile-stat{flex:1;text-align:center;padding:16px;background:var(--card-bg);border-radius:12px}
+.profile-stat .num{font-size:24px;font-weight:700;color:var(--cyan)}
+.profile-stat .label{font-size:12px;color:var(--light-gray);margin-top:4px}
+.profile-menu{display:flex;flex-direction:column;gap:8px}
+.profile-menu-item{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--card-bg);border-radius:12px;cursor:pointer;font-size:14px}
+.profile-menu-item:hover{background:var(--medium-gray)}
+.profile-menu-item .pm-icon{font-size:20px}
+.logout-btn{margin-top:20px;width:100%;height:48px;border-radius:12px;border:1px solid var(--neon-pink);background:transparent;color:var(--neon-pink);font-size:15px;cursor:pointer}
+.logout-btn:hover{background:rgba(255,46,110,.1)}
+/* Search results */
+.search-results{padding:0 12px}
+.search-empty{text-align:center;padding:60px 0;color:var(--light-gray);font-size:14px}
+/* Download progress */
+.download-bar{display:flex;align-items:center;gap:8px;padding:8px 16px;background:var(--dark-gray);border-radius:8px;margin:8px 16px}
+.download-bar .dl-progress{flex:1;height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden}
+.download-bar .dl-progress .dl-fill{height:100%;background:var(--cyan);border-radius:3px;transition:width .3s}
+.download-bar .dl-text{font-size:12px;color:var(--light-gray);white-space:nowrap}
+.cached-badge{position:absolute;top:8px;right:8px;background:rgba(0,255,0,.8);border-radius:8px;padding:2px 8px;font-size:10px;font-weight:700}
+</style>
+</head>
+<body>
+
+<!-- Auth Page -->
+<div id="authPage" class="page">
+  <div class="auth-page">
+    <h2 id="authTitle">登录</h2>
+    <div class="auth-form">
+      <input type="text" id="authUsername" placeholder="用户名">
+      <input type="password" id="authPassword" placeholder="密码">
+      <input type="text" id="authNickname" placeholder="昵称（注册时填写）" style="display:none">
+      <button class="btn-primary" id="authBtn" onclick="doAuth()">登录</button>
+    </div>
+    <div class="auth-switch">
+      <span id="authSwitchText">没有账号？</span>
+      <a id="authSwitchLink" onclick="toggleAuthMode()">立即注册</a>
+    </div>
+  </div>
+</div>
+
+<!-- Home Page -->
+<div id="homePage" class="page">
+  <div class="top-bar">
+    <h1>短剧播放器</h1>
+    <input type="text" class="search-bar" id="searchInput" placeholder="搜索短剧..." oninput="onSearchInput()">
+    <button class="search-btn" onclick="doSearch()">&#128269;</button>
+  </div>
+  <div id="homeContent">
+    <div class="banner-container"><div class="banner-track" id="bannerTrack"></div><div class="banner-dots" id="bannerDots"></div></div>
+    <div class="tabs">
+      <div class="tab active" data-tab="recommend">推荐</div>
+      <div class="tab" data-tab="hot">热播</div>
+      <div class="tab" data-tab="new">新剧</div>
+    </div>
+    <div class="drama-grid" id="dramaGrid"></div>
+  </div>
+  <div id="searchResults" class="search-results" style="display:none">
+    <div class="drama-grid" id="searchGrid"></div>
+    <div class="search-empty" id="searchEmpty" style="display:none">未找到相关短剧</div>
+  </div>
+</div>
+
+<!-- Detail Page -->
+<div id="detailPage" class="detail-page">
+  <div class="detail-header">
+    <div class="bg" id="detailBg"></div>
+    <div class="bg-overlay"></div>
+    <button class="back-btn" onclick="showHomePage()">&#8592;</button>
+  </div>
+  <div class="detail-info">
+    <div class="poster" id="detailPoster"></div>
+    <div class="text">
+      <h2 id="detailTitle"></h2>
+      <div class="stars"><span>&#9733;</span> <span id="detailRating">暂无评分</span> <span style="color:var(--light-gray);font-size:12px" id="detailRatingCount"></span></div>
+      <div class="stars" style="margin-top:4px"><span style="color:var(--light-gray);font-size:12px" id="detailViews"></span></div>
+      <div class="category-tag" id="detailCategory"></div>
+    </div>
+  </div>
+  <div class="user-rating-row" style="padding:0 16px">
+    <label>我的评分：</label>
+    <div class="star-picker" id="starPicker"></div>
+    <span id="myRatingText" style="font-size:13px;color:var(--light-gray)"></span>
+  </div>
+  <div class="action-row">
+    <button class="action-btn" onclick="shareDrama()"><span class="icon">&#8679;</span>分享</button>
+    <button class="action-btn" onclick="downloadDrama()"><span class="icon">&#8635;</span>缓存</button>
+  </div>
+  <div id="downloadProgress"></div>
+  <div class="section-title">剧情简介</div>
+  <div class="desc-text" id="detailDesc"></div>
+  <div class="section-title">选集</div>
+  <div class="episode-scroll" id="episodeScroll"></div>
+  <div class="section-title">相关推荐</div>
+  <div class="related-scroll" id="relatedScroll"></div>
+  <div class="play-bar" id="playBar" style="display:none">
+    <div class="pb-cover" id="playBarCover"></div>
+    <div class="pb-text"><h4 id="playBarTitle"></h4><span id="playBarEp"></span></div>
+    <button class="pb-btn" onclick="playEpisode(currentPlayEp)">继续播放</button>
+  </div>
+</div>
+
+<!-- Player Page -->
+<div id="playerPage" class="player-page">
+  <div class="player-container">
+    <button class="player-back" onclick="backToDetail()">&#8592;</button>
+    <video id="videoPlayer" playsinline webkit-playsinline></video>
+    <div class="bubble-cloud" id="bubbleCloud"></div>
+    <div class="interaction-float" id="interactionFloat"></div>
+    <div class="player-controls">
+      <div class="progress-container" id="progressContainer">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div id="highlightMarkers"></div>
+        <div id="interactionMarkers"></div>
+      </div>
+      <div class="controls-row">
+        <div class="controls-left">
+          <button class="ctrl-btn" id="playPauseBtn" onclick="togglePlay()">&#9654;</button>
+          <span class="time-display"><span id="currentTime">0:00</span> / <span id="totalTime">0:00</span></span>
+        </div>
+        <div class="controls-right">
+          <button class="ctrl-btn" onclick="skipBack()">-10</button>
+          <button class="ctrl-btn" onclick="skipForward()">+10</button>
+          <button class="ctrl-btn" id="speedBtn" onclick="changeSpeed()">1x</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="episode-info-bar">
+    <h3 id="playerEpTitle"></h3>
+    <div class="ep-nav"><button onclick="playPrevEp()">上一集</button><button onclick="playNextEp()">下一集</button></div>
+  </div>
+  <div class="highlights-panel">
+    <h4>&#9733; 高光时刻</h4>
+    <div class="highlight-list" id="highlightList"></div>
+  </div>
+</div>
+
+<!-- Profile Page -->
+<div id="profilePage" class="page">
+  <div class="profile-page">
+    <div class="profile-header">
+      <div class="profile-avatar" id="profileAvatar"></div>
+      <div class="profile-info">
+        <h3 id="profileName"></h3>
+        <p id="profileUsername"></p>
+      </div>
+    </div>
+    <div class="profile-stats">
+      <div class="profile-stat"><div class="num" id="profilePoints">0</div><div class="label">积分</div></div>
+      <div class="profile-stat"><div class="num" id="profileWatched">0</div><div class="label">看过</div></div>
+    </div>
+    <div class="section-title" style="padding:0;margin-bottom:12px">彩蛋收集</div>
+    <div id="eggCollection" class="profile-menu" style="margin-bottom:20px"></div>
+    <div class="profile-menu">
+      <div class="profile-menu-item"><span class="pm-icon">&#127942;</span>我的成就</div>
+      <div class="profile-menu-item"><span class="pm-icon">&#9881;</span>设置</div>
+    </div>
+    <button class="logout-btn" onclick="logout()">退出登录</button>
+  </div>
+</div>
+
+
+<div class="toast" id="toast"></div>
+
+<nav class="bottom-nav" id="bottomNav">
+  <div class="nav-item active" data-page="homePage" onclick="navTo('homePage')">
+    <span class="nav-icon">&#127968;</span><span class="nav-label">首页</span>
+  </div>
+  <div class="nav-item" data-page="profilePage" onclick="navTo('profilePage')">
+    <span class="nav-icon">&#128100;</span><span class="nav-label">我的</span>
+  </div>
+</nav>
+
+<script>
+// ========== 离线数据层 ==========
+const SAMPLE_VIDEO = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+const DB_KEY = 'drama_db';
+const API = '';
+
+// 内嵌数据
+const EMBEDDED = [
+  {id:1,title:'北派寻宝笔记',category:'悬疑',description:'一本神秘的寻宝笔记，引出了一段跨越百年的传奇故事。主人公循着祖辈留下的线索，踏上了惊险刺激的寻宝之旅。',totalEpisodes:19,
+   episodes:[63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81].map(n=>({num:n,title:'第'+n+'集'})),
+   interactions:{63:[{ts:30000,type:'VOTE',q:'这个线索你觉得指向哪里？',opts:[{id:1,t:'古墓'},{id:2,t:'密室'},{id:3,t:'地下河'}]},{ts:45000,type:'EGG',q:'隐藏彩蛋：寻宝笔记作者亲笔签名照',opts:[{id:1,t:'领取'}]},{ts:60000,type:'QUIZ',q:'笔记中提到的朝代是？',opts:[{id:1,t:'明朝'},{id:2,t:'清朝'},{id:3,t:'唐朝'}],correct:2}]},
+   isHot:true,isNew:false},
+  {id:2,title:'天下第一纨绔',category:'古装',description:'一个被所有人看不起的纨绔子弟，却有着不为人知的惊人才华。当他不再隐藏自己，整个天下都为之震动。',totalEpisodes:24,
+   episodes:Array.from({length:24},(_,i)=>({num:i+1,title:'第'+(i+1)+'集'})),
+   interactions:{1:[{ts:25000,type:'VOTE',q:'男主这波操作你打几分？',opts:[{id:1,t:'满分'},{id:2,t:'及格'},{id:3,t:'不及格'}]},{ts:55000,type:'CHOICE',q:'如果你是男主，你会怎么应对？',opts:[{id:1,t:'正面硬刚'},{id:2,t:'智取'},{id:3,t:'假装认怂'}]},{ts:70000,type:'EGG',q:'隐藏彩蛋：纨绔少爷的秘密武器',opts:[{id:1,t:'领取'}]}]},
+   isHot:true,isNew:true},
+  {id:3,title:'十八岁太奶奶驾到',category:'都市',description:'太奶奶穿越回现代，凭借过人的智慧和胆识，带领家族走向新的辉煌。',totalEpisodes:20,
+   episodes:Array.from({length:20},(_,i)=>({num:i+1,title:'第'+(i+1)+'集'})),
+   interactions:{1:[{ts:20000,type:'VOTE',q:'太奶奶这招高不高？',opts:[{id:1,t:'太高了'},{id:2,t:'一般般'},{id:3,t:'看不懂'}]},{ts:50000,type:'EGG',q:'隐藏彩蛋：太奶奶的独家秘方',opts:[{id:1,t:'领取'}]}]},
+   isHot:true,isNew:true},
+  {id:4,title:'幸得相遇离婚时',category:'甜宠',description:'一场离婚，让两个人重新认识了彼此。当爱情褪去激情，真正的生活才刚刚开始。',totalEpisodes:20,
+   episodes:Array.from({length:20},(_,i)=>({num:i+1,title:'第'+(i+1)+'集'})),
+   interactions:{1:[{ts:35000,type:'VOTE',q:'你觉得他们应该离婚吗？',opts:[{id:1,t:'应该'},{id:2,t:'不应该'},{id:3,t:'再看看'}]},{ts:55000,type:'EGG',q:'隐藏彩蛋：离婚协议书背面的秘密',opts:[{id:1,t:'查看'}]}]},
+   isHot:false,isNew:true},
+  {id:5,title:'荒年全村啃树皮',category:'古装',description:'穿越到饥荒年代，获得囤货系统的她，凭借一己之力带领全村人度过荒年。',totalEpisodes:20,
+   episodes:Array.from({length:20},(_,i)=>({num:i+1,title:'第'+(i+1)+'集'})),
+   interactions:{1:[{ts:28000,type:'QUIZ',q:'系统给了主角什么能力？',opts:[{id:1,t:'空间储存'},{id:2,t:'预知未来'},{id:3,t:'点石成金'}],correct:1},{ts:45000,type:'EGG',q:'隐藏彩蛋：系统空间里的神秘礼物',opts:[{id:1,t:'领取'}]},{ts:60000,type:'VOTE',q:'穿越到荒年第一件事？',opts:[{id:1,t:'囤粮食'},{id:2,t:'找水源'},{id:3,t:'建庇护所'}]}]},
+   isHot:true,isNew:false},
+  {id:6,title:'家里家外',category:'都市',description:'一个普通家庭的喜怒哀乐，婆媳关系、夫妻相处、每个话题都能引起你的共鸣。',totalEpisodes:20,
+   episodes:Array.from({length:20},(_,i)=>({num:i+1,title:'第'+(i+1)+'集'})),
+   interactions:{1:[{ts:30000,type:'VOTE',q:'婆媳矛盾谁对谁错？',opts:[{id:1,t:'婆婆对'},{id:2,t:'媳妇对'},{id:3,t:'都有问题'}]},{ts:50000,type:'EGG',q:'隐藏彩蛋：奶奶传下来的金手镯',opts:[{id:1,t:'领取'}]}]},
+   isHot:false,isNew:true}
+];
+
+function getDB() {
+  const def = {dramas:EMBEDDED,ratings:{},progress:{},eggs:{},answers:{},stats:{}};
+  try { const db = JSON.parse(localStorage.getItem(DB_KEY)) || def; for(const k in def) if(!db[k]) db[k]=def[k]; return db; } catch(e) { return def; }
+}
+function saveDB(db) { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+function getDBDramas() { return getDB().dramas || EMBEDDED; }
+function getDBDrama(id) { return getDBDramas().find(d=>d.id===id); }
+function getDBRating(dramaId) { const db=getDB(); const r=db.ratings[dramaId]; return r?r.reduce((a,b)=>a+b,0)/r.length:0; }
+function getDBRatingCount(dramaId) { const db=getDB(); return (db.ratings[dramaId]||[]).length; }
+function submitDBRating(userId,dramaId,score) {
+  const db=getDB(); if(!db.ratings[dramaId]) db.ratings[dramaId]=[];
+  db.ratings[dramaId].push(score); saveDB(db);
+  return {success:true,averageRating:getDBRating(dramaId).toFixed(1),ratingCount:db.ratings[dramaId].length};
+}
+function getDBProgress(userId,epId) { const db=getDB(); return db.progress[userId+'_'+epId]||0; }
+function setDBProgress(userId,epId,ms) { const db=getDB(); db.progress[userId+'_'+epId]=ms; saveDB(db); }
+function getDBViewCount(dramaId) { const db=getDB(); return db.views?(db.views[dramaId]||0):0; }
+function incDBViewCount(dramaId) { const db=getDB(); if(!db.views)db.views={}; db.views[dramaId]=(db.views[dramaId]||0)+1; saveDB(db); }
+function collectDBEgg(userId,interactionId,content) {
+  const db=getDB(); if(!db.eggs[userId])db.eggs[userId]=[];
+  if(db.eggs[userId].find(e=>e.interactionId===interactionId)) return {success:false,message:'already'};
+  db.eggs[userId].push({interactionId,eggContent:content,collectedAt:new Date().toISOString()});
+  saveDB(db); return {success:true};
+}
+function getDBEggs(userId) { const db=getDB(); return (db.eggs[userId]||[]).reverse(); }
+function dbUserRegister(username,password,nickname) {
+  const db=getDB(); if(!db.users)db.users={};
+  if(db.users[username]) return {success:false,message:'用户名已存在'};
+  const id=Object.keys(db.users).length+1;
+  db.users[username]={id,password,nickname:nickname||username,points:0};
+  saveDB(db); return {success:true,userId:id,nickname:nickname||username};
+}
+function dbUserLogin(username,password) {
+  const db=getDB(); if(!db.users)db.users={};
+  const u=db.users[username]; if(!u||u.password!==password) return {success:false,message:'用户名或密码错误'};
+  return {success:true,userId:u.id,nickname:u.nickname,username};
+}
+function dbUserGet(userId) {
+  const db=getDB(); if(!db.users)return {};
+  for(const k in db.users) { if(db.users[k].id===userId) return db.users[k]; }
+  return {};
+}
+function dbUserAddPoints(userId,pts) {
+  const db=getDB(); if(!db.users)return;
+  for(const k in db.users) { if(db.users[k].id===userId) { db.users[k].points=(db.users[k].points||0)+pts; saveDB(db); return; } }
+}
+function dbDramaSummary(d) {
+  return {id:d.id,title:d.title,category:d.category,totalEpisodes:d.totalEpisodes,
+    rating:+getDBRating(d.id).toFixed(1),ratingCount:getDBRatingCount(d.id),
+    viewCount:getDBViewCount(d.id),isNew:d.isNew,isHot:d.isHot};
+}
+function getVideoUrl(dramaId,epNum) {
+  const d = EMBEDDED.find(x=>x.id===dramaId);
+  if(!d) return SAMPLE_VIDEO;
+  const path = '/videos/' + encodeURIComponent(d.title) + '/第' + epNum + '集.mp4';
+  if(location.protocol === 'file:') {
+    const base = location.href.substring(0, location.href.lastIndexOf('/') + 1);
+    return base + 'videos/' + encodeURIComponent(d.title) + '/第' + epNum + '集.mp4';
+  }
+  return path;
+}
+
+// 统一API层：先尝试后端，失败则用本地数据
+const API_BASE = 'http://localhost:8080';
+let backendOK = false;
+async function api(url, opts) {
+  if(backendOK) {
+    try {
+      const r=await fetch(API_BASE+url,opts);
+      if(!r.ok) { backendOK=false; return localAPI(url,opts); }
+      return r.json();
+    } catch(e) { backendOK=false; }
+  }
+  // 本地路由
+  return localAPI(url,opts);
+}
+function localAPI(url,opts) {
+  const method = opts?(opts.method||'GET'):'GET';
+  const body = opts&&opts.body ? JSON.parse(opts.body) : null;
+  // Auth
+  if(url==='/api/auth/register') return dbUserRegister(body.username,body.password,body.nickname);
+  if(url==='/api/auth/login') return dbUserLogin(body.username,body.password);
+  if(url.match(/\/api\/auth\/(\d+)/)) { const uid=+url.match(/\/api\/auth\/(\d+)/)[1]; return dbUserGet(uid); }
+  // Drama
+  if(url.match(/\/api\/drama\/recommend/)) return {content:getDBDramas().map(dbDramaSummary)};
+  if(url.match(/\/api\/drama\/hot/)) return {content:getDBDramas().filter(d=>d.isHot).map(dbDramaSummary)};
+  if(url.match(/\/api\/drama\/new/)) return {content:getDBDramas().filter(d=>d.isNew).map(dbDramaSummary)};
+  if(url.match(/\/api\/drama\/search/)) { const kw=decodeURIComponent(url.match(/keyword=([^&]+)/)[1]); return {content:getDBDramas().filter(d=>d.title.includes(kw)||d.category.includes(kw)).map(dbDramaSummary)}; }
+  if(url.match(/\/api\/drama\/(\d+)\/detail/)) {
+    const id=+url.match(/\/api\/drama\/(\d+)\/detail/)[1]; const d=getDBDrama(id); if(!d)return{};
+    const eps=d.episodes.map((ep,i)=>({id:d.id*100+ep.num,episodeNumber:ep.num,title:ep.title,durationSeconds:90,watchPositionMs:getDBProgress(currentUser?currentUser.userId:0,d.id*100+ep.num),isHot:ep.num<=3}));
+    const related=getDBDramas().filter(x=>x.id!==id).slice(0,6).map(dbDramaSummary);
+    return {id:d.id,title:d.title,description:d.description,category:d.category,totalEpisodes:d.totalEpisodes,rating:+getDBRating(id).toFixed(1),ratingCount:getDBRatingCount(id),viewCount:getDBViewCount(id),episodes:eps,relatedDramas:related};
+  }
+  // Episode playinfo
+  if(url.match(/\/api\/episode\/(\d+)\/playinfo/)) {
+    const epId=+url.match(/\/api\/episode\/(\d+)\/playinfo/)[1];
+    const dramaId=Math.floor(epId/100); const epNum=epId%100;
+    const d=getDBDrama(dramaId); if(!d)return{};
+    const interList=(d.interactions[epNum]||[]).map((it,idx)=>({id:epId*100+idx,timestampMs:it.ts,type:it.type,questionText:it.q,options:it.opts.map(o=>({id:o.id,text:o.t})),correctOptionId:it.correct||null}));
+    return {episodeId:epId,videoUrl:getVideoUrl(dramaId,epNum),durationSeconds:90,lastPositionMs:getDBProgress(currentUser?currentUser.userId:0,epId),interactions:interList};
+  }
+  // Rating
+  if(url==='/api/rating/submit') return submitDBRating(body.userId,body.dramaId,body.score);
+  if(url.match(/\/api\/rating\/user/)) { const p=new URLSearchParams(url.split('?')[1]); const db=getDB(); const arr=db.ratings[p.get('dramaId')]||[]; return {score:arr.length?arr[arr.length-1]:0}; }
+  if(url.match(/\/api\/rating\/stats/)) { const p=new URLSearchParams(url.split('?')[1]); return {averageRating:getDBRating(+p.get('dramaId')).toFixed(1),ratingCount:getDBRatingCount(+p.get('dramaId'))}; }
+  // Interaction
+  if(url==='/api/interaction/answer') {
+    const db=getDB(); const ansKey=body.userId+'_'+body.interactionId;
+    if(db.answers[ansKey]) return {success:false,message:'Already answered'};
+    const epId=Math.floor(body.interactionId/100); const interIdx=body.interactionId%100;
+    const dramaId=Math.floor(epId/100); const epNum=epId%100;
+    const d=getDBDrama(dramaId); if(!d) return {success:false,message:'Not found'};
+    const inter=(d.interactions[epNum]||[])[interIdx];
+    if(!inter) return {success:false,message:'Not found'};
+    db.answers[ansKey]=true;
+    // 累积统计
+    if(!db.stats[body.interactionId]) db.stats[body.interactionId]={total:0,options:{}};
+    const st=db.stats[body.interactionId];
+    st.total++;
+    st.options[body.choiceId]=(st.options[body.choiceId]||0)+1;
+    saveDB(db);
+    if(inter.type==='EGG') { collectDBEgg(body.userId,body.interactionId,inter.q); dbUserAddPoints(body.userId,5); }
+    if(inter.correct&&body.choiceId===inter.correct) dbUserAddPoints(body.userId,10);
+    const optStats={}; for(const oid in st.options){ const cnt=st.options[oid]; optStats[oid]={count:cnt,percentage:Math.round(cnt*1000/st.total)/10}; }
+    return {success:true,stats:{interactionId:body.interactionId,totalParticipants:st.total,optionStats:optStats}};
+  }
+  if(url.match(/\/api\/interaction\/(\d+)\/stats/)) {
+    const iid=+url.match(/\/api\/interaction\/(\d+)/)[1]; const db=getDB(); const st=db.stats[iid];
+    if(!st) return {interactionId:iid,totalParticipants:0,optionStats:{}};
+    const optStats={}; for(const oid in st.options){ const cnt=st.options[oid]; optStats[oid]={count:cnt,percentage:Math.round(cnt*1000/st.total)/10}; }
+    return {interactionId:iid,totalParticipants:st.total,optionStats:optStats};
+  }
+  // Progress
+  if(url==='/api/progress/report') { setDBProgress(body.userId,body.episodeId,body.positionMs); return {success:true}; }
+  // Eggs
+  if(url.match(/\/api\/user\/(\d+)\/eggs$/)) return getDBEggs(+url.match(/\/api\/user\/(\d+)/)[1]);
+  if(url.match(/\/api\/user\/(\d+)\/eggs\/count/)) return {count:getDBEggs(+url.match(/\/api\/user\/(\d+)/)[1]).length};
+  return {};
+}
+
+// 启动时探测后端
+fetch(API_BASE+'/api/drama/recommend?page=0&size=1',{signal:AbortSignal.timeout(2000)}).then(r=>{if(r.ok)backendOK=true;}).catch(()=>{});
+
+let currentUser = null;
+let dramas = [];
+let currentDrama = null;
+let currentEpisode = null;
+let currentPlayEp = null;
+let currentSpeed = 1;
+let isRegister = false;
+let highlightLikes = {};
+let searchTimer = null;
+let bannerInterval = null;
+
+// ========== SVG Cover Generator ==========
+const THEMES = {
+  '悬疑': { bg1:'#1a0a2e', bg2:'#0d1b2a', accent:'#8B5CF6', icon:'&#128270;', pattern:'mystery' },
+  '古装': { bg1:'#2d1b00', bg2:'#1a0a00', accent:'#FFD700', icon:'&#9876;', pattern:'ancient' },
+  '都市': { bg1:'#0a1628', bg2:'#0a0a1e', accent:'#00F0FF', icon:'&#127961;', pattern:'city' },
+  '甜宠': { bg1:'#2d0a1e', bg2:'#1a0a14', accent:'#FF69B4', icon:'&#128151;', pattern:'love' }
+};
+
+function genCoverSVG(title, category, id) {
+  const t = THEMES[category] || THEMES['都市'];
+  const hash = [...title].reduce((a, c) => a + c.charCodeAt(0), 0);
+  const shapes = [];
+  for (let i = 0; i < 6; i++) {
+    const x = (hash * (i + 1) * 37) % 360 + 20;
+    const y = (hash * (i + 1) * 53) % 180 + 10;
+    const r = (hash * (i + 1) * 17) % 30 + 10;
+    shapes.push(`<circle cx="${x}" cy="${y}" r="${r}" fill="${t.accent}" opacity="${0.08 + i * 0.03}"/>`);
+  }
+  const titleShort = title.length > 6 ? title.slice(0, 6) : title;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 225">
+    <defs><linearGradient id="g${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${t.bg1}"/><stop offset="100%" stop-color="${t.bg2}"/></linearGradient></defs>
+    <rect width="400" height="225" fill="url(#g${id})"/>
+    ${shapes.join('')}
+    <text x="200" y="100" text-anchor="middle" fill="${t.accent}" font-size="28" font-weight="bold" font-family="PingFang SC,Microsoft YaHei">${titleShort}</text>
+    <text x="200" y="140" text-anchor="middle" fill="${t.accent}" font-size="16" opacity="0.6" font-family="PingFang SC">${category}</text>
+    <text x="200" y="180" text-anchor="middle" fill="${t.accent}" font-size="32">${t.icon}</text>
+  </svg>`;
+}
+
+function coverHTML(title, category, id, extraClass) {
+  return `<div class="cover ${extraClass||''}">${genCoverSVG(title, category, id)}</div>`;
+}
+
+// ========== API ==========
+
+// ========== Auth ==========
+function toggleAuthMode() {
+  isRegister = !isRegister;
+  document.getElementById('authTitle').textContent = isRegister ? '注册' : '登录';
+  document.getElementById('authBtn').textContent = isRegister ? '注册' : '登录';
+  document.getElementById('authSwitchText').textContent = isRegister ? '已有账号？' : '没有账号？';
+  document.getElementById('authSwitchLink').textContent = isRegister ? '立即登录' : '立即注册';
+  document.getElementById('authNickname').style.display = isRegister ? 'block' : 'none';
+}
+
+async function doAuth() {
+  const username = document.getElementById('authUsername').value.trim();
+  const password = document.getElementById('authPassword').value.trim();
+  if (!username || !password) return showToast('请填写用户名和密码');
+
+  try {
+    if (isRegister) {
+      const nickname = document.getElementById('authNickname').value.trim() || username;
+      const r = await api('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password, nickname }) });
+      if (r.success) {
+        currentUser = { userId: r.userId, nickname: r.nickname, username };
+        saveUser();
+        showToast('注册成功！');
+        navTo('homePage');
+      } else {
+        showToast(r.message);
+      }
+    } else {
+      const r = await api('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
+      if (r.success) {
+        currentUser = { userId: r.userId, nickname: r.nickname, username: r.username };
+        saveUser();
+        showToast('登录成功！');
+        navTo('homePage');
+      } else {
+        showToast(r.message);
+      }
+    }
+  } catch (e) {
+    showToast('网络错误，请检查后端服务');
+  }
+}
+
+function saveUser() { localStorage.setItem('drama_user', JSON.stringify(currentUser)); }
+function loadUser() { try { currentUser = JSON.parse(localStorage.getItem('drama_user')); } catch(e) {} }
+function logout() { currentUser = null; localStorage.removeItem('drama_user'); showAuthPage(); }
+
+function showAuthPage() {
+  document.querySelectorAll('.page,.detail-page,.player-page').forEach(p => p.classList.remove('active'));
+  document.getElementById('authPage').classList.add('active');
+  document.getElementById('bottomNav').style.display = 'none';
+}
+
+// ========== Navigation ==========
+function navTo(pageId) {
+  if (!currentUser && pageId !== 'authPage') { showAuthPage(); return; }
+  document.querySelectorAll('.page,.detail-page,.player-page').forEach(p => p.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+  document.getElementById('bottomNav').style.display = 'flex';
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === pageId));
+  if (pageId === 'homePage') { document.getElementById('playBar').style.display = 'none'; loadHomePage(); }
+  if (pageId === 'profilePage') loadProfile();
+}
+
+function showPage(pageId) {
+  document.querySelectorAll('.page,.detail-page,.player-page').forEach(p => p.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+}
+
+function showHomePage() {
+  navTo('homePage');
+  document.getElementById('searchInput').value = '';
+  document.getElementById('homeContent').style.display = 'block';
+  document.getElementById('searchResults').style.display = 'none';
+}
+
+// ========== Home ==========
+async function loadHomePage() {
+  try {
+    const data = await api('/api/drama/recommend?page=0&size=20');
+    dramas = data.content || [];
+    renderBanner(dramas.slice(0, 3));
+    renderDramaGrid(dramas, 'dramaGrid');
+  } catch (e) {
+    document.getElementById('dramaGrid').innerHTML = '<div style="grid-column:1/3;text-align:center;padding:40px;color:var(--light-gray)">加载失败，请检查后端服务</div>';
+  }
+}
+
+function renderBanner(list) {
+  const track = document.getElementById('bannerTrack');
+  const dots = document.getElementById('bannerDots');
+  track.innerHTML = list.map((d, i) => `
+    <div class="banner-slide">${genCoverSVG(d.title, d.category, d.id + 100)}
+      <div class="banner-overlay">
+        <h2>${d.title}</h2>
+        <div class="meta">
+          <span class="rating">&#9733; ${d.rating > 0 ? d.rating : '暂无评分'}</span>
+          <span class="tag">${d.category}</span>
+        </div>
+        <button class="banner-btn" onclick="showDetail(${d.id})">立即观看</button>
+      </div>
+    </div>
+  `).join('');
+  dots.innerHTML = list.map((_, i) => `<div class="banner-dot ${i === 0 ? 'active' : ''}" onclick="goToBanner(${i})"></div>`).join('');
+  if (bannerInterval) clearInterval(bannerInterval);
+  let cur = 0;
+  bannerInterval = setInterval(() => { cur = (cur + 1) % list.length; goToBanner(cur); }, 4000);
+}
+
+function goToBanner(i) {
+  document.getElementById('bannerTrack').style.transform = `translateX(-${i * 100}%)`;
+  document.querySelectorAll('.banner-dot').forEach((d, j) => d.classList.toggle('active', j === i));
+}
+
+function renderDramaGrid(list, containerId) {
+  document.getElementById(containerId).innerHTML = list.map(d => `
+    <div class="drama-card" onclick="showDetail(${d.id})">
+      ${coverHTML(d.title, d.category, d.id)}
+      <div class="info">
+        <h3>${d.title}</h3>
+        <div class="meta">${d.category} · ${d.totalEpisodes}集${d.viewCount > 0 ? ' · ' + formatViews(d.viewCount) : ''}</div>
+        <div class="rating"><span>&#9733; ${d.rating > 0 ? d.rating : '暂无评分'}${d.ratingCount > 0 ? ' (' + d.ratingCount + ')' : ''}</span></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Tabs
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', async () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const type = tab.dataset.tab;
+    let ep = '/api/drama/recommend';
+    if (type === 'hot') ep = '/api/drama/hot';
+    if (type === 'new') ep = '/api/drama/new';
+    try {
+      const data = await api(`${ep}?page=0&size=20`);
+      renderDramaGrid(data.content || [], 'dramaGrid');
+    } catch (e) {}
+  });
+});
+
+// ========== Search ==========
+function onSearchInput() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(doSearch, 300);
+}
+
+async function doSearch() {
+  const kw = document.getElementById('searchInput').value.trim();
+  if (!kw) {
+    document.getElementById('homeContent').style.display = 'block';
+    document.getElementById('searchResults').style.display = 'none';
+    return;
+  }
+  document.getElementById('homeContent').style.display = 'none';
+  document.getElementById('searchResults').style.display = 'block';
+  try {
+    const data = await api(`/api/drama/search?keyword=${encodeURIComponent(kw)}&page=0&size=20`);
+    if (!data.content || data.content.length === 0) {
+      document.getElementById('searchGrid').innerHTML = '';
+      document.getElementById('searchEmpty').style.display = 'block';
+    } else {
+      document.getElementById('searchEmpty').style.display = 'none';
+      renderDramaGrid(data.content, 'searchGrid');
+    }
+  } catch (e) {
+    document.getElementById('searchEmpty').style.display = 'block';
+  }
+}
+
+// ========== Detail ==========
+async function showDetail(dramaId) {
+  try {
+    const uid = currentUser ? currentUser.userId : '';
+    const detail = await api(`/api/drama/${dramaId}/detail${uid ? '?userId=' + uid : ''}`);
+    currentDrama = detail;
+
+    document.getElementById('detailBg').innerHTML = genCoverSVG(detail.title, detail.category, detail.id + 200);
+    document.getElementById('detailBg').style.background = 'none';
+    document.getElementById('detailPoster').innerHTML = genCoverSVG(detail.title, detail.category, detail.id + 300);
+    document.getElementById('detailTitle').textContent = detail.title;
+    document.getElementById('detailRating').textContent = detail.rating > 0 ? detail.rating : '暂无评分';
+    document.getElementById('detailRatingCount').textContent = detail.ratingCount > 0 ? `(${detail.ratingCount}人评分)` : '';
+    document.getElementById('detailViews').textContent = detail.viewCount > 0 ? formatViews(detail.viewCount) : '';
+    document.getElementById('detailCategory').textContent = detail.category;
+    document.getElementById('detailDesc').textContent = detail.description;
+
+    // User rating
+    if (currentUser) {
+      try {
+        const myR = await api(`/api/rating/user?userId=${currentUser.userId}&dramaId=${dramaId}`);
+        renderStarPicker(myR.score);
+      } catch (e) { renderStarPicker(0); }
+    } else {
+      renderStarPicker(0);
+    }
+
+    renderEpisodes(detail.episodes);
+    renderRelated(dramaId);
+
+    document.getElementById('playBar').style.display = 'flex';
+    document.getElementById('playBarCover').innerHTML = genCoverSVG(detail.title, detail.category, detail.id + 400);
+    document.getElementById('playBarTitle').textContent = detail.title;
+    currentPlayEp = detail.episodes[0]?.id;
+    document.getElementById('playBarEp').textContent = detail.episodes[0]?.title || '';
+
+    showPage('detailPage');
+  } catch (e) {
+    showToast('加载失败');
+  }
+}
+
+function renderStarPicker(current) {
+  const picker = document.getElementById('starPicker');
+  picker.innerHTML = '';
+  for (let i = 1; i <= 10; i++) {
+    const s = document.createElement('span');
+    s.className = 'star' + (i <= current ? ' active' : '');
+    s.innerHTML = '&#9733;';
+    s.onclick = () => submitRating(i);
+    s.onmouseenter = () => { picker.querySelectorAll('.star').forEach((st, j) => st.classList.toggle('active', j < i)); };
+    picker.appendChild(s);
+  }
+  picker.onmouseleave = () => { picker.querySelectorAll('.star').forEach((st, j) => st.classList.toggle('active', j < current)); };
+  document.getElementById('myRatingText').textContent = current > 0 ? `${current}分` : '点击评分';
+}
+
+async function submitRating(score) {
+  if (!currentUser) { showToast('请先登录'); return; }
+  const r = await api('/api/rating/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.userId, dramaId: currentDrama.id, score }) });
+  if (r.success) {
+    renderStarPicker(score);
+    document.getElementById('detailRating').textContent = r.averageRating;
+    document.getElementById('detailRatingCount').textContent = `(${r.ratingCount}人评分)`;
+    showToast('评分成功！');
+  }
+}
+
+function renderEpisodes(episodes) {
+  document.getElementById('episodeScroll').innerHTML = episodes.map(ep => `
+    <button class="episode-card" onclick="playEpisode(${ep.id})">${ep.title.replace('第','').replace('集','')}</button>
+  `).join('');
+}
+
+function renderRelated(currentId) {
+  const related = dramas.filter(d => d.id !== currentId).slice(0, 6);
+  document.getElementById('relatedScroll').innerHTML = related.map(d => `
+    <div class="related-card" onclick="showDetail(${d.id})">
+      <div class="rc-cover">${genCoverSVG(d.title, d.category, d.id + 500)}</div>
+      <div class="rc-info"><h4>${d.title}</h4><span>&#9733; ${d.rating > 0 ? d.rating : '暂无'}</span></div>
+    </div>
+  `).join('');
+}
+
+// ========== Share ==========
+function shareDrama() {
+  if (!currentDrama) return;
+  const url = `${location.origin}${location.pathname}?drama=${currentDrama.id}`;
+  navigator.clipboard.writeText(url).then(() => showToast('链接已复制！')).catch(() => showToast(url));
+}
+
+// ========== Download/Cache ==========
+function downloadDrama() {
+  if (!currentDrama) return;
+  const ep = currentDrama.episodes[0];
+  if (!ep) return;
+
+  const progressDiv = document.getElementById('downloadProgress');
+  progressDiv.innerHTML = `<div class="download-bar"><div class="dl-progress"><div class="dl-fill" id="dlFill" style="width:0%"></div></div><span class="dl-text" id="dlText">准备中...</span></div>`;
+
+  api(`/api/episode/${ep.id}/playinfo`).then(playInfo => {
+    const videoUrl = API + playInfo.videoUrl;
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', videoUrl, true);
+    xhr.responseType = 'blob';
+
+    xhr.onprogress = (e) => {
+      if (e.lengthComputable) {
+        const pct = Math.round(e.loaded / e.total * 100);
+        const fill = document.getElementById('dlFill');
+        const text = document.getElementById('dlText');
+        if (fill) fill.style.width = pct + '%';
+        if (text) text.textContent = pct + '% (' + Math.round(e.loaded / 1024 / 1024) + 'MB)';
+      }
+    };
+
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        const blob = xhr.response;
+        cacheVideo(ep.id, { id: ep.id, dramaId: currentDrama.id, title: ep.title, blob, cachedAt: Date.now() })
+          .then(() => {
+            progressDiv.innerHTML = '<div style="padding:8px 16px;color:var(--cyan);font-size:13px">&#10003; 缓存完成 (' + Math.round(blob.size / 1024 / 1024) + 'MB)</div>';
+            showToast('缓存成功！');
+          })
+          .catch(err => {
+            showToast('存储失败: 可能空间不足');
+            progressDiv.innerHTML = '';
+          });
+      } else {
+        showToast('下载失败: HTTP ' + xhr.status);
+        progressDiv.innerHTML = '';
+      }
+    };
+
+    xhr.onerror = () => {
+      showToast('下载失败: 网络错误');
+      progressDiv.innerHTML = '';
+    };
+
+    xhr.send();
+  }).catch(e => {
+    showToast('获取播放信息失败');
+    progressDiv.innerHTML = '';
+  });
+}
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('DramaCache', 1);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('videos')) {
+        db.createObjectStore('videos', { keyPath: 'id' });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function cacheVideo(key, data) {
+  return new Promise(async (resolve, reject) => {
+    const db = await openDB();
+    const tx = db.transaction('videos', 'readwrite');
+    tx.objectStore('videos').put(data);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+function getCachedVideo(key) {
+  return new Promise(async (resolve, reject) => {
+    const db = await openDB();
+    const tx = db.transaction('videos', 'readonly');
+    const req = tx.objectStore('videos').get(key);
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+// ========== Player ==========
+async function playEpisode(episodeId) {
+  try {
+    const uid = currentUser ? currentUser.userId : '';
+    const playInfo = await api(`/api/episode/${episodeId}/playinfo${uid ? '?userId=' + uid : ''}`);
+    currentEpisode = playInfo;
+
+    const video = document.getElementById('videoPlayer');
+
+    // Check cache first, then fallback to network
+    let videoSrc = (backendOK ? API_BASE : '') + playInfo.videoUrl;
+    try {
+      const cached = await getCachedVideo(episodeId);
+      if (cached && cached.blob) {
+        videoSrc = URL.createObjectURL(cached.blob);
+      }
+    } catch (e) { /* ignore cache errors */ }
+
+    video.src = videoSrc;
+    video.playbackRate = currentSpeed;
+    document.getElementById('playerEpTitle').textContent = `第${episodeId}集`;
+
+  const highlights = generateHighlights(playInfo);
+  highlightLikes = {};
+  renderHighlightMarkers(highlights);
+  renderInteractionMarkers(playInfo.interactions);
+  renderHighlightList(highlights);
+  renderBubbleCloud(highlights);
+
+  showPage('playerPage');
+  document.getElementById('bottomNav').style.display = 'none';
+  video.play();
+
+  video.ontimeupdate = () => {
+    updateTime();
+    checkHighlightBubbles(video.currentTime, highlights);
+    reportProgress(video.currentTime, episodeId);
+  };
+  video.onloadedmetadata = () => {
+    document.getElementById('totalTime').textContent = formatTime(video.duration);
+    renderHighlightMarkers(highlights);
+    renderInteractionMarkers(playInfo.interactions);
+  };
+  video.onplay = () => { document.getElementById('playPauseBtn').innerHTML = '&#9646;&#9646;'; };
+  video.onpause = () => { document.getElementById('playPauseBtn').innerHTML = '&#9654;'; };
+  video.onclick = () => togglePlay();
+
+  setupInteractions(playInfo.interactions, video);
+  } catch (e) {
+    showToast('播放失败: ' + e.message);
+  }
+}
+
+let lastReportTime = 0;
+function reportProgress(currentTime, episodeId) {
+  if (!currentUser) return;
+  const now = Date.now();
+  if (now - lastReportTime < 5000) return;
+  lastReportTime = now;
+  api('/api/progress/report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.userId, episodeId, positionMs: Math.floor(currentTime * 1000) }) });
+}
+
+function generateHighlights(playInfo) {
+  const d = playInfo.durationSeconds || 90;
+  return [
+    { time: Math.floor(d * 0.15), text: '精彩开场', icon: '&#127916;' },
+    { time: Math.floor(d * 0.35), text: '剧情转折', icon: '&#128165;' },
+    { time: Math.floor(d * 0.55), text: '高能片段', icon: '&#9889;' },
+    { time: Math.floor(d * 0.75), text: '名场面', icon: '&#127775;' },
+    { time: Math.floor(d * 0.9), text: '悬念揭晓', icon: '&#128274;' }
+  ];
+}
+
+function renderHighlightMarkers(list) {
+  const video = document.getElementById('videoPlayer');
+  const dur = video.duration || 90;
+  document.getElementById('highlightMarkers').innerHTML = list.map(h => {
+    const pct = (h.time / dur) * 100;
+    return `<div class="highlight-marker" style="left:${pct}%" onclick="event.stopPropagation();seekTo(${h.time})"><div class="highlight-tooltip">${h.text} ${formatTime(h.time)}</div></div>`;
+  }).join('');
+}
+
+function renderInteractionMarkers(list) {
+  const video = document.getElementById('videoPlayer');
+  const dur = video.duration || 90;
+  document.getElementById('interactionMarkers').innerHTML = list.map(i => {
+    const pct = (i.timestampMs / 1000 / dur) * 100;
+    return `<div class="interaction-marker" style="left:${pct}%"></div>`;
+  }).join('');
+}
+
+function renderHighlightList(list) {
+  document.getElementById('highlightList').innerHTML = list.map(h => `
+    <div class="highlight-item" onclick="seekTo(${h.time})">
+      <span class="hl-time">${formatTime(h.time)}</span>
+      <span class="hl-text">${h.text}</span>
+      <span class="hl-icon">${h.icon}</span>
+    </div>
+  `).join('');
+}
+
+// ========== Bubble Cloud (Rating during highlights) ==========
+function renderBubbleCloud(highlights) {
+  const cloud = document.getElementById('bubbleCloud');
+  cloud.innerHTML = '';
+  highlights.forEach(h => { highlightLikes[h.time] = 0; });
+}
+
+function checkHighlightBubbles(currentTime, highlights) {
+  const cloud = document.getElementById('bubbleCloud');
+  highlights.forEach(h => {
+    const diff = Math.abs(currentTime - h.time);
+    const existing = document.getElementById('bubble-' + h.time);
+    if (diff < 3 && !existing) {
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.id = 'bubble-' + h.time;
+      bubble.innerHTML = `<span class="heart" onclick="event.stopPropagation();likeHighlight(${h.time})">&#128151;</span> ${h.text} <span class="like-count" id="like-${h.time}">${highlightLikes[h.time] || 0}</span>`;
+      cloud.appendChild(bubble);
+      setTimeout(() => { if (bubble.parentNode) bubble.remove(); }, 6000);
+    }
+  });
+}
+
+function likeHighlight(time) {
+  highlightLikes[time] = (highlightLikes[time] || 0) + 1;
+  const el = document.getElementById('like-' + time);
+  if (el) el.textContent = highlightLikes[time];
+  showPoints('+1');
+}
+
+// ========== Interactions (Non-intrusive floating cards) ==========
+function setupInteractions(interactions, video) {
+  const triggered = new Set();
+  video.addEventListener('timeupdate', () => {
+    const ms = video.currentTime * 1000;
+    interactions.forEach(inter => {
+      if (Math.abs(ms - inter.timestampMs) < 500 && !triggered.has(inter.id)) {
+        triggered.add(inter.id);
+        showFloatingCard(inter);
+      }
+    });
+  });
+}
+
+function showFloatingCard(inter) {
+  const container = document.getElementById('interactionFloat');
+  const typeMap = { 'VOTE': { label: '&#128499; 投票', cls: 'vote' }, 'QUIZ': { label: '&#128218; 答题', cls: 'quiz' }, 'CHOICE': { label: '&#128256; 抉择', cls: 'choice' }, 'EGG': { label: '&#127873; 彩蛋', cls: 'egg' } };
+  const t = typeMap[inter.type] || typeMap['VOTE'];
+  const cardId = 'if-' + inter.id;
+
+  // Don't duplicate
+  if (document.getElementById(cardId)) return;
+
+  const card = document.createElement('div');
+  card.className = 'if-card ' + t.cls;
+  card.id = cardId;
+
+  if (inter.type === 'EGG') {
+    card.innerHTML = `
+      <div class="if-header"><span class="if-badge ${t.cls}">${t.label}</span><button class="if-close" onclick="closeFloatCard('${cardId}')">&#10005;</button></div>
+      <div class="if-question">${inter.questionText}</div>
+      <button class="if-egg-btn" onclick="collectEgg(${inter.id},'${cardId}')">&#127873; 领取彩蛋</button>
+      <div class="if-progress"><div class="if-progress-fill" style="width:100%"></div></div>`;
+    container.appendChild(card);
+    // Auto dismiss after 10s
+    startCardTimer(card, cardId, 10000);
+  } else {
+    card.innerHTML = `
+      <div class="if-header"><span class="if-badge ${t.cls}">${t.label}</span><button class="if-close" onclick="closeFloatCard('${cardId}')">&#10005;</button></div>
+      <div class="if-question">${inter.questionText}</div>
+      <div class="if-options">${inter.options.map(o => `<button class="if-opt" data-id="${o.id}" onclick="floatSelect(${o.id},${inter.id},'${cardId}')">${o.text}</button>`).join('')}</div>
+      <div class="if-progress"><div class="if-progress-fill" style="width:100%"></div></div>`;
+    container.appendChild(card);
+    startCardTimer(card, cardId, 15000);
+  }
+}
+
+function startCardTimer(card, cardId, duration) {
+  const fill = card.querySelector('.if-progress-fill');
+  if (fill) {
+    fill.style.transitionDuration = duration + 'ms';
+    requestAnimationFrame(() => { fill.style.width = '0%'; });
+  }
+  setTimeout(() => closeFloatCard(cardId), duration);
+}
+
+function closeFloatCard(id) {
+  const el = document.getElementById(id);
+  if (el) { el.style.animation = 'slideIn .3s ease-in reverse'; setTimeout(() => el.remove(), 300); }
+}
+
+async function collectEgg(interId, cardId) {
+  if (!currentUser) { showToast('请先登录'); return; }
+  try {
+    const r = await api('/api/interaction/answer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.userId, interactionId: interId, choiceId: 1 }) });
+    if (r.success) {
+      showPoints('+5');
+      showToast('&#127873; 彩蛋已收集！+5积分');
+      const card = document.getElementById(cardId);
+      if (card) {
+        const btn = card.querySelector('.if-egg-btn');
+        if (btn) { btn.textContent = '&#10003; 已收集'; btn.disabled = true; btn.style.opacity = '0.5'; }
+      }
+    } else {
+      showToast('已经领取过了');
+    }
+  } catch (e) { showToast('领取失败'); }
+  setTimeout(() => closeFloatCard(cardId), 2000);
+}
+
+async function floatSelect(optId, interId, cardId) {
+  if (!currentUser) { showToast('请先登录'); return; }
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  // 禁用所有选项防止重复点击
+  const opts = card.querySelectorAll('.if-opt');
+  opts.forEach(b => { b.classList.add(b.dataset.id == optId ? 'selected' : ''); b.disabled = true; b.style.pointerEvents = 'none'; });
+
+  try {
+    const r = await api('/api/interaction/answer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.userId, interactionId: interId, choiceId: optId }) });
+    if (r.success) {
+      const inter = currentEpisode.interactions.find(i => i.id === interId);
+      if (inter?.type === 'QUIZ') { showPoints('+10'); }
+    } else {
+      showToast('已经回答过了');
+    }
+  } catch (e) { showToast('提交失败'); }
+
+  // Load stats inline
+  setTimeout(() => loadFloatStats(interId, cardId), 500);
+}
+
+async function loadFloatStats(interId, cardId) {
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  try {
+    const stats = await api(`/api/interaction/${interId}/stats`);
+    const inter = currentEpisode.interactions.find(i => i.id === interId);
+    if (!inter) return;
+    const colors = ['#8B5CF6', '#00F0FF', '#FF2E6E', '#FFD700'];
+    const statsHtml = inter.options.map((o, i) => {
+      const s = stats.optionStats[o.id] || { count: 0, percentage: 0 };
+      return `<div class="if-stat-row"><span class="if-stat-label">${o.text}</span><div class="if-stat-track"><div class="if-stat-fill" style="width:${s.percentage}%;background:${colors[i % 4]}"></div></div><span class="if-stat-pct">${s.percentage}%</span></div>`;
+    }).join('');
+    const statsDiv = document.createElement('div');
+    statsDiv.className = 'if-stats';
+    statsDiv.innerHTML = statsHtml;
+    card.appendChild(statsDiv);
+    setTimeout(() => closeFloatCard(cardId), 3000);
+  } catch (e) {}
+}
+
+// ========== Player Controls ==========
+function togglePlay() {
+  const v = document.getElementById('videoPlayer');
+  v.paused ? (v.play(), document.getElementById('playPauseBtn').innerHTML = '&#9646;&#9646;') : (v.pause(), document.getElementById('playPauseBtn').innerHTML = '&#9654;');
+}
+function updateTime() {
+  const v = document.getElementById('videoPlayer');
+  document.getElementById('progressFill').style.width = (v.currentTime / v.duration * 100) + '%';
+  document.getElementById('currentTime').textContent = formatTime(v.currentTime);
+}
+function seekTo(s) { const v = document.getElementById('videoPlayer'); v.currentTime = s; v.play(); }
+function skipBack() { document.getElementById('videoPlayer').currentTime = Math.max(0, document.getElementById('videoPlayer').currentTime - 10); }
+function skipForward() { const v = document.getElementById('videoPlayer'); v.currentTime = Math.min(v.duration, v.currentTime + 10); }
+function changeSpeed() {
+  const sp = [0.5, 0.75, 1, 1.25, 1.5, 2];
+  currentSpeed = sp[(sp.indexOf(currentSpeed) + 1) % sp.length];
+  document.getElementById('videoPlayer').playbackRate = currentSpeed;
+  document.getElementById('speedBtn').textContent = currentSpeed + 'x';
+}
+document.getElementById('progressContainer').addEventListener('click', e => {
+  const r = e.currentTarget.getBoundingClientRect();
+  document.getElementById('videoPlayer').currentTime = (e.clientX - r.left) / r.width * document.getElementById('videoPlayer').duration;
+});
+function playPrevEp() { if (!currentDrama || !currentEpisode) return; const eps = currentDrama.episodes; const i = eps.findIndex(e => e.id === currentEpisode.episodeId); if (i > 0) playEpisode(eps[i - 1].id); }
+function playNextEp() { if (!currentDrama || !currentEpisode) return; const eps = currentDrama.episodes; const i = eps.findIndex(e => e.id === currentEpisode.episodeId); if (i < eps.length - 1) playEpisode(eps[i + 1].id); }
+function backToDetail() { document.getElementById('videoPlayer').pause(); document.getElementById('bottomNav').style.display = 'flex'; showPage('detailPage'); }
+
+// ========== Profile ==========
+async function loadProfile() {
+  if (!currentUser) return;
+  try {
+    const u = await api(`/api/auth/${currentUser.userId}`);
+    document.getElementById('profileAvatar').textContent = (u.nickname || u.username || '?')[0];
+    document.getElementById('profileName').textContent = u.nickname || u.username;
+    document.getElementById('profileUsername').textContent = '@' + u.username;
+    document.getElementById('profilePoints').textContent = u.points || 0;
+  } catch (e) {}
+  try {
+    const eggs = await api(`/api/user/${currentUser.userId}/eggs`);
+    const eggDiv = document.getElementById('eggCollection');
+    if (eggs.length === 0) {
+      eggDiv.innerHTML = '<div style="text-align:center;padding:16px;color:var(--light-gray);font-size:13px">还没有收集到彩蛋，去看剧发现隐藏彩蛋吧！</div>';
+    } else {
+      eggDiv.innerHTML = eggs.map(egg => `
+        <div class="profile-menu-item" style="border-left:3px solid var(--highlight-gold)">
+          <span class="pm-icon">&#127873;</span>
+          <div style="flex:1">
+            <div style="font-size:14px">${egg.eggContent || '神秘彩蛋'}</div>
+            <div style="font-size:11px;color:var(--light-gray);margin-top:2px">${new Date(egg.collectedAt).toLocaleDateString()}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+  } catch (e) {}
+}
+
+// ========== Utils ==========
+function formatTime(s) { const m = Math.floor(s / 60); return m + ':' + Math.floor(s % 60).toString().padStart(2, '0'); }
+function formatViews(v) { return v >= 10000 ? (v / 10000).toFixed(1) + '万次播放' : v + '次播放'; }
+function showToast(msg) { const t = document.getElementById('toast'); t.innerHTML = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
+function showPoints(text) { const p = document.createElement('div'); p.className = 'points-popup'; p.textContent = text; p.style.left = (Math.random() * 60 + 20) + '%'; p.style.top = '50%'; document.body.appendChild(p); setTimeout(() => p.remove(), 1500); }
+
+// ========== Init ==========
+loadUser();
+if (currentUser) {
+  navTo('homePage');
+} else {
+  showAuthPage();
+}
+
+// Check URL for shared drama link
+const params = new URLSearchParams(location.search);
+if (params.get('drama')) {
+  if (currentUser) { showDetail(+params.get('drama')); }
+}
+</script>
+</body>
+</html>
