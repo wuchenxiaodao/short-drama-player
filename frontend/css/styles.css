@@ -216,6 +216,69 @@ body {
     border-color: var(--electric-purple);
 }
 
+@media (min-width: 768px) {
+    body {
+        max-width: 768px;
+    }
+
+    .drama-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .episode-grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
+
+    .banner-carousel {
+        height: 240px;
+    }
+}
+
+@media (min-width: 1024px) {
+    body {
+        max-width: 1024px;
+    }
+
+    .drama-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .episode-grid {
+        grid-template-columns: repeat(6, 1fr);
+    }
+
+    .banner-carousel {
+        height: 300px;
+    }
+
+    .drama-card-cover {
+        height: 160px;
+    }
+}
+
+@media (hover: none) {
+    .drama-card:active {
+        transform: scale(0.98);
+    }
+
+    .interaction-option:active {
+        transform: scale(0.97);
+    }
+
+    .episode-btn:active {
+        transform: scale(0.95);
+    }
+
+    .back-btn,
+    .search-icon {
+        min-height: 44px;
+        min-width: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
 .player-container {
     position: relative;
     width: 100%;
