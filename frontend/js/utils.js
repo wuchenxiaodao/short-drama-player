@@ -36,3 +36,27 @@ const utils = {
         element.innerHTML = `<div class="error">${message}</div>`;
     }
 };
+
+// 懒加载功能
+const lazyLoad = {
+    observer: null,
+
+    init() {
+        this.observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    img.src = img.dataset.src;
+                    img.classList.remove('lazy');
+                    this.observer.unobserve(img);
+                }
+            });
+        });
+    },
+
+    observe(selector) {
+        document.querySelectorAll(selector).forEach(img => {
+            this.observer.observe(img);
+        });
+    }
+};
