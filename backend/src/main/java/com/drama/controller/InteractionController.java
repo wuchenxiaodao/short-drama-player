@@ -1,13 +1,11 @@
 package com.drama.controller;
 
+import com.drama.common.ApiResponse;
 import com.drama.dto.AnswerRequest;
 import com.drama.dto.InteractionStats;
 import com.drama.service.InteractionService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/interaction")
@@ -17,17 +15,17 @@ public class InteractionController {
     private final InteractionService interactionService;
 
     @PostMapping("/answer")
-    public ResponseEntity<Map<String, Object>> answer(@RequestBody AnswerRequest request) {
+    public ApiResponse<Object> answer(@RequestBody AnswerRequest request) {
         boolean success = interactionService.submitAnswer(request);
         if (success) {
             InteractionStats stats = interactionService.getStats(request.getInteractionId());
-            return ResponseEntity.ok(Map.of("success", true, "stats", stats));
+            return ApiResponse.success("答题成功", stats);
         }
-        return ResponseEntity.ok(Map.of("success", false, "message", "Already answered"));
+        return ApiResponse.error(400, "已经答过题了");
     }
 
     @GetMapping("/{id}/stats")
-    public InteractionStats stats(@PathVariable Long id) {
-        return interactionService.getStats(id);
+    public ApiResponse<InteractionStats> stats(@PathVariable Long id) {
+        return ApiResponse.success(interactionService.getStats(id));
     }
 }

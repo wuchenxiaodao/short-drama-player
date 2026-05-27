@@ -1,5 +1,6 @@
 package com.drama.controller;
 
+import com.drama.common.ApiResponse;
 import com.drama.model.UserEgg;
 import com.drama.model.UserMedal;
 import com.drama.repository.UserEggRepository;
@@ -19,22 +20,22 @@ public class UserProfileController {
     private final UserMedalRepository medalRepository;
 
     @GetMapping("/{userId}/eggs")
-    public List<UserEgg> getEggs(@PathVariable Long userId) {
-        return eggRepository.findByUserIdOrderByCollectedAtDesc(userId);
+    public ApiResponse<List<UserEgg>> getEggs(@PathVariable Long userId) {
+        return ApiResponse.success(eggRepository.findByUserIdOrderByCollectedAtDesc(userId));
     }
 
     @GetMapping("/{userId}/eggs/count")
-    public Map<String, Long> getEggCount(@PathVariable Long userId) {
-        return Map.of("count", eggRepository.countByUserId(userId));
+    public ApiResponse<Map<String, Long>> getEggCount(@PathVariable Long userId) {
+        return ApiResponse.success(Map.of("count", eggRepository.countByUserId(userId)));
     }
 
     @GetMapping("/{userId}/medals")
-    public List<UserMedal> getMedals(@PathVariable Long userId) {
-        return medalRepository.findByUserIdOrderByEarnedAtDesc(userId);
+    public ApiResponse<List<UserMedal>> getMedals(@PathVariable Long userId) {
+        return ApiResponse.success(medalRepository.findByUserIdOrderByEarnedAtDesc(userId));
     }
 
     @GetMapping("/{userId}/medals/check/{medalCode}")
-    public Map<String, Boolean> checkMedal(@PathVariable Long userId, @PathVariable String medalCode) {
-        return Map.of("earned", medalRepository.existsByUserIdAndMedalCode(userId, medalCode));
+    public ApiResponse<Map<String, Boolean>> checkMedal(@PathVariable Long userId, @PathVariable String medalCode) {
+        return ApiResponse.success(Map.of("earned", medalRepository.existsByUserIdAndMedalCode(userId, medalCode)));
     }
 }
