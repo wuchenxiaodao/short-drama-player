@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/player.css">
     <link rel="stylesheet" href="css/interaction.css">
+    <script src="js/theme.js"></script>
 </head>
 <body>
     <div id="app">
@@ -14,7 +15,10 @@
         <div id="home-page" class="page active">
             <div class="top-bar">
                 <h1>短剧播放器</h1>
-                <div class="search-icon" onclick="app.showSearch()">🔍</div>
+                <div class="top-bar-right">
+                    <div id="theme-toggle" class="theme-toggle" onclick="themeManager.toggle()">☀️</div>
+                    <div class="search-icon" onclick="app.showSearch()">🔍</div>
+                </div>
             </div>
             <div class="banner-container">
                 <div id="banner-carousel" class="banner-carousel"></div>
@@ -72,5 +76,6 @@
     <script src="js/player.js"></script>
     <script src="js/interaction.js"></script>
     <script src="js/app.js"></script>
+    <script>themeManager.init();</script>
 </body>
 </html>

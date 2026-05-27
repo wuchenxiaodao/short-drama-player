@@ -4,7 +4,8 @@
     box-sizing: border-box;
 }
 
-:root {
+:root,
+[data-theme="dark"] {
     --deep-black: #0A0A0A;
     --electric-purple: #8B5CF6;
     --purple-dark: #6D28D9;
@@ -17,16 +18,40 @@
     --card-bg: #16162A;
     --star-yellow: #FFC107;
     --highlight-gold: #FFD700;
+    --text-primary: #FFFFFF;
+    --text-secondary: #9CA3AF;
+    --bg-primary: #0A0A0A;
+    --bg-secondary: #1A1A2E;
+}
+
+[data-theme="light"] {
+    --deep-black: #F5F5F5;
+    --electric-purple: #7C3AED;
+    --purple-dark: #6D28D9;
+    --purple-light: #A78BFA;
+    --neon-pink: #EC4899;
+    --cyan: #06B6D4;
+    --dark-gray: #E5E7EB;
+    --medium-gray: #D1D5DB;
+    --light-gray: #6B7280;
+    --card-bg: #FFFFFF;
+    --star-yellow: #F59E0B;
+    --highlight-gold: #D97706;
+    --text-primary: #111827;
+    --text-secondary: #6B7280;
+    --bg-primary: #F5F5F5;
+    --bg-secondary: #E5E7EB;
 }
 
 body {
     font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    background: var(--deep-black);
-    color: #fff;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     overflow-x: hidden;
     max-width: 430px;
     margin: 0 auto;
     min-height: 100vh;
+    transition: background-color 0.3s, color 0.3s;
 }
 
 .page {
@@ -54,6 +79,23 @@ body {
 .search-icon {
     font-size: 20px;
     cursor: pointer;
+}
+
+.top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.theme-toggle {
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px;
+    transition: transform 0.2s;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1);
 }
 
 .banner-container {
