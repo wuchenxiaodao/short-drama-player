@@ -29,39 +29,57 @@ public class EpisodeService {
         Episode episode = episodeRepository.findById(episodeId)
                 .orElseThrow(() -> new RuntimeException("Episode not found: " + episodeId));
 
+        PlayInfo playInfo = buildPlayInfo(episode);
+        playInfo.setLastPositionMs(getLastPosition(userId, episodeId));
+        playInfo.setInteractions(buildInteractionInfoList(episodeId));
+
+        return playInfo;
+    }
+
+    private PlayInfo buildPlayInfo(Episode episode) {
         PlayInfo playInfo = new PlayInfo();
         playInfo.setEpisodeId(episode.getId());
         playInfo.setVideoUrl(episode.getVideoUrl());
         playInfo.setDurationSeconds(episode.getDurationSeconds());
-
-        if (userId != null) {
-            watchProgressRepository.findByUserIdAndEpisodeId(userId, episodeId)
-                    .ifPresent(p -> playInfo.setLastPositionMs(p.getPositionMs()));
-        }
-
-        List<InteractionPoint> points = interactionPointRepository.findByEpisodeIdOrderByTimestampMsAsc(episodeId);
-        List<PlayInfo.InteractionInfo> interactions = points.stream().map(p -> {
-            PlayInfo.InteractionInfo info = new PlayInfo.InteractionInfo();
-            info.setId(p.getId());
-            info.setTimestampMs(p.getTimestampMs());
-            info.setType(p.getInteractionType().name());
-            info.setQuestionText(p.getQuestionText());
-            try {
-                List<Map<String, Object>> options = objectMapper.readValue(
-                        p.getOptionsJson(), new TypeReference<>() {});
-                info.setOptions(options.stream().map(o -> {
-                    PlayInfo.InteractionInfo.OptionInfo opt = new PlayInfo.InteractionInfo.OptionInfo();
-                    opt.setId(((Number) o.get("id")).longValue());
-                    opt.setText((String) o.get("text"));
-                    return opt;
-                }).collect(Collectors.toList()));
-            } catch (Exception e) {
-                info.setOptions(List.of());
-            }
-            return info;
-        }).collect(Collectors.toList());
-        playInfo.setInteractions(interactions);
-
         return playInfo;
+    }
+
+    private Long getLastPosition(Long userId, Long episodeId) {
+        if (userId == null) return null;
+        return watchProgressRepository.findByUserIdAndEpisodeId(userId, episodeId)
+                .map(WatchProgress::getPositionMs)
+                .orElse(null);
+    }
+
+    private List<PlayInfo.InteractionInfo> buildInteractionInfoList(Long episodeId) {
+        List<InteractionPoint> points = interactionPointRepository.findByEpisodeIdOrderByTimestampMsAsc(episodeId);
+        return points.stream()
+                .map(this::buildInteractionInfo)
+                .collect(Collectors.toList());
+    }
+
+    private PlayInfo.InteractionInfo buildInteractionInfo(InteractionPoint point) {
+        PlayInfo.InteractionInfo info = new PlayInfo.InteractionInfo();
+        info.setId(point.getId());
+        info.setTimestampMs(point.getTimestampMs());
+        info.setType(point.getInteractionType().name());
+        info.setQuestionText(point.getQuestionText());
+        info.setOptions(parseOptions(point.getOptionsJson()));
+        return info;
+    }
+
+    private List<PlayInfo.InteractionInfo.OptionInfo> parseOptions(String optionsJson) {
+        try {
+            List<Map<String, Object>> options = objectMapper.readValue(
+                    optionsJson, new TypeReference<>() {});
+            return options.stream().map(o -> {
+                PlayInfo.InteractionInfo.OptionInfo opt = new PlayInfo.InteractionInfo.OptionInfo();
+                opt.setId(((Number) o.get("id")).longValue());
+                opt.setText((String) o.get("text"));
+                return opt;
+            }).collect(Collectors.toList());
+        } catch (Exception e) {
+            return List.of();
+        }
     }
 }
