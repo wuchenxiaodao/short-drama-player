@@ -48,7 +48,7 @@ class InteractionServiceTest {
         testUser = TestDataFactory.createUser(1L, "testuser");
         testDrama = TestDataFactory.createDrama(1L, "测试短剧");
         testEpisode = TestDataFactory.createEpisode(1L, testDrama, 1);
-        testPoint = TestDataFactory.createInteractionPoint(1L, testEpisode, 30);
+        testPoint = TestDataFactory.createInteractionPoint(1L, testEpisode, 30L);
 
         testRequest = new AnswerRequest();
         testRequest.setUserId(1L);

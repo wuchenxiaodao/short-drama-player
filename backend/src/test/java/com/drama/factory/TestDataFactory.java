@@ -48,35 +48,34 @@ public class TestDataFactory {
         return user;
     }
 
-    public static InteractionPoint createInteractionPoint(Long id, Episode episode, int timestamp) {
+    public static InteractionPoint createInteractionPoint(Long id, Episode episode, long timestampMs) {
         InteractionPoint point = new InteractionPoint();
         point.setId(id);
         point.setEpisode(episode);
-        point.setTimestamp(timestamp);
-        point.setType("VOTE");
-        point.setQuestion("测试问题？");
-        point.setOptions(List.of("选项A", "选项B", "选项C"));
-        point.setCorrectAnswer("选项A");
-        point.setPoints(10);
+        point.setTimestampMs(timestampMs);
+        point.setInteractionType(InteractionPoint.InteractionType.VOTE);
+        point.setQuestionText("测试问题？");
+        point.setOptionsJson("[{\"id\":1,\"text\":\"选项A\"},{\"id\":2,\"text\":\"选项B\"},{\"id\":3,\"text\":\"选项C\"}]");
+        point.setCorrectOptionId(1L);
         return point;
     }
 
-    public static Comment createComment(Long id, User user, InteractionPoint point) {
+    public static Comment createComment(Long id, Long userId, Long interactionId) {
         Comment comment = new Comment();
         comment.setId(id);
-        comment.setUser(user);
-        comment.setInteractionPoint(point);
+        comment.setUserId(userId);
+        comment.setInteractionId(interactionId);
         comment.setContent("测试评论内容");
         comment.setCreatedAt(LocalDateTime.now());
-        comment.setLikeCount(0);
+        comment.setLikeCount(0L);
         return comment;
     }
 
-    public static Rating createRating(Long id, User user, Drama drama) {
+    public static Rating createRating(Long id, Long userId, Long dramaId) {
         Rating rating = new Rating();
         rating.setId(id);
-        rating.setUser(user);
-        rating.setDrama(drama);
+        rating.setUserId(userId);
+        rating.setDramaId(dramaId);
         rating.setScore(8);
         rating.setCreatedAt(LocalDateTime.now());
         return rating;
