@@ -1,3 +1,35 @@
+// 加载状态管理
+const loadingManager = {
+    show() {
+        const loader = document.getElementById('global-loader');
+        if (loader) loader.classList.remove('hidden');
+    },
+
+    hide() {
+        const loader = document.getElementById('global-loader');
+        if (loader) loader.classList.add('hidden');
+    }
+};
+
+// 错误处理
+const errorHandler = {
+    handle(error, context) {
+        console.error(`Error in ${context}:`, error);
+        this.showMessage('操作失败，请稍后重试', 'error');
+    },
+
+    showMessage(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.remove();
+        }, 3000);
+    }
+};
+
 const app = {
     init() {
         player.init();
@@ -26,10 +58,15 @@ const app = {
     },
 
     async loadHomePage() {
-        await Promise.all([
-            this.loadRecommendDramas(),
-            this.loadHotDramas()
-        ]);
+        loadingManager.show();
+        try {
+            await Promise.all([
+                this.loadRecommendDramas(),
+                this.loadHotDramas()
+            ]);
+        } finally {
+            loadingManager.hide();
+        }
     },
 
     async loadRecommendDramas() {
@@ -43,6 +80,7 @@ const app = {
             }
         } catch (error) {
             utils.showError(container, '加载失败');
+            errorHandler.handle(error, 'loadRecommendDramas');
         }
     },
 
@@ -57,6 +95,7 @@ const app = {
             }
         } catch (error) {
             utils.showError(container, '加载失败');
+            errorHandler.handle(error, 'loadHotDramas');
         }
     },
 
@@ -73,11 +112,15 @@ const app = {
     },
 
     async showDramaDetail(dramaId) {
-        const response = await api.getDramaDetail(dramaId);
-        if (response.code === 200) {
-            state.currentDrama = response.data;
-            this.renderDramaDetail(response.data);
-            this.navigateTo('detail');
+        try {
+            const response = await api.getDramaDetail(dramaId);
+            if (response.code === 200) {
+                state.currentDrama = response.data;
+                this.renderDramaDetail(response.data);
+                this.navigateTo('detail');
+            }
+        } catch (error) {
+            errorHandler.handle(error, 'showDramaDetail');
         }
     },
 
@@ -98,12 +141,16 @@ const app = {
     },
 
     async playEpisode(episodeId) {
-        const response = await api.getEpisodePlayInfo(episodeId);
-        if (response.code === 200) {
-            state.currentEpisode = response.data;
-            player.loadEpisode(response.data);
-            this.navigateTo('player');
-            player.play();
+        try {
+            const response = await api.getEpisodePlayInfo(episodeId);
+            if (response.code === 200) {
+                state.currentEpisode = response.data;
+                player.loadEpisode(response.data);
+                this.navigateTo('player');
+                player.play();
+            }
+        } catch (error) {
+            errorHandler.handle(error, 'playEpisode');
         }
     },
 
