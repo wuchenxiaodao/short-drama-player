@@ -133,7 +133,7 @@ class DramaServiceTest {
         assertNotNull(result);
         assertEquals("测试短剧", result.getTitle());
         assertEquals(1, result.getEpisodes().size());
-        verify(dramaRepository).findById(1L);
+        verify(dramaRepository, times(2)).findById(1L); // 被调用2次：一次在getDetail，一次在incrementViewCount
         verify(episodeRepository).findByDramaIdOrderByEpisodeNumberAsc(1L);
     }
 

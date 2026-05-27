@@ -12,7 +12,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -113,8 +115,9 @@ class InteractionServiceTest {
     @Test
     void getStats_ShouldReturnStats() {
         // Arrange
-        Object[] row = {1L, 50L};
-        when(answerRepository.countByOption(1L)).thenReturn(Arrays.asList(row));
+        List<Object[]> rows = new ArrayList<>();
+        rows.add(new Object[]{1L, 50L});
+        when(answerRepository.countByOption(1L)).thenReturn(rows);
         when(answerRepository.countByInteractionPointId(1L)).thenReturn(100L);
 
         // Act
