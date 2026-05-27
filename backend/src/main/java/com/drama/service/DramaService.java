@@ -61,15 +61,26 @@ public class DramaService {
         incrementViewCount(dramaId);
 
         List<Episode> episodes = episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(dramaId);
+        Map<Long, Long> progressMap = getWatchProgress(userId, episodes);
 
+        DramaDetail detail = buildDramaDetail(drama, episodes, progressMap);
+        detail.setRelatedDramas(getRelatedDramas(drama));
+
+        return detail;
+    }
+
+    private Map<Long, Long> getWatchProgress(Long userId, List<Episode> episodes) {
         Map<Long, Long> progressMap = new HashMap<>();
-        if (userId != null) {
-            for (Episode ep : episodes) {
-                watchProgressRepository.findByUserIdAndEpisodeId(userId, ep.getId())
-                        .ifPresent(p -> progressMap.put(ep.getId(), p.getPositionMs()));
-            }
-        }
+        if (userId == null) return progressMap;
 
+        for (Episode ep : episodes) {
+            watchProgressRepository.findByUserIdAndEpisodeId(userId, ep.getId())
+                    .ifPresent(p -> progressMap.put(ep.getId(), p.getPositionMs()));
+        }
+        return progressMap;
+    }
+
+    private DramaDetail buildDramaDetail(Drama drama, List<Episode> episodes, Map<Long, Long> progressMap) {
         DramaDetail detail = new DramaDetail();
         detail.setId(drama.getId());
         detail.setTitle(drama.getTitle());
@@ -78,10 +89,14 @@ public class DramaService {
         detail.setCategory(drama.getCategory());
         detail.setTotalEpisodes(drama.getTotalEpisodes());
         detail.setRating(drama.getRating());
-        detail.setRatingCount(ratingRepository.getRatingCount(dramaId));
+        detail.setRatingCount(ratingRepository.getRatingCount(drama.getId()));
         detail.setViewCount(drama.getViewCount());
+        detail.setEpisodes(buildEpisodeInfoList(episodes, progressMap));
+        return detail;
+    }
 
-        List<DramaDetail.EpisodeInfo> epInfos = episodes.stream().map(ep -> {
+    private List<DramaDetail.EpisodeInfo> buildEpisodeInfoList(List<Episode> episodes, Map<Long, Long> progressMap) {
+        return episodes.stream().map(ep -> {
             DramaDetail.EpisodeInfo info = new DramaDetail.EpisodeInfo();
             info.setId(ep.getId());
             info.setEpisodeNumber(ep.getEpisodeNumber());
@@ -91,34 +106,45 @@ public class DramaService {
             info.setIsHot(ep.getEpisodeNumber() <= 3);
             return info;
         }).collect(Collectors.toList());
-        detail.setEpisodes(epInfos);
+    }
 
-        List<Drama> related = dramaRepository.findByCategoryAndIdNot(
-                drama.getCategory(), dramaId, PageRequest.of(0, 6));
-        detail.setRelatedDramas(related.stream().map(this::toSummary).collect(Collectors.toList()));
-
-        return detail;
+    private List<DramaSummary> getRelatedDramas(Drama drama) {
+        return dramaRepository.findByCategoryAndIdNot(
+                drama.getCategory(), drama.getId(), PageRequest.of(0, 6))
+                .stream().map(this::toSummary).collect(Collectors.toList());
     }
 
     private void incrementViewCount(Long dramaId) {
         if (redisTemplate != null) {
-            String key = "drama:view:" + dramaId;
-            Long count = redisTemplate.opsForValue().increment(key);
-            if (count != null && count == 1) {
-                redisTemplate.expire(key, 1, TimeUnit.HOURS);
-            }
-            if (count != null && count % 100 == 0) {
-                dramaRepository.findById(dramaId).ifPresent(d -> {
-                    d.setViewCount(d.getViewCount() + 100);
-                    dramaRepository.save(d);
-                });
-            }
+            incrementViewCountWithRedis(dramaId);
         } else {
-            dramaRepository.findById(dramaId).ifPresent(d -> {
-                d.setViewCount(d.getViewCount() + 1);
-                dramaRepository.save(d);
-            });
+            incrementViewCountWithDatabase(dramaId);
         }
+    }
+
+    private void incrementViewCountWithRedis(Long dramaId) {
+        String key = "drama:view:" + dramaId;
+        Long count = redisTemplate.opsForValue().increment(key);
+        if (count != null && count == 1) {
+            redisTemplate.expire(key, 1, TimeUnit.HOURS);
+        }
+        if (count != null && count % 100 == 0) {
+            syncViewCountToDatabase(dramaId, 100L);
+        }
+    }
+
+    private void incrementViewCountWithDatabase(Long dramaId) {
+        dramaRepository.findById(dramaId).ifPresent(d -> {
+            d.setViewCount(d.getViewCount() + 1);
+            dramaRepository.save(d);
+        });
+    }
+
+    private void syncViewCountToDatabase(Long dramaId, Long increment) {
+        dramaRepository.findById(dramaId).ifPresent(d -> {
+            d.setViewCount(d.getViewCount() + increment);
+            dramaRepository.save(d);
+        });
     }
 
     private DramaSummary toSummary(Drama d) {
