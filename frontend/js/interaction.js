@@ -53,6 +53,10 @@ const interaction = {
             }
         });
 
+        if (result.correct) {
+            this.triggerEmojiRain(['🎉', '⭐', '🏆', '✨', '💯']);
+        }
+
         const resultDiv = document.getElementById('interaction-result');
         resultDiv.innerHTML = `
             <div class="interaction-points">
@@ -62,6 +66,25 @@ const interaction = {
                 继续观看
             </button>
         `;
+    },
+
+    triggerEmojiRain(emojis) {
+        const container = document.createElement('div');
+        container.className = 'emoji-rain';
+        document.body.appendChild(container);
+
+        for (let i = 0; i < 20; i++) {
+            setTimeout(() => {
+                const emoji = document.createElement('div');
+                emoji.className = 'emoji-rain-item';
+                emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                emoji.style.left = `${Math.random() * 100}%`;
+                emoji.style.animationDuration = `${1 + Math.random() * 2}s`;
+                container.appendChild(emoji);
+            }, i * 100);
+        }
+
+        setTimeout(() => container.remove(), 3000);
     },
 
     close() {
