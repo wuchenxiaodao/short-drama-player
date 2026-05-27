@@ -45,5 +45,24 @@ public class WebConfig implements WebMvcConfigurer {
         log.info("Video resource handler: /videos/** -> file:{}", videoPath);
         registry.addResourceHandler("/videos/**")
                 .addResourceLocations("file:" + videoPath);
+
+        // Serve preview.html from android assets
+        String previewPath = null;
+        String[] previewCandidates = {
+            userDir + File.separator,
+            userDir + File.separator + "android" + File.separator + "app" + File.separator + "src" + File.separator + "main" + File.separator + "assets" + File.separator,
+            userDir + File.separator + ".." + File.separator + "android" + File.separator + "app" + File.separator + "src" + File.separator + "main" + File.separator + "assets" + File.separator
+        };
+        for (String path : previewCandidates) {
+            if (new File(path + "preview.html").exists()) {
+                previewPath = path;
+                break;
+            }
+        }
+        if (previewPath != null) {
+            log.info("Preview handler: /preview.html -> file:{}", previewPath);
+            registry.addResourceHandler("/preview.html")
+                    .addResourceLocations("file:" + previewPath);
+        }
     }
 }
