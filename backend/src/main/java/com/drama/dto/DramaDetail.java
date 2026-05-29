@@ -14,6 +14,7 @@ public class DramaDetail {
     private Double rating;
     private Long ratingCount;
     private Long viewCount;
+    private String status;
     private List<EpisodeInfo> episodes;
     private List<DramaSummary> relatedDramas;
 

@@ -35,6 +35,11 @@ public class DramaController {
         return ApiResponse.success(dramaService.getDetail(id, AuthUtils.getCurrentUserId()));
     }
 
+    @GetMapping("/{id}")
+    public ApiResponse<DramaDetail> detailShort(@PathVariable Long id) {
+        return detail(id);
+    }
+
     @GetMapping("/search")
     public ApiResponse<Page<DramaSummary>> search(
             @RequestParam String keyword,

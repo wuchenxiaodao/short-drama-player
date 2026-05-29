@@ -61,7 +61,7 @@ class DramaServiceTest {
 
     @Test
     void getRecommended_ShouldReturnDramas() {
-        when(dramaRepository.findTopRated(any(PageRequest.class))).thenReturn(dramaPage);
+        when(dramaRepository.findByIsNewTrueOrderByCreatedAtDesc(any(PageRequest.class))).thenReturn(dramaPage);
         List<Object[]> countResult = new ArrayList<>();
         countResult.add(new Object[]{1L, 10L});
         when(ratingRepository.countByDramaIds(anyList())).thenReturn(countResult);
@@ -71,7 +71,7 @@ class DramaServiceTest {
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
         assertEquals("测试短剧", result.getContent().get(0).getTitle());
-        verify(dramaRepository).findTopRated(any(PageRequest.class));
+        verify(dramaRepository).findByIsNewTrueOrderByCreatedAtDesc(any(PageRequest.class));
     }
 
     @Test
@@ -122,6 +122,7 @@ class DramaServiceTest {
         when(episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(1L)).thenReturn(Arrays.asList(testEpisode));
         when(ratingRepository.getRatingCount(1L)).thenReturn(10L);
         when(dramaRepository.findByCategoryAndIdNot(anyString(), anyLong(), any(PageRequest.class))).thenReturn(Arrays.asList());
+        when(dramaRepository.findByIdNot(anyLong(), any(PageRequest.class))).thenReturn(new PageImpl<>(Arrays.asList()));
 
         DramaDetail result = dramaService.getDetail(1L, null);
 
@@ -148,6 +149,7 @@ class DramaServiceTest {
         when(watchProgressRepository.findByUserIdAndEpisodeIdIn(1L, Arrays.asList(1L))).thenReturn(List.of());
         when(ratingRepository.getRatingCount(1L)).thenReturn(10L);
         when(dramaRepository.findByCategoryAndIdNot(anyString(), anyLong(), any(PageRequest.class))).thenReturn(Arrays.asList());
+        when(dramaRepository.findByIdNot(anyLong(), any(PageRequest.class))).thenReturn(new PageImpl<>(Arrays.asList()));
 
         DramaDetail result = dramaService.getDetail(1L, 1L);
 

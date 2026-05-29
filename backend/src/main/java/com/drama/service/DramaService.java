@@ -34,7 +34,11 @@ public class DramaService {
     private StringRedisTemplate redisTemplate;
 
     public Page<DramaSummary> getRecommended(int page, int size) {
-        return mapToSummaryPage(dramaRepository.findTopRated(PageRequest.of(page, size)));
+        Page<Drama> result = dramaRepository.findByIsNewTrueOrderByCreatedAtDesc(PageRequest.of(page, size));
+        if (result.isEmpty()) {
+            result = dramaRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(page, size));
+        }
+        return mapToSummaryPage(result);
     }
 
     public Page<DramaSummary> getHot(int page, int size) {
@@ -89,6 +93,7 @@ public class DramaService {
         detail.setRating(drama.getRating());
         detail.setRatingCount(ratingRepository.getRatingCount(drama.getId()));
         detail.setViewCount(drama.getViewCount());
+        detail.setStatus(drama.getIsNew() ? "ONGOING" : "COMPLETED");
         detail.setEpisodes(buildEpisodeInfoList(episodes, progressMap));
         return detail;
     }
@@ -109,6 +114,10 @@ public class DramaService {
     private List<DramaSummary> getRelatedDramas(Drama drama) {
         List<Drama> relatedDramas = dramaRepository.findByCategoryAndIdNot(
                 drama.getCategory(), drama.getId(), PageRequest.of(0, 6));
+        if (relatedDramas.isEmpty()) {
+            Page<Drama> fallback = dramaRepository.findByIdNot(drama.getId(), PageRequest.of(0, 6));
+            relatedDramas = fallback.getContent();
+        }
         if (relatedDramas.isEmpty()) return List.of();
         List<Long> ids = relatedDramas.stream().map(Drama::getId).collect(Collectors.toList());
         Map<Long, Long> ratingCountMap = new HashMap<>();

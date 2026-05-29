@@ -43,6 +43,7 @@ services:
       MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD:-changeme}
       REDIS_HOST: redis
       REDIS_PASSWORD: ${REDIS_PASSWORD:-changeme}
+      JWT_SECRET: ${JWT_SECRET}
     depends_on:
       mysql:
         condition: service_healthy

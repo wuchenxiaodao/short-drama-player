@@ -28,7 +28,7 @@ app:
     base-url: ${IMAGE_BASE_URL:http://localhost:9000/images}
 
 jwt:
-  secret: ${JWT_SECRET:a]9kL2mN5pQ8sT1vX3yA6bC0dE7fG4hI}
+  secret: ${JWT_SECRET:pleaseSetJwtSecretViaEnvironmentVariable!}
   expiration-ms: 604800000
 
 cors:

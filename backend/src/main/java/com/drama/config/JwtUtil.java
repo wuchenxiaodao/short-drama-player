@@ -26,7 +26,8 @@ public class JwtUtil {
         if (secret.length() < 32) {
             throw new IllegalStateException("jwt.secret 至少32字符");
         }
-        if ("defaultSecretKeyMustBeAtLeast32BytesLong!!".equals(secret)) {
+        if ("defaultSecretKeyMustBeAtLeast32BytesLong!!".equals(secret)
+                || "a]9kL2mN5pQ8sT1vX3yA6bC0dE7fG4hI".equals(secret)) {
             throw new IllegalStateException("jwt.secret 不能使用默认值");
         }
     }
