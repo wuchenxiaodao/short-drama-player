@@ -30,3 +30,6 @@ app:
 jwt:
   secret: ${JWT_SECRET:a]9kL2mN5pQ8sT1vX3yA6bC0dE7fG4hI}
   expiration-ms: 604800000
+
+cors:
+  allowed-origins: ${CORS_ORIGINS:http://localhost:3000,http://localhost:8080}

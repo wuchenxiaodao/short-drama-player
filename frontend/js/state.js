@@ -1,21 +1,33 @@
 const state = {
     currentPage: 'home',
-    previousPage: null,
+    history: [],
     currentDrama: null,
     currentEpisode: null,
     userId: localStorage.getItem('userId') || null,
     token: localStorage.getItem('drama_token') || null,
 
     setPage(page) {
-        this.previousPage = this.currentPage;
+        if (this.currentPage && this.currentPage !== page) {
+            this.history.push(this.currentPage);
+            if (this.history.length > 10) {
+                this.history.shift();
+            }
+        }
         this.currentPage = page;
     },
 
     goBack() {
-        if (this.previousPage) {
-            this.currentPage = this.previousPage;
-            this.previousPage = null;
+        if (this.history.length > 0) {
+            const prevPage = this.history.pop();
+            this.currentPage = prevPage;
+            return prevPage;
         }
+        this.currentPage = 'home';
+        return 'home';
+    },
+
+    clearHistory() {
+        this.history = [];
     },
 
     isLoggedIn() { return !!this.token; },
@@ -32,6 +44,5 @@ const state = {
         this.userId = null;
         localStorage.removeItem('drama_token');
         localStorage.removeItem('userId');
-        localStorage.removeItem('drama_user');
     }
 };

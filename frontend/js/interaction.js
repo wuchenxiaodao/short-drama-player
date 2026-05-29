@@ -11,14 +11,17 @@ const interaction = {
     createInteractionHTML(point) {
         let html = `
             <div class="interaction-popup">
-                <div class="interaction-question">${point.question}</div>
+                <div class="interaction-question">${point.questionText || point.question}</div>
                 <div class="interaction-options">
         `;
 
-        point.options.forEach((option, index) => {
+        const options = point.options || [];
+        options.forEach(option => {
+            const optId = option.id || option;
+            const optText = option.text || option;
             html += `
-                <button class="interaction-option" onclick="interaction.selectOption('${option}')">
-                    ${option}
+                <button class="interaction-option" data-id="${optId}" onclick="interaction.selectOption(${optId}, '${optText.replace(/'/g, "\\'")}')">
+                    ${optText}
                 </button>
             `;
         });
@@ -32,35 +35,25 @@ const interaction = {
         return html;
     },
 
-    async selectOption(option) {
-        const result = await api.submitAnswer(
-            state.userId,
-            this.currentPoint.id,
-            option
-        );
-
-        this.showResult(result, option);
+    async selectOption(optionId, optionText) {
+        try {
+            const result = await api.submitAnswer(this.currentPoint.id, optionId);
+            this.showResult(result, optionText);
+        } catch (error) {
+            errorHandler.handle(error, 'selectOption');
+        }
     },
 
     showResult(result, selectedOption) {
         const options = document.querySelectorAll('.interaction-option');
         options.forEach(btn => {
             btn.disabled = true;
-            if (btn.textContent.trim() === this.currentPoint.correctAnswer) {
-                btn.classList.add('correct');
-            } else if (btn.textContent.trim() === selectedOption && !result.correct) {
-                btn.classList.add('wrong');
-            }
         });
-
-        if (result.correct) {
-            this.triggerEmojiRain(['🎉', '⭐', '🏆', '✨', '💯']);
-        }
 
         const resultDiv = document.getElementById('interaction-result');
         resultDiv.innerHTML = `
             <div class="interaction-points">
-                ${result.correct ? `+${result.pointsEarned}` : '答错了'}
+                ${result.correct !== false ? '回答正确' : '答错了'}
             </div>
             <button class="continue-btn" onclick="interaction.close()">
                 继续观看

@@ -9,4 +9,5 @@ public class ProgressReport {
     private Long episodeId;
     @NotNull(message = "播放位置不能为空")
     private Long positionMs;
+    private Boolean completed;
 }

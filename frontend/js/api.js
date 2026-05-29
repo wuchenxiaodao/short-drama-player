@@ -97,5 +97,43 @@ const api = {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ episodeId, positionMs })
         });
+    },
+
+    async login(username, password) {
+        return this.request(`${API_BASE_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+    },
+
+    async register(username, password, nickname) {
+        return this.request(`${API_BASE_URL}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password, nickname })
+        });
+    },
+
+    async getComments(interactionId, sort, page, size) {
+        return this.request(`${API_BASE_URL}/comment/${interactionId}?sort=${sort || 'hot'}&page=${page || 0}&size=${size || 20}`);
+    },
+
+    async postComment(interactionId, content, parentCommentId) {
+        return this.request(`${API_BASE_URL}/comment`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ interactionId, content, parentCommentId })
+        });
+    },
+
+    async toggleCommentLike(commentId) {
+        return this.request(`${API_BASE_URL}/comment/${commentId}/like`, {
+            method: 'POST'
+        });
+    },
+
+    async getNewDramas(page, size) {
+        return this.request(`${API_BASE_URL}/drama/new?page=${page || 0}&size=${size || 10}`);
     }
 };

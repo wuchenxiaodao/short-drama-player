@@ -24,7 +24,7 @@ public class ProgressService {
         progress.setUserId(userId);
         progress.setEpisodeId(report.getEpisodeId());
         progress.setPositionMs(report.getPositionMs());
-        progress.setCompleted(false);
+        progress.setCompleted(Boolean.TRUE.equals(report.getCompleted()));
         progressRepository.save(progress);
     }
 }

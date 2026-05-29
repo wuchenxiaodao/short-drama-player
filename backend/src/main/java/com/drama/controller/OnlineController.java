@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
-import java.util.Set;
 
 @RestController
 @RequestMapping("/api/online")
@@ -27,11 +26,5 @@ public class OnlineController {
     public Map<String, Object> getOnlineCount(@PathVariable Long episodeId) {
         long count = onlineService.getOnlineCount(episodeId);
         return Map.of("episodeId", episodeId, "onlineCount", count);
-    }
-
-    @GetMapping("/episode/{episodeId}/users")
-    public Map<String, Object> getOnlineUsers(@PathVariable Long episodeId) {
-        Set<String> users = onlineService.getOnlineUsers(episodeId);
-        return Map.of("episodeId", episodeId, "users", users);
     }
 }

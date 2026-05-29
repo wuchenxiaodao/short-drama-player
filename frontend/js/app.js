@@ -23,22 +23,95 @@ const errorHandler = {
         toast.className = `toast toast-${type}`;
         toast.textContent = message;
         document.body.appendChild(toast);
-
-        setTimeout(() => {
-            toast.remove();
-        }, 3000);
+        setTimeout(() => toast.remove(), 3000);
     }
 };
 
 const app = {
+    bannerIndex: 0,
+    bannerTimer: null,
+
     init() {
         player.init();
+        this.checkAuth();
         this.loadHomePage();
         this.setupNavigation();
     },
 
+    checkAuth() {
+        const token = localStorage.getItem('drama_token');
+        if (token) {
+            state.token = token;
+            this.updateAuthUI(true);
+        }
+    },
+
+    updateAuthUI(loggedIn) {
+        const authBtn = document.getElementById('auth-btn');
+        if (authBtn) {
+            authBtn.textContent = loggedIn ? '退出' : '登录';
+            authBtn.onclick = loggedIn ? () => this.logout() : () => this.showLoginPage();
+        }
+    },
+
+    showLoginPage() {
+        this.navigateTo('login');
+    },
+
+    async handleLogin() {
+        const username = document.getElementById('login-username').value.trim();
+        const password = document.getElementById('login-password').value.trim();
+        if (!username || !password) {
+            errorHandler.showMessage('请输入用户名和密码', 'error');
+            return;
+        }
+        try {
+            const res = await api.login(username, password);
+            const data = res.data || res;
+            if (data.token) {
+                localStorage.setItem('drama_token', data.token);
+                state.token = data.token;
+                this.updateAuthUI(true);
+                this.navigateTo('home');
+                errorHandler.showMessage('登录成功', 'success');
+            }
+        } catch (error) {
+            errorHandler.handle(error, 'handleLogin');
+        }
+    },
+
+    async handleRegister() {
+        const username = document.getElementById('reg-username').value.trim();
+        const password = document.getElementById('reg-password').value.trim();
+        const nickname = document.getElementById('reg-nickname').value.trim() || username;
+        if (!username || !password) {
+            errorHandler.showMessage('请输入用户名和密码', 'error');
+            return;
+        }
+        try {
+            const res = await api.register(username, password, nickname);
+            const data = res.data || res;
+            if (data.token) {
+                localStorage.setItem('drama_token', data.token);
+                state.token = data.token;
+                this.updateAuthUI(true);
+                this.navigateTo('home');
+                errorHandler.showMessage('注册成功', 'success');
+            }
+        } catch (error) {
+            errorHandler.handle(error, 'handleRegister');
+        }
+    },
+
+    logout() {
+        localStorage.removeItem('drama_token');
+        state.token = null;
+        this.updateAuthUI(false);
+        this.navigateTo('home');
+        errorHandler.showMessage('已退出登录', 'info');
+    },
+
     setupNavigation() {
-        // 底部导航
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', () => {
                 const page = item.dataset.page;
@@ -49,7 +122,10 @@ const app = {
 
     navigateTo(page) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(`${page}-page`).classList.add('active');
+        const pageEl = document.getElementById(`${page}-page`);
+        if (pageEl) {
+            pageEl.classList.add('active');
+        }
         state.setPage(page);
 
         if (page === 'home') {
@@ -76,7 +152,10 @@ const app = {
         try {
             const response = await api.getRecommendDramas();
             const dramas = (response.data || response).content;
-            if (dramas) this.renderDramaList(container, dramas);
+            if (dramas) {
+                this.renderDramaList(container, dramas);
+                this.renderBanner(dramas.slice(0, 5));
+            }
         } catch (error) {
             utils.showError(container, '加载失败');
             errorHandler.handle(error, 'loadRecommendDramas');
@@ -97,13 +176,40 @@ const app = {
         }
     },
 
+    renderBanner(dramas) {
+        const carousel = document.getElementById('banner-carousel');
+        if (!carousel || dramas.length === 0) return;
+
+        carousel.innerHTML = dramas.map((drama, i) => `
+            <div class="banner-slide ${i === 0 ? 'active' : ''}" onclick="app.showDramaDetail(${drama.id})">
+                <div class="banner-cover" style="background-image: url(${drama.coverUrl || ''})"></div>
+                <div class="banner-info">
+                    <h3>${drama.title}</h3>
+                    <p>${drama.category} · ${drama.totalEpisodes}集</p>
+                </div>
+            </div>
+        `).join('');
+
+        clearInterval(this.bannerTimer);
+        this.bannerIndex = 0;
+        this.bannerTimer = setInterval(() => {
+            this.bannerIndex = (this.bannerIndex + 1) % dramas.length;
+            carousel.querySelectorAll('.banner-slide').forEach((slide, i) => {
+                slide.classList.toggle('active', i === this.bannerIndex);
+            });
+        }, 3000);
+    },
+
     renderDramaList(container, dramas) {
         container.innerHTML = dramas.map(drama => `
             <div class="drama-card" onclick="app.showDramaDetail(${drama.id})">
-                <div class="drama-card-cover">🎬</div>
+                <div class="drama-card-cover">
+                    ${drama.coverUrl ? `<img src="${drama.coverUrl}" alt="${drama.title}" onerror="this.style.display='none'">` : ''}
+                    <span class="cover-emoji">🎬</span>
+                </div>
                 <div class="drama-card-info">
                     <div class="drama-card-title">${drama.title}</div>
-                    <div class="drama-card-episodes">${drama.totalEpisodes}集</div>
+                    <div class="drama-card-meta">${drama.category || ''} · ${drama.totalEpisodes}集</div>
                 </div>
             </div>
         `).join('');
@@ -125,16 +231,31 @@ const app = {
         document.getElementById('detail-title').textContent = drama.title;
         document.getElementById('detail-description').textContent = drama.description;
         document.getElementById('detail-episodes').textContent = `共${drama.totalEpisodes}集`;
-        document.getElementById('detail-status').textContent = drama.status === 'ONGOING' ? '连载中' : '已完结';
 
-        // 加载剧集列表
-        this.loadEpisodes(drama.id);
+        const coverImg = document.getElementById('detail-cover-img');
+        if (coverImg && drama.coverUrl) {
+            coverImg.src = drama.coverUrl;
+            coverImg.alt = drama.title;
+        }
+
+        this.loadEpisodes(drama);
     },
 
-    async loadEpisodes(dramaId) {
+    loadEpisodes(drama) {
         const container = document.getElementById('episode-grid');
-        // 这里需要调用获取剧集列表的API
-        container.innerHTML = '<p>加载中...</p>';
+        const episodes = drama.episodes || [];
+
+        if (episodes.length === 0) {
+            container.innerHTML = '<p class="empty-text">暂无剧集</p>';
+            return;
+        }
+
+        container.innerHTML = episodes.map(ep => `
+            <div class="episode-item" onclick="app.playEpisode(${ep.id})">
+                <span class="episode-number">${ep.episodeNumber}</span>
+                <span class="episode-title">${ep.title || '第' + ep.episodeNumber + '集'}</span>
+            </div>
+        `).join('');
     },
 
     async playEpisode(episodeId) {
@@ -157,6 +278,7 @@ const app = {
         const container = document.getElementById('search-results');
         container.className = 'search-results';
         container.innerHTML = '<div class="search-empty">输入关键词搜索短剧</div>';
+        this.renderSearchHistory();
     },
 
     closeSearch() {
@@ -173,6 +295,7 @@ const app = {
         if (!keyword) {
             container.className = 'search-results';
             container.innerHTML = '<div class="search-empty">输入关键词搜索短剧</div>';
+            this.renderSearchHistory();
             return;
         }
         this._searchTimer = setTimeout(() => this.doSearch(keyword), 300);
@@ -182,6 +305,7 @@ const app = {
         const container = document.getElementById('search-results');
         container.className = 'search-results';
         utils.showLoading(container);
+        this.saveSearchHistory(keyword);
         try {
             const response = await api.searchDramas(keyword);
             const dramas = (response.data || response).content;
@@ -197,16 +321,52 @@ const app = {
         }
     },
 
+    getSearchHistory() {
+        try { return JSON.parse(localStorage.getItem('search_history') || '[]'); } catch { return []; }
+    },
+
+    saveSearchHistory(keyword) {
+        let history = this.getSearchHistory().filter(h => h !== keyword);
+        history.unshift(keyword);
+        if (history.length > 15) history = history.slice(0, 15);
+        localStorage.setItem('search_history', JSON.stringify(history));
+    },
+
+    renderSearchHistory() {
+        const history = this.getSearchHistory();
+        const container = document.getElementById('search-history');
+        if (!container) return;
+        if (history.length === 0) {
+            container.style.display = 'none';
+            return;
+        }
+        container.style.display = 'block';
+        container.innerHTML = `
+            <div class="search-history-title">
+                <span>搜索历史</span>
+                <span class="clear-history" onclick="app.clearSearchHistory()">清除</span>
+            </div>
+            <div class="search-tags">
+                ${history.map(kw => `<span class="search-tag" onclick="app.doSearch('${kw.replace(/'/g, "\\'")}')">${kw}</span>`).join('')}
+            </div>
+        `;
+    },
+
+    clearSearchHistory() {
+        localStorage.removeItem('search_history');
+        this.renderSearchHistory();
+    },
+
     goBack() {
-        if (state.previousPage) {
-            this.navigateTo(state.previousPage);
-        } else {
-            this.navigateTo('home');
+        const prevPage = state.goBack();
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        const pageEl = document.getElementById(`${prevPage}-page`);
+        if (pageEl) {
+            pageEl.classList.add('active');
         }
     }
 };
 
-// 初始化应用
 document.addEventListener('DOMContentLoaded', () => {
     app.init();
 });

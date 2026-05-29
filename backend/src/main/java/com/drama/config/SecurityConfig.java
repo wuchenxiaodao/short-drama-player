@@ -1,5 +1,6 @@
 package com.drama.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -21,6 +22,9 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
+
+    @Value("${cors.allowed-origins:http://localhost:3000,http://localhost:8080}")
+    private String allowedOrigins;
 
     public SecurityConfig(JwtFilter jwtFilter) {
         this.jwtFilter = jwtFilter;
@@ -45,9 +49,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/interaction/*/stats").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/comment/**").permitAll()
                 .requestMatchers("/api/rating/stats").permitAll()
-                .requestMatchers("/api/online/episode/**").permitAll()
+                .requestMatchers("/api/online/episode/*/count").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/h2-console/**").permitAll()
-                .requestMatchers("/", "/preview.html", "/css/**", "/js/**", "/assets/**").permitAll()
+                .requestMatchers("/", "/preview.html", "/index.html", "/css/**", "/js/**", "/assets/**").permitAll()
                 .requestMatchers("/videos/**").permitAll()
                 .requestMatchers("/video").permitAll()
                 .anyRequest().authenticated()
@@ -60,7 +64,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:8080"));
+        config.setAllowedOrigins(List.of(allowedOrigins.split(",")));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

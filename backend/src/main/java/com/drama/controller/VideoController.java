@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,6 +21,10 @@ public class VideoController {
     @GetMapping(value = "/video", produces = "video/mp4")
     public ResponseEntity<Resource> serveVideo(@RequestParam String path) {
         try {
+            if (path.contains("..") || path.contains("\\")) {
+                return ResponseEntity.badRequest().build();
+            }
+
             String userDir = System.getProperty("user.dir");
             String[][] bases = {
                 { userDir, "..", "videos" },
@@ -29,8 +34,12 @@ public class VideoController {
             };
 
             for (String[] parts : bases) {
-                File dir = Paths.get(parts[0], java.util.Arrays.copyOfRange(parts, 1, parts.length)).toFile();
-                File file = new File(dir, path);
+                Path dirPath = Paths.get(parts[0], java.util.Arrays.copyOfRange(parts, 1, parts.length));
+                Path filePath = dirPath.resolve(path).normalize();
+                if (!filePath.startsWith(dirPath.normalize())) {
+                    continue;
+                }
+                File file = filePath.toFile();
                 if (file.exists() && file.isFile()) {
                     return ResponseEntity.ok()
                         .contentType(MediaType.parseMediaType("video/mp4"))

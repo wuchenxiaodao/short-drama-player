@@ -18,6 +18,7 @@
                 <div class="top-bar-right">
                     <div id="theme-toggle" class="theme-toggle" onclick="themeManager.toggle()">☀️</div>
                     <div class="search-icon" onclick="app.showSearch()">🔍</div>
+                    <div id="auth-btn" class="auth-btn" onclick="app.showLoginPage()">登录</div>
                 </div>
             </div>
             <div class="banner-container">
@@ -66,6 +67,7 @@
                     <button class="search-btn" onclick="app.doSearch(document.getElementById('search-input').value)">搜索</button>
                 </div>
             </div>
+            <div id="search-history" class="search-history" style="display:none"></div>
             <div id="search-results" class="search-results"></div>
         </div>
 
@@ -78,6 +80,33 @@
             <div class="player-controls">
                 <button class="back-btn" onclick="app.goBack()">←</button>
                 <span id="player-title"></span>
+            </div>
+        </div>
+
+        <!-- 登录页 -->
+        <div id="login-page" class="page">
+            <div class="login-container">
+                <h2>登录</h2>
+                <div class="login-form">
+                    <input id="login-username" type="text" placeholder="用户名">
+                    <input id="login-password" type="password" placeholder="密码">
+                    <button class="login-btn" onclick="app.handleLogin()">登录</button>
+                    <p class="login-switch">没有账号？<a onclick="document.getElementById('login-page').classList.remove('active');document.getElementById('register-page').classList.add('active')">去注册</a></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 注册页 -->
+        <div id="register-page" class="page">
+            <div class="login-container">
+                <h2>注册</h2>
+                <div class="login-form">
+                    <input id="reg-username" type="text" placeholder="用户名">
+                    <input id="reg-password" type="password" placeholder="密码">
+                    <input id="reg-nickname" type="text" placeholder="昵称（可选）">
+                    <button class="login-btn" onclick="app.handleRegister()">注册</button>
+                    <p class="login-switch">已有账号？<a onclick="document.getElementById('register-page').classList.remove('active');document.getElementById('login-page').classList.add('active')">去登录</a></p>
+                </div>
             </div>
         </div>
     </div>

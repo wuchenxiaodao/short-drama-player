@@ -42,7 +42,8 @@ public class DramaService {
     }
 
     public Page<DramaSummary> search(String keyword, int page, int size) {
-        return mapToSummaryPage(dramaRepository.search(keyword,
+        String escaped = keyword.replace("%", "\\%").replace("_", "\\_");
+        return mapToSummaryPage(dramaRepository.search(escaped,
                 PageRequest.of(page, size, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "viewCount"))));
     }
 
