@@ -1,17 +1,24 @@
 const interaction = {
     currentPoint: null,
 
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    },
+
     show(point) {
         this.currentPoint = point;
         const overlay = document.getElementById('interaction-overlay');
         overlay.classList.remove('hidden');
         overlay.innerHTML = this.createInteractionHTML(point);
+        this.bindOptionEvents();
     },
 
     createInteractionHTML(point) {
         let html = `
             <div class="interaction-popup">
-                <div class="interaction-question">${point.questionText || point.question}</div>
+                <div class="interaction-question">${this.escapeHtml(point.questionText || point.question)}</div>
                 <div class="interaction-options">
         `;
 
@@ -20,8 +27,8 @@ const interaction = {
             const optId = option.id || option;
             const optText = option.text || option;
             html += `
-                <button class="interaction-option" data-id="${optId}" onclick="interaction.selectOption(${optId}, '${optText.replace(/'/g, "\\'")}')">
-                    ${optText}
+                <button class="interaction-option" data-id="${optId}">
+                    ${this.escapeHtml(optText)}
                 </button>
             `;
         });
@@ -35,30 +42,77 @@ const interaction = {
         return html;
     },
 
-    async selectOption(optionId, optionText) {
+    bindOptionEvents() {
+        document.querySelectorAll('.interaction-option').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const optionId = parseInt(btn.dataset.id);
+                this.selectOption(optionId);
+            });
+        });
+    },
+
+    async selectOption(optionId) {
         try {
             const result = await api.submitAnswer(this.currentPoint.id, optionId);
-            this.showResult(result, optionText);
+            this.showResult(result, optionId);
         } catch (error) {
             errorHandler.handle(error, 'selectOption');
         }
     },
 
-    showResult(result, selectedOption) {
+    showResult(result, selectedOptionId) {
         const options = document.querySelectorAll('.interaction-option');
-        options.forEach(btn => {
-            btn.disabled = true;
-        });
+        options.forEach(btn => btn.disabled = true);
 
-        const resultDiv = document.getElementById('interaction-result');
-        resultDiv.innerHTML = `
-            <div class="interaction-points">
-                ${result.correct !== false ? '回答正确' : '答错了'}
-            </div>
-            <button class="continue-btn" onclick="interaction.close()">
-                继续观看
-            </button>
-        `;
+        const type = this.currentPoint.type;
+        let resultHtml = '';
+
+        if (type === 'QUIZ') {
+            const correctOpt = this.currentPoint.options.find(o => o.isCorrect);
+            const isCorrect = correctOpt && selectedOptionId === correctOpt.id;
+            if (isCorrect) {
+                options.forEach(btn => {
+                    if (parseInt(btn.dataset.id) === selectedOptionId) btn.classList.add('correct');
+                });
+                resultHtml = '✅ 回答正确 +10分';
+                this.triggerEmojiRain(['🎉', '⭐', '🏆', '💯']);
+            } else {
+                options.forEach(btn => {
+                    const id = parseInt(btn.dataset.id);
+                    if (id === selectedOptionId) btn.classList.add('wrong');
+                    if (correctOpt && id === correctOpt.id) btn.classList.add('correct');
+                });
+                resultHtml = '❌ 答错了';
+            }
+        } else if (type === 'VOTE' || type === 'CHOICE') {
+            resultHtml = this.buildStatsHtml(result);
+        } else if (type === 'EGG') {
+            resultHtml = '🥚 彩蛋已收集 +5分';
+            this.triggerEmojiRain(['🥚', '🎁', '✨']);
+        } else {
+            resultHtml = '已提交';
+        }
+
+        resultHtml += '<button class="continue-btn" onclick="interaction.close()">继续观看</button>';
+        document.getElementById('interaction-result').innerHTML = resultHtml;
+    },
+
+    buildStatsHtml(result) {
+        if (!result || !result.optionStats) return '<div class="stats-title">投票结果</div>';
+        const options = this.currentPoint.options || [];
+        let html = '<div class="stats-title">投票结果</div>';
+        options.forEach(opt => {
+            const stat = result.optionStats[opt.id];
+            const pct = stat ? stat.percentage : 0;
+            html += `
+                <div class="stats-bar">
+                    <span class="stats-label">${this.escapeHtml(opt.text)}</span>
+                    <div class="stats-bar-bg"><div class="stats-bar-fill" style="width:${pct}%"></div></div>
+                    <span class="stats-pct">${pct}%</span>
+                </div>
+            `;
+        });
+        return html;
     },
 
     triggerEmojiRain(emojis) {

@@ -93,6 +93,7 @@ public class EpisodeService {
             PlayInfo.InteractionInfo.OptionInfo opt = new PlayInfo.InteractionInfo.OptionInfo();
             opt.setId(o.getId());
             opt.setText(o.getOptionText());
+            opt.setIsCorrect(o.getIsCorrect());
             return opt;
         }).collect(Collectors.toList()));
         return info;

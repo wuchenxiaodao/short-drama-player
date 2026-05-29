@@ -23,6 +23,7 @@ public class PlayInfo {
         public static class OptionInfo {
             private Long id;
             private String text;
+            private Boolean isCorrect;
         }
     }
 }
