@@ -24,7 +24,7 @@ public class EpisodeService {
 
     public PlayInfo getPlayInfo(Long episodeId, Long userId) {
         Episode episode = episodeRepository.findById(episodeId)
-                .orElseThrow(() -> new RuntimeException("Episode not found: " + episodeId));
+                .orElseThrow(() -> new com.drama.common.BusinessException(404, "剧集不存在"));
 
         PlayInfo playInfo = buildPlayInfo(episode);
         playInfo.setLastPositionMs(getLastPosition(userId, episodeId));

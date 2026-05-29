@@ -5,6 +5,7 @@ import com.drama.common.AuthUtils;
 import com.drama.dto.AnswerRequest;
 import com.drama.dto.InteractionStats;
 import com.drama.service.InteractionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,7 +17,7 @@ public class InteractionController {
     private final InteractionService interactionService;
 
     @PostMapping("/answer")
-    public ApiResponse<Object> answer(@RequestBody AnswerRequest request) {
+    public ApiResponse<Object> answer(@Valid @RequestBody AnswerRequest request) {
         Long userId = AuthUtils.requireUserId();
         boolean success = interactionService.submitAnswer(request, userId);
         if (success) {

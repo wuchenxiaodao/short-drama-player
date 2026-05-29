@@ -54,12 +54,12 @@ public class InteractionService {
 
     private InteractionPoint getInteractionPoint(Long interactionId) {
         return interactionPointRepository.findById(interactionId)
-                .orElseThrow(() -> new RuntimeException("Interaction not found"));
+                .orElseThrow(() -> new com.drama.common.BusinessException(404, "互动不存在"));
     }
 
     private User getUser(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new com.drama.common.BusinessException(404, "用户不存在"));
     }
 
     private void saveAnswer(AnswerRequest request, InteractionPoint point, Long userId) {

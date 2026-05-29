@@ -62,7 +62,7 @@ public class CommentService {
     @Transactional
     public CommentResponse postComment(CommentRequest request, Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new com.drama.common.BusinessException(404, "用户不存在"));
 
         Comment comment = new Comment();
         comment.setUserId(userId);

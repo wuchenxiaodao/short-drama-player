@@ -51,7 +51,7 @@ public class DramaService {
 
     public DramaDetail getDetail(Long dramaId, Long userId) {
         Drama drama = dramaRepository.findById(dramaId)
-                .orElseThrow(() -> new RuntimeException("Drama not found: " + dramaId));
+                .orElseThrow(() -> new com.drama.common.BusinessException(404, "短剧不存在"));
 
         incrementViewCount(dramaId);
 

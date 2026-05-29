@@ -39,6 +39,7 @@ class MainActivity : AppCompatActivity() {
 
         webView.webChromeClient = object : WebChromeClient() {
             override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
+                android.util.Log.d("WebViewJS", "${consoleMessage?.messageLevel()}: ${consoleMessage?.message()} [${consoleMessage?.sourceId()}:${consoleMessage?.lineNumber()}]")
                 return true
             }
         }
@@ -56,7 +57,13 @@ class MainActivity : AppCompatActivity() {
             or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
         )
 
-        webView.loadUrl("file:///android_asset/preview.html")
+        val autoLogin = intent?.getStringExtra("autologin")
+        val dramaId = intent?.getStringExtra("drama")
+        val params = mutableListOf<String>()
+        if (!autoLogin.isNullOrEmpty()) params.add("autologin=$autoLogin")
+        if (!dramaId.isNullOrEmpty()) params.add("drama=$dramaId")
+        val query = if (params.isNotEmpty()) "?" + params.joinToString("&") else ""
+        webView.loadUrl("file:///android_asset/preview.html$query")
     }
 
     override fun onBackPressed() {

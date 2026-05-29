@@ -75,9 +75,8 @@ const app = {
 
         try {
             const response = await api.getRecommendDramas();
-            if (response.code === 200) {
-                this.renderDramaList(container, response.data.content);
-            }
+            const dramas = (response.data || response).content;
+            if (dramas) this.renderDramaList(container, dramas);
         } catch (error) {
             utils.showError(container, '加载失败');
             errorHandler.handle(error, 'loadRecommendDramas');
@@ -90,9 +89,8 @@ const app = {
 
         try {
             const response = await api.getHotDramas();
-            if (response.code === 200) {
-                this.renderDramaList(container, response.data.content);
-            }
+            const dramas = (response.data || response).content;
+            if (dramas) this.renderDramaList(container, dramas);
         } catch (error) {
             utils.showError(container, '加载失败');
             errorHandler.handle(error, 'loadHotDramas');
@@ -114,11 +112,10 @@ const app = {
     async showDramaDetail(dramaId) {
         try {
             const response = await api.getDramaDetail(dramaId);
-            if (response.code === 200) {
-                state.currentDrama = response.data;
-                this.renderDramaDetail(response.data);
-                this.navigateTo('detail');
-            }
+            const drama = response.data || response;
+            state.currentDrama = drama;
+            this.renderDramaDetail(drama);
+            this.navigateTo('detail');
         } catch (error) {
             errorHandler.handle(error, 'showDramaDetail');
         }
@@ -143,20 +140,61 @@ const app = {
     async playEpisode(episodeId) {
         try {
             const response = await api.getEpisodePlayInfo(episodeId);
-            if (response.code === 200) {
-                state.currentEpisode = response.data;
-                player.loadEpisode(response.data);
-                this.navigateTo('player');
-                player.play();
-            }
+            const episode = response.data || response;
+            state.currentEpisode = episode;
+            player.loadEpisode(episode);
+            this.navigateTo('player');
+            player.play();
         } catch (error) {
             errorHandler.handle(error, 'playEpisode');
         }
     },
 
     showSearch() {
-        // 搜索功能
-        console.log('显示搜索');
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('search-page').classList.add('active');
+        document.getElementById('search-input').focus();
+        const container = document.getElementById('search-results');
+        container.className = 'search-results';
+        container.innerHTML = '<div class="search-empty">输入关键词搜索短剧</div>';
+    },
+
+    closeSearch() {
+        document.getElementById('search-input').value = '';
+        this.navigateTo('home');
+    },
+
+    _searchTimer: null,
+
+    onSearchInput(value) {
+        clearTimeout(this._searchTimer);
+        const keyword = value.trim();
+        const container = document.getElementById('search-results');
+        if (!keyword) {
+            container.className = 'search-results';
+            container.innerHTML = '<div class="search-empty">输入关键词搜索短剧</div>';
+            return;
+        }
+        this._searchTimer = setTimeout(() => this.doSearch(keyword), 300);
+    },
+
+    async doSearch(keyword) {
+        const container = document.getElementById('search-results');
+        container.className = 'search-results';
+        utils.showLoading(container);
+        try {
+            const response = await api.searchDramas(keyword);
+            const dramas = (response.data || response).content;
+            if (!dramas || dramas.length === 0) {
+                container.innerHTML = '<div class="search-empty">未找到相关短剧</div>';
+            } else {
+                container.className = 'search-results drama-grid';
+                this.renderDramaList(container, dramas);
+            }
+        } catch (error) {
+            utils.showError(container, '搜索失败');
+            errorHandler.handle(error, 'doSearch');
+        }
     },
 
     goBack() {

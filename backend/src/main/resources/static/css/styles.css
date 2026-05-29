@@ -1,0 +1,345 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root,
+[data-theme="dark"] {
+    --deep-black: #0A0A0A;
+    --electric-purple: #8B5CF6;
+    --purple-dark: #6D28D9;
+    --purple-light: #A78BFA;
+    --neon-pink: #FF2E6E;
+    --cyan: #00F0FF;
+    --dark-gray: #1A1A2E;
+    --medium-gray: #2A2A3E;
+    --light-gray: #9CA3AF;
+    --card-bg: #16162A;
+    --star-yellow: #FFC107;
+    --highlight-gold: #FFD700;
+    --text-primary: #FFFFFF;
+    --text-secondary: #9CA3AF;
+    --bg-primary: #0A0A0A;
+    --bg-secondary: #1A1A2E;
+}
+
+[data-theme="light"] {
+    --deep-black: #F5F5F5;
+    --electric-purple: #7C3AED;
+    --purple-dark: #6D28D9;
+    --purple-light: #A78BFA;
+    --neon-pink: #EC4899;
+    --cyan: #06B6D4;
+    --dark-gray: #E5E7EB;
+    --medium-gray: #D1D5DB;
+    --light-gray: #6B7280;
+    --card-bg: #FFFFFF;
+    --star-yellow: #F59E0B;
+    --highlight-gold: #D97706;
+    --text-primary: #111827;
+    --text-secondary: #6B7280;
+    --bg-primary: #F5F5F5;
+    --bg-secondary: #E5E7EB;
+}
+
+body {
+    font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    overflow-x: hidden;
+    max-width: 430px;
+    margin: 0 auto;
+    min-height: 100vh;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.page {
+    display: none;
+    padding-bottom: 70px;
+}
+
+.page.active {
+    display: block;
+}
+
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 50px 16px 12px;
+}
+
+.top-bar h1 {
+    font-size: 22px;
+    color: var(--cyan);
+    font-weight: 700;
+}
+
+.search-icon {
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.theme-toggle {
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px;
+    transition: transform 0.2s;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1);
+}
+
+.banner-container {
+    padding: 0 16px;
+    margin-bottom: 20px;
+}
+
+.banner-carousel {
+    height: 180px;
+    background: linear-gradient(135deg, var(--purple-dark), var(--neon-pink));
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.section {
+    padding: 0 16px;
+    margin-bottom: 24px;
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--cyan);
+}
+
+.drama-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.drama-card {
+    background: var(--card-bg);
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.drama-card:hover {
+    transform: translateY(-2px);
+}
+
+.drama-card-cover {
+    width: 100%;
+    height: 120px;
+    background: linear-gradient(135deg, var(--medium-gray), var(--dark-gray));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+}
+
+.drama-card-info {
+    padding: 8px;
+}
+
+.drama-card-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.drama-card-episodes {
+    font-size: 12px;
+    color: var(--light-gray);
+}
+
+.detail-header {
+    display: flex;
+    align-items: center;
+    padding: 50px 16px 12px;
+    background: var(--dark-gray);
+}
+
+.detail-header h2 {
+    font-size: 18px;
+    margin-left: 12px;
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    color: var(--cyan);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 4px 8px;
+}
+
+.detail-content {
+    padding: 16px;
+}
+
+.detail-cover {
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(135deg, var(--purple-dark), var(--neon-pink));
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+.detail-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.detail-info {
+    margin-bottom: 20px;
+}
+
+.detail-info p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--light-gray);
+    margin-bottom: 8px;
+}
+
+.detail-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--light-gray);
+}
+
+.episode-list h3 {
+    font-size: 16px;
+    margin-bottom: 12px;
+}
+
+.episode-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.episode-btn {
+    background: var(--card-bg);
+    border: 1px solid var(--medium-gray);
+    color: #fff;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.episode-btn:hover {
+    background: var(--electric-purple);
+    border-color: var(--electric-purple);
+}
+
+.episode-btn.active {
+    background: var(--electric-purple);
+    border-color: var(--electric-purple);
+}
+
+@media (min-width: 768px) {
+    body {
+        max-width: 768px;
+    }
+
+    .drama-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .episode-grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
+
+    .banner-carousel {
+        height: 240px;
+    }
+}
+
+@media (min-width: 1024px) {
+    body {
+        max-width: 1024px;
+    }
+
+    .drama-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .episode-grid {
+        grid-template-columns: repeat(6, 1fr);
+    }
+
+    .banner-carousel {
+        height: 300px;
+    }
+
+    .drama-card-cover {
+        height: 160px;
+    }
+}
+
+@media (hover: none) {
+    .drama-card:active {
+        transform: scale(0.98);
+    }
+
+    .interaction-option:active {
+        transform: scale(0.97);
+    }
+
+    .episode-btn:active {
+        transform: scale(0.95);
+    }
+
+    .back-btn,
+    .search-icon {
+        min-height: 44px;
+        min-width: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+.player-container {
+    position: relative;
+    width: 100%;
+    background: #000;
+}
+
+#video-player {
+    width: 100%;
+    height: auto;
+}
+
+.player-controls {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--dark-gray);
+}
+
+#player-title {
+    margin-left: 12px;
+    font-size: 16px;
+}

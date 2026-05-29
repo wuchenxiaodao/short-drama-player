@@ -402,9 +402,11 @@ input,button{-webkit-appearance:none;appearance:none}
 
 <script>
 // ========== 离线数据层 ==========
+const ANDROID_API = 'http://10.0.2.2:8080';
+const BROWSER_API = 'http://localhost:8080';
 const SAMPLE_VIDEO = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
 const DB_KEY = 'drama_db';
-const API = '';
+let API = ANDROID_API;
 
 // 内嵌数据
 const EMBEDDED = [
@@ -564,15 +566,22 @@ function seedInteractionVotes(db) {
   });
 }
 function getVideoUrl(dramaId,epNum) {
-  return SAMPLE_VIDEO;
+  const dramaMap = {1:'北派寻宝笔记',2:'天下第一纨绔',3:'十八岁太奶奶驾到，重整家族荣耀第三部',4:'幸得相遇离婚时',5:'荒年全村啃树皮，我有系统满仓肉',6:'家里家外'};
+  const name = dramaMap[dramaId];
+  if (!name) return SAMPLE_VIDEO;
+  return '/videos/' + encodeURIComponent(name) + '/第' + epNum + '集.mp4';
 }
 
 // 统一API层：先尝试后端，失败则用本地数据
-const API_BASE = 'http://localhost:8080';
 let backendOK = false;
 async function api(url, opts) {
   if(backendOK) {
-    try { const r=await fetch(API_BASE+url,opts); return r.json(); } catch(e) { backendOK=false; }
+    try {
+      const r=await fetch(API+url,opts);
+      const json=await r.json();
+      if (json.code !== undefined) return json.data !== null && json.data !== undefined ? json.data : {success: json.code === 200, message: json.message};
+      return json;
+    } catch(e) { backendOK=false; }
   }
   // 本地路由
   return localAPI(url,opts);
@@ -625,16 +634,33 @@ function localAPI(url,opts) {
   // Eggs
   if(url.match(/\/api\/user\/(\d+)\/eggs$/)) return getDBEggs(+url.match(/\/api\/user\/(\d+)/)[1]);
   if(url.match(/\/api\/user\/(\d+)\/eggs\/count/)) return {count:getDBEggs(+url.match(/\/api\/user\/(\d+)/)[1]).length};
-  // Online (local simulation)
-  if(url==='/api/online/heartbeat') return {success:true};
-  if(url.match(/\/api\/online\/episode\/(\d+)\/count/)) return {onlineCount:Math.floor(Math.random()*50)+10};
+  // Online (localStorage heartbeat tracking)
+  if(url==='/api/online/heartbeat') {
+    const db=getDB(); if(!db.onlineHeartbeats)db.onlineHeartbeats={};
+    const epKey='ep_'+body.episodeId;
+    if(!db.onlineHeartbeats[epKey])db.onlineHeartbeats[epKey]={};
+    db.onlineHeartbeats[epKey][body.userId]=Date.now();
+    const now=Date.now();
+    for(const k in db.onlineHeartbeats[epKey]) { if(now-db.onlineHeartbeats[epKey][k]>30000) delete db.onlineHeartbeats[epKey][k]; }
+    saveDB(db); return {success:true};
+  }
+  if(url.match(/\/api\/online\/episode\/(\d+)\/count/)) {
+    const epId=url.match(/\/api\/online\/episode\/(\d+)\/count/)[1];
+    const db=getDB(); const epKey='ep_'+epId;
+    const hb=db.onlineHeartbeats&&db.onlineHeartbeats[epKey]||{};
+    const now=Date.now(); let count=0;
+    for(const k in hb) { if(now-hb[k]<=30000) count++; }
+    return {onlineCount:count};
+  }
   // Progress
   if(url==='/api/progress/report') { setDBProgress(body.userId,body.episodeId,body.positionMs); return {success:true}; }
   return {};
 }
 
-// 启动时探测后端
-fetch(API_BASE+'/api/drama/recommend?page=0&size=1',{signal:AbortSignal.timeout(2000)}).then(r=>{if(r.ok)backendOK=true;}).catch(()=>{});
+// 启动时探测后端（先尝试Android模拟器地址，再尝试localhost）
+fetch(ANDROID_API+'/api/drama/recommend?page=0&size=1',{signal:AbortSignal.timeout(2000)}).then(r=>{if(r.ok){backendOK=true;API=ANDROID_API;}}).catch(()=>{
+  fetch(BROWSER_API+'/api/drama/recommend?page=0&size=1',{signal:AbortSignal.timeout(2000)}).then(r=>{if(r.ok){backendOK=true;API=BROWSER_API;}}).catch(()=>{});
+});
 
 let currentUser = null;
 let dramas = [];
@@ -700,23 +726,23 @@ async function doAuth() {
     if (isRegister) {
       const nickname = document.getElementById('authNickname').value.trim() || username;
       const r = await api('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password, nickname }) });
-      if (r.success) {
+      if (r.userId) {
         currentUser = { userId: r.userId, nickname: r.nickname, username };
         saveUser();
         showToast('注册成功！');
         navTo('homePage');
       } else {
-        showToast(r.message);
+        showToast(r.message || '注册失败');
       }
     } else {
       const r = await api('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
-      if (r.success) {
-        currentUser = { userId: r.userId, nickname: r.nickname, username: r.username };
+      if (r.userId) {
+        currentUser = { userId: r.userId, nickname: r.nickname, username: r.username || username };
         saveUser();
         showToast('登录成功！');
         navTo('homePage');
       } else {
-        showToast(r.message);
+        showToast(r.message || '登录失败');
       }
     }
   } catch (e) {
@@ -953,7 +979,9 @@ function downloadDrama() {
   progressDiv.innerHTML = `<div class="download-bar"><div class="dl-progress"><div class="dl-fill" id="dlFill" style="width:0%"></div></div><span class="dl-text" id="dlText">准备中...</span></div>`;
 
   api(`/api/episode/${ep.id}/playinfo`).then(playInfo => {
-    const videoUrl = API + playInfo.videoUrl;
+    let dlPath = playInfo.videoUrl;
+    if (dlPath.startsWith('/videos/')) dlPath = dlPath.substring('/videos/'.length);
+    const videoUrl = API + '/video?path=' + encodeURIComponent(dlPath);
     const xhr = new XMLHttpRequest();
     xhr.open('GET', videoUrl, true);
     xhr.responseType = 'blob';
@@ -1042,7 +1070,9 @@ async function playEpisode(episodeId) {
     const video = document.getElementById('videoPlayer');
 
     // Check cache first, then fallback to network
-    let videoSrc = API + playInfo.videoUrl;
+    let videoPath = playInfo.videoUrl;
+    if (videoPath.startsWith('/videos/')) videoPath = videoPath.substring('/videos/'.length);
+    let videoSrc = API + '/video?path=' + encodeURIComponent(videoPath);
     try {
       const cached = await getCachedVideo(episodeId);
       if (cached && cached.blob) {
@@ -1151,7 +1181,6 @@ function checkHighlightBubbles(currentTime, highlights) {
       bubble.className = 'bubble';
       bubble.id = 'bubble-' + h.time;
       bubble.innerHTML = `<span class="heart" onclick="event.stopPropagation();likeHighlight(${h.time})">&#128151;</span> ${h.text} <span class="like-count" id="like-${h.time}">${highlightLikes[h.time] || 0}</span>`;
-      bubble.onclick = (e) => e.stopPropagation();
       cloud.appendChild(bubble);
       setTimeout(() => { if (bubble.parentNode) bubble.remove(); }, 6000);
     }
@@ -1333,11 +1362,29 @@ if (currentUser) {
   showAuthPage();
 }
 
-// Check URL for shared drama link
 const params = new URLSearchParams(location.search);
-if (params.get('drama')) {
-  if (currentUser) { showDetail(+params.get('drama')); }
+const dramaId = params.get('drama');
+
+const autoLogin = params.get('autologin');
+if (autoLogin && !currentUser) {
+  const [u, p] = autoLogin.split(':');
+  (async () => {
+    try {
+      const r = await fetch(API + '/api/auth/login', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({username:u,password:p}) });
+      const data = await r.json();
+      if (data.code === 200) {
+        const d = data.data;
+        currentUser = { userId: d.userId, nickname: d.nickname, username: d.username || u };
+        saveUser();
+        navTo('homePage');
+        if (dramaId) setTimeout(() => showDetail(+dramaId), 500);
+      }
+    } catch(e) {}
+  })();
+} else if (dramaId && currentUser) {
+  showDetail(+dramaId);
 }
+
 </script>
 </body>
 </html>

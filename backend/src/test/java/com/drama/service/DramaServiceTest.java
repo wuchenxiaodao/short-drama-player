@@ -135,7 +135,7 @@ class DramaServiceTest {
     void getDetail_WhenDramaNotExists_ShouldThrowException() {
         when(dramaRepository.findById(999L)).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () -> {
+        assertThrows(com.drama.common.BusinessException.class, () -> {
             dramaService.getDetail(999L, null);
         });
         verify(dramaRepository).findById(999L);

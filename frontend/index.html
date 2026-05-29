@@ -57,6 +57,18 @@
             </div>
         </div>
 
+        <!-- 搜索页 -->
+        <div id="search-page" class="page">
+            <div class="search-header">
+                <button class="back-btn" onclick="app.closeSearch()">←</button>
+                <div class="search-input-wrap">
+                    <input id="search-input" type="text" placeholder="搜索短剧..." oninput="app.onSearchInput(this.value)" onkeydown="if(event.key==='Enter')app.doSearch(this.value)">
+                    <button class="search-btn" onclick="app.doSearch(document.getElementById('search-input').value)">搜索</button>
+                </div>
+            </div>
+            <div id="search-results" class="search-results"></div>
+        </div>
+
         <!-- 播放页 -->
         <div id="player-page" class="page">
             <div class="player-container">

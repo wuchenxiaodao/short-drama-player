@@ -93,7 +93,7 @@ class InteractionServiceTest {
         when(interactionPointRepository.findById(1L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () -> {
+        assertThrows(com.drama.common.BusinessException.class, () -> {
             interactionService.submitAnswer(testRequest, 1L);
         });
     }
@@ -106,7 +106,7 @@ class InteractionServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () -> {
+        assertThrows(com.drama.common.BusinessException.class, () -> {
             interactionService.submitAnswer(testRequest, 1L);
         });
     }

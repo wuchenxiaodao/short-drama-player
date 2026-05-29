@@ -8,7 +8,6 @@ import com.drama.model.InteractionPoint;
 import com.drama.repository.EpisodeRepository;
 import com.drama.repository.InteractionPointRepository;
 import com.drama.repository.WatchProgressRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,9 +34,6 @@ class EpisodeServiceTest {
 
     @Mock
     private WatchProgressRepository watchProgressRepository;
-
-    @Mock
-    private ObjectMapper objectMapper;
 
     @InjectMocks
     private EpisodeService episodeService;
@@ -77,7 +73,7 @@ class EpisodeServiceTest {
         when(episodeRepository.findById(999L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () -> {
+        assertThrows(com.drama.common.BusinessException.class, () -> {
             episodeService.getPlayInfo(999L, null);
         });
         verify(episodeRepository).findById(999L);
