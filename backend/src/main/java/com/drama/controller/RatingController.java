@@ -2,9 +2,13 @@ package com.drama.controller;
 
 import com.drama.common.ApiResponse;
 import com.drama.common.AuthUtils;
+import com.drama.dto.RatingRequest;
 import com.drama.model.Rating;
 import com.drama.repository.DramaRepository;
 import com.drama.repository.RatingRepository;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,14 +23,10 @@ public class RatingController {
     private final DramaRepository dramaRepository;
 
     @PostMapping("/submit")
-    public ApiResponse<Map<String, Object>> submit(@RequestBody Map<String, Object> body) {
+    public ApiResponse<Map<String, Object>> submit(@Valid @RequestBody RatingRequest request) {
         Long userId = AuthUtils.requireUserId();
-        Long dramaId = ((Number) body.get("dramaId")).longValue();
-        Integer score = ((Number) body.get("score")).intValue();
-
-        if (score < 1 || score > 10) {
-            return ApiResponse.error(400, "评分范围1-10");
-        }
+        Long dramaId = request.getDramaId();
+        Integer score = request.getScore();
 
         Rating rating = ratingRepository.findByUserIdAndDramaId(userId, dramaId).orElse(new Rating());
         rating.setUserId(userId);
@@ -36,10 +36,7 @@ public class RatingController {
 
         Double avg = ratingRepository.getAverageScore(dramaId);
         Long count = ratingRepository.getRatingCount(dramaId);
-        dramaRepository.findById(dramaId).ifPresent(d -> {
-            d.setRating(Math.round(avg * 10.0) / 10.0);
-            dramaRepository.save(d);
-        });
+        dramaRepository.updateRating(dramaId, Math.round(avg * 10.0) / 10.0);
 
         return ApiResponse.success("评分成功", Map.of("averageRating", avg, "ratingCount", count));
     }
@@ -53,7 +50,7 @@ public class RatingController {
     }
 
     @GetMapping("/stats")
-    public ApiResponse<Map<String, Object>> getStats(@RequestParam Long dramaId) {
+    public ApiResponse<Map<String, Object>> getStats(@RequestParam @Min(1) Long dramaId) {
         Double avg = ratingRepository.getAverageScore(dramaId);
         Long count = ratingRepository.getRatingCount(dramaId);
         return ApiResponse.success(Map.of(

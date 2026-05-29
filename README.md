@@ -10,25 +10,6 @@
 | 前端 | 纯 HTML5 + CSS3 + JavaScript（preview.html） |
 | 部署 | Docker Compose / Kubernetes (ACK/TKE) |
 
-## 项目结构
-
-```
-short-drama-player/
-├── backend/          # Spring Boot 后端 API
-│   ├── src/main/java/com/drama/
-│   │   ├── config/       # 配置类（Redis、跨域、安全、数据初始化）
-│   │   ├── controller/   # REST 控制器
-│   │   ├── dto/          # 数据传输对象
-│   │   ├── model/        # JPA 实体
-│   │   ├── repository/   # 数据访问层
-│   │   └── service/      # 业务逻辑层
-│   └── pom.xml
-├── k8s/              # Kubernetes 部署配置
-├── sql/              # 数据库初始化脚本
-├── preview.html      # 网页版完整 UI
-└── docker-compose.yml
-```
-
 ## 快速开始
 
 ### 网页预览（无需安装）
@@ -39,7 +20,6 @@ short-drama-player/
 
 ```bash
 cd backend
-# 需要 Java 17
 ./mvnw clean package -DskipTests
 java -jar target/short-drama-player-1.0.0.jar --spring.profiles.active=h2
 ```
@@ -55,20 +35,68 @@ docker-compose up -d
 
 ## API 接口
 
+### 认证（公开）
+
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| POST | `/api/auth/register` | 用户注册 |
-| POST | `/api/auth/login` | 用户登录 |
-| GET | `/api/drama/recommend?page=0&size=10` | 推荐短剧列表 |
-| GET | `/api/drama/hot?page=0&size=10` | 热播短剧列表 |
+| POST | `/api/auth/register` | 用户注册（返回 JWT token） |
+| POST | `/api/auth/login` | 用户登录（返回 JWT token） |
+| GET | `/api/auth/me` | 获取当前用户信息（需登录） |
+
+### 短剧（公开）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/drama/recommend?page=0&size=10` | 推荐短剧（按评分排序） |
+| GET | `/api/drama/hot?page=0&size=10` | 热播短剧（按播放量排序） |
+| GET | `/api/drama/new?page=0&size=10` | 最新短剧 |
 | GET | `/api/drama/search?keyword=...` | 搜索短剧（支持剧集标题） |
 | GET | `/api/drama/{id}/detail` | 短剧详情 |
+
+### 播放（公开）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
 | GET | `/api/episode/{id}/playinfo` | 播放信息 + 互动点列表 |
+
+### 互动（部分需登录）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/interaction/{id}/stats` | 互动统计数据（公开） |
 | POST | `/api/interaction/answer` | 提交互动答案（需登录） |
-| GET | `/api/interaction/{id}/stats` | 互动统计数据 |
-| POST | `/api/progress/report` | 上报播放进度（需登录） |
+
+### 进度（需登录）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/api/progress/report` | 上报播放进度 |
+
+### 评分（部分需登录）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/rating/stats?dramaId=...` | 评分统计（公开） |
+| GET | `/api/rating/user?dramaId=...` | 用户评分（需登录） |
 | POST | `/api/rating/submit` | 提交评分（需登录） |
+
+### 评论（部分需登录）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/comment/{interactionId}` | 评论列表（公开） |
+| GET | `/api/comment/{interactionId}/count` | 评论数量（公开） |
+| GET | `/api/comment/replies/{parentCommentId}` | 回复列表（公开） |
 | POST | `/api/comment` | 发表评论（需登录） |
+| POST | `/api/comment/{id}/like` | 点赞/取消点赞（需登录） |
+
+### 在线状态（部分需登录）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/online/episode/{id}/count` | 在线人数（公开） |
+| GET | `/api/online/episode/{id}/users` | 在线用户列表（公开） |
+| POST | `/api/online/heartbeat` | 心跳上报（需登录） |
 
 ## 核心功能
 
@@ -76,20 +104,22 @@ docker-compose up -d
 - 详情页：高斯模糊背景、选集列表、相关推荐、底部播放栏
 - 播放器：全屏播放、进度条、倍速、记忆播放、自动连播
 - 互动系统：投票（表情雨+实时统计）、答题（限时+积分）、抉择（剧情选择+前置条件）、彩蛋（金光特效）
-- 安全：JWT 鉴权 + BCrypt 密码加密 + 受保护端点
+- 安全：JWT 鉴权 + BCrypt 密码加密 + 原子操作 + CORS 配置
 - 后端：完整 REST API + H2/MySQL 双模式 + Redis 缓存 + Docker 部署
 
 ## 数据库设计
 
-- `dramas` — 短剧信息
-- `episodes` — 剧集信息
-- `interaction_points` — 互动点配置（时间戳、类型、问题）
-- `interaction_options` — 互动选项（关联互动点）
-- `interaction_answers` — 用户互动记录
-- `watch_progress` — 观看进度（复合主键：user_id + episode_id）
-- `users` — 用户信息（BCrypt 密码）
-- `comments` — 评论
-- `ratings` — 评分
+- `dramas` — 短剧信息（title, category, rating, viewCount）
+- `episodes` — 剧集信息（episodeNumber, videoUrl, durationSeconds）
+- `interaction_points` — 互动点配置（timestampMs, interactionType, questionText）
+- `interaction_options` — 互动选项（optionIndex, optionText, isCorrect）
+- `interaction_answers` — 用户互动记录（userId, interactionPoint, selectedOptionId）
+- `watch_progress` — 观看进度（复合主键：userId + episodeId）
+- `users` — 用户信息（BCrypt 密码, points）
+- `comments` — 评论（content, likeCount）
+- `comment_likes` — 点赞记录（userId, commentId）
+- `ratings` — 评分（userId, dramaId, score）
+- `user_eggs` — 彩蛋收集（userId, interactionId, eggContent）
 
 ## 环境要求
 
@@ -98,11 +128,13 @@ docker-compose up -d
 
 ## 路线图
 
-- [x] 安全加固（JWT + BCrypt）
+- [x] 安全加固（JWT + BCrypt + 原子操作）
 - [x] 数据模型修正（选项拆表 + N+1 修复）
 - [x] 异常处理规范化
 - [x] 多集互动 + 前置条件
 - [x] 搜索优化（剧集标题 + 搜索历史）
+- [x] 并发安全（原子 SQL UPDATE）
+- [x] CORS 配置 + 分页上限
 - [ ] Android 原生应用
 - [ ] 弹幕功能
 - [ ] 彩蛋收集图鉴

@@ -53,7 +53,7 @@ public class EpisodeService {
     }
 
     private List<PlayInfo.InteractionInfo> buildInteractionInfoList(Long episodeId, Long userId) {
-        List<InteractionPoint> points = interactionPointRepository.findByEpisodeIdOrderByTimestampMsAsc(episodeId);
+        List<InteractionPoint> points = interactionPointRepository.findWithOptionsByEpisodeId(episodeId);
         if (userId == null) {
             return points.stream().map(this::buildInteractionInfo).collect(Collectors.toList());
         }

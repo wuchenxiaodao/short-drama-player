@@ -31,4 +31,16 @@ public interface DramaRepository extends JpaRepository<Drama, Long> {
     @Transactional
     @Query("UPDATE Drama d SET d.viewCount = d.viewCount + 1 WHERE d.id = :id")
     void incrementViewCount(@org.springframework.data.repository.query.Param("id") Long id);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Drama d SET d.viewCount = d.viewCount + :increment WHERE d.id = :id")
+    void incrementViewCountBy(@org.springframework.data.repository.query.Param("id") Long id,
+                              @org.springframework.data.repository.query.Param("increment") Long increment);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Drama d SET d.rating = :rating WHERE d.id = :id")
+    void updateRating(@org.springframework.data.repository.query.Param("id") Long id,
+                      @org.springframework.data.repository.query.Param("rating") Double rating);
 }

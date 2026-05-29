@@ -106,9 +106,19 @@ public class DramaService {
     }
 
     private List<DramaSummary> getRelatedDramas(Drama drama) {
-        return dramaRepository.findByCategoryAndIdNot(
-                drama.getCategory(), drama.getId(), PageRequest.of(0, 6))
-                .stream().map(this::toSummary).collect(Collectors.toList());
+        List<Drama> relatedDramas = dramaRepository.findByCategoryAndIdNot(
+                drama.getCategory(), drama.getId(), PageRequest.of(0, 6));
+        if (relatedDramas.isEmpty()) return List.of();
+        List<Long> ids = relatedDramas.stream().map(Drama::getId).collect(Collectors.toList());
+        Map<Long, Long> ratingCountMap = new HashMap<>();
+        List<Object[]> counts = ratingRepository.countByDramaIds(ids);
+        for (Object[] row : counts) {
+            ratingCountMap.put((Long) row[0], (Long) row[1]);
+        }
+        Map<Long, Long> finalMap = ratingCountMap;
+        return relatedDramas.stream()
+                .map(d -> toSummary(d, finalMap.getOrDefault(d.getId(), 0L)))
+                .collect(Collectors.toList());
     }
 
     private Page<DramaSummary> mapToSummaryPage(Page<Drama> dramaPage) {
@@ -154,18 +164,12 @@ public class DramaService {
     private void incrementViewCountWithRedis(Long dramaId) {
         String key = "drama:view:" + dramaId;
         Long count = redisTemplate.opsForValue().increment(key);
-        if (count != null && count == 1) {
-            redisTemplate.expire(key, 1, java.util.concurrent.TimeUnit.HOURS);
-        }
-        if (count != null && count % 100 == 0) {
-            syncViewCountToDatabase(dramaId, 100L);
+        if (count != null && count % 10 == 0) {
+            syncViewCountToDatabase(dramaId, 10L);
         }
     }
 
     private void syncViewCountToDatabase(Long dramaId, Long increment) {
-        dramaRepository.findById(dramaId).ifPresent(d -> {
-            d.setViewCount(d.getViewCount() + increment);
-            dramaRepository.save(d);
-        });
+        dramaRepository.incrementViewCountBy(dramaId, increment);
     }
 }

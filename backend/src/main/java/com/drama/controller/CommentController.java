@@ -5,6 +5,9 @@ import com.drama.common.AuthUtils;
 import com.drama.dto.CommentRequest;
 import com.drama.dto.CommentResponse;
 import com.drama.service.CommentService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,8 +25,8 @@ public class CommentController {
     public ApiResponse<CommentResponse.PageResult> getComments(
             @PathVariable Long interactionId,
             @RequestParam(defaultValue = "hot") String sort,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         return ApiResponse.success(commentService.getComments(interactionId, sort, page, size));
     }
 
@@ -39,7 +42,7 @@ public class CommentController {
     }
 
     @PostMapping
-    public ApiResponse<CommentResponse> postComment(@RequestBody CommentRequest request) {
+    public ApiResponse<CommentResponse> postComment(@Valid @RequestBody CommentRequest request) {
         Long userId = AuthUtils.requireUserId();
         return ApiResponse.success(commentService.postComment(request, userId));
     }

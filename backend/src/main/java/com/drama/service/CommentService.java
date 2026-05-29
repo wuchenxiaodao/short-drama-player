@@ -1,5 +1,6 @@
 package com.drama.service;
 
+import com.drama.common.AuthUtils;
 import com.drama.dto.CommentRequest;
 import com.drama.dto.CommentResponse;
 import com.drama.model.Comment;
@@ -14,8 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,15 +37,38 @@ public class CommentService {
         }
 
         List<Comment> comments = commentPage.getContent();
+        if (comments.isEmpty()) {
+            CommentResponse.PageResult result = new CommentResponse.PageResult();
+            result.setComments(List.of());
+            result.setTotal(0);
+            result.setPage(page);
+            return result;
+        }
+
         List<Long> commentIds = comments.stream().map(Comment::getId).collect(Collectors.toList());
 
-        // Batch load replies count
-        Map<Long, Long> replyCountMap = comments.stream().collect(Collectors.toMap(
-                Comment::getId,
-                c -> commentRepository.countByInteractionId(interactionId) // simplified
-        ));
+        Map<Long, Long> replyCountMap = new HashMap<>();
+        List<Object[]> replyCounts = commentRepository.countRepliesByParentIds(commentIds);
+        for (Object[] row : replyCounts) {
+            replyCountMap.put((Long) row[0], (Long) row[1]);
+        }
 
-        List<CommentResponse> responses = comments.stream().map(c -> toResponse(c, null)).collect(Collectors.toList());
+        List<Long> userIds = comments.stream().map(Comment::getUserId).distinct().collect(Collectors.toList());
+        Map<Long, User> userMap = userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(User::getId, u -> u));
+
+        Long currentUserId = AuthUtils.getCurrentUserId();
+        Set<Long> likedCommentIds = Set.of();
+        if (currentUserId != null) {
+            List<CommentLike> likes = commentLikeRepository.findByUserIdAndCommentIdIn(currentUserId, commentIds);
+            likedCommentIds = likes.stream().map(CommentLike::getCommentId).collect(Collectors.toSet());
+        }
+
+        Set<Long> finalLiked = likedCommentIds;
+        Map<Long, Long> finalReplyMap = replyCountMap;
+        List<CommentResponse> responses = comments.stream()
+                .map(c -> toResponse(c, userMap.get(c.getUserId()), finalLiked.contains(c.getId()), finalReplyMap.getOrDefault(c.getId(), 0L)))
+                .collect(Collectors.toList());
 
         CommentResponse.PageResult result = new CommentResponse.PageResult();
         result.setComments(responses);
@@ -56,7 +79,23 @@ public class CommentService {
 
     public List<CommentResponse> getReplies(Long parentCommentId, Long userId) {
         List<Comment> replies = commentRepository.findByParentCommentIdOrderByCreatedAtAsc(parentCommentId);
-        return replies.stream().map(r -> toResponse(r, userId)).collect(Collectors.toList());
+        if (replies.isEmpty()) return List.of();
+
+        List<Long> userIds = replies.stream().map(Comment::getUserId).distinct().collect(Collectors.toList());
+        Map<Long, User> userMap = userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(User::getId, u -> u));
+
+        Set<Long> likedCommentIds = Set.of();
+        if (userId != null) {
+            List<Long> commentIds = replies.stream().map(Comment::getId).collect(Collectors.toList());
+            List<CommentLike> likes = commentLikeRepository.findByUserIdAndCommentIdIn(userId, commentIds);
+            likedCommentIds = likes.stream().map(CommentLike::getCommentId).collect(Collectors.toSet());
+        }
+
+        Set<Long> finalLiked = likedCommentIds;
+        return replies.stream()
+                .map(r -> toResponse(r, userMap.get(r.getUserId()), finalLiked.contains(r.getId()), 0L))
+                .collect(Collectors.toList());
     }
 
     @Transactional
@@ -71,7 +110,7 @@ public class CommentService {
         comment.setParentCommentId(request.getParentCommentId());
         commentRepository.save(comment);
 
-        return toResponse(comment, userId);
+        return toResponse(comment, user, false, 0L);
     }
 
     @Transactional
@@ -79,22 +118,14 @@ public class CommentService {
         var existing = commentLikeRepository.findByUserIdAndCommentId(userId, commentId);
         if (existing.isPresent()) {
             commentLikeRepository.delete(existing.get());
-            Comment comment = commentRepository.findById(commentId).orElse(null);
-            if (comment != null) {
-                comment.setLikeCount(Math.max(0, comment.getLikeCount() - 1));
-                commentRepository.save(comment);
-            }
+            commentRepository.decrementLikeCount(commentId);
             return false;
         } else {
             CommentLike like = new CommentLike();
             like.setUserId(userId);
             like.setCommentId(commentId);
             commentLikeRepository.save(like);
-            Comment comment = commentRepository.findById(commentId).orElse(null);
-            if (comment != null) {
-                comment.setLikeCount(comment.getLikeCount() + 1);
-                commentRepository.save(comment);
-            }
+            commentRepository.incrementLikeCount(commentId);
             return true;
         }
     }
@@ -103,22 +134,15 @@ public class CommentService {
         return commentRepository.countByInteractionId(interactionId);
     }
 
-    private CommentResponse toResponse(Comment comment, Long currentUserId) {
+    private CommentResponse toResponse(Comment comment, User author, boolean isLiked, long replyCount) {
         CommentResponse resp = new CommentResponse();
         resp.setId(comment.getId());
         resp.setUserId(comment.getUserId());
         resp.setContent(comment.getContent());
         resp.setLikeCount(comment.getLikeCount());
         resp.setCreatedAt(comment.getCreatedAt());
-
-        userRepository.findById(comment.getUserId()).ifPresent(user -> resp.setNickname(user.getNickname()));
-
-        if (currentUserId != null) {
-            resp.setIsLiked(commentLikeRepository.findByUserIdAndCommentId(currentUserId, comment.getId()).isPresent());
-        } else {
-            resp.setIsLiked(false);
-        }
-
+        resp.setNickname(author != null ? author.getNickname() : "未知用户");
+        resp.setIsLiked(isLiked);
         return resp;
     }
 }

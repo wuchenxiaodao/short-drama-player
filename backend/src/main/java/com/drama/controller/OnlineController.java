@@ -1,7 +1,8 @@
 package com.drama.controller;
 
+import com.drama.common.AuthUtils;
 import com.drama.service.OnlineService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -9,14 +10,14 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("/api/online")
+@RequiredArgsConstructor
 public class OnlineController {
 
-    @Autowired
-    private OnlineService onlineService;
+    private final OnlineService onlineService;
 
     @PostMapping("/heartbeat")
     public Map<String, Object> heartbeat(@RequestBody Map<String, Object> body) {
-        Long userId = Long.valueOf(body.get("userId").toString());
+        Long userId = AuthUtils.requireUserId();
         Long episodeId = Long.valueOf(body.get("episodeId").toString());
         onlineService.heartbeat(userId, episodeId);
         return Map.of("success", true);

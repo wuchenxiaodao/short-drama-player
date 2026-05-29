@@ -97,8 +97,7 @@ public class InteractionService {
     }
 
     private void addPoints(User user, int points) {
-        user.setPoints(user.getPoints() + points);
-        userRepository.save(user);
+        userRepository.addPoints(user.getId(), points);
     }
 
     private void collectEgg(Long userId, Long interactionId, String eggContent) {

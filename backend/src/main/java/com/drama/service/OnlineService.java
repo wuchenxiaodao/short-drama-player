@@ -1,5 +1,6 @@
 package com.drama.service;
 
+import jakarta.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -26,11 +27,25 @@ public class OnlineService {
         cleaner.scheduleAtFixedRate(this::cleanLocal, 10, 10, TimeUnit.SECONDS);
     }
 
+    @PreDestroy
+    public void cleanup() {
+        cleaner.shutdown();
+        try {
+            if (!cleaner.awaitTermination(5, TimeUnit.SECONDS)) {
+                cleaner.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            cleaner.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+    }
+
     public void heartbeat(Long userId, Long episodeId) {
         if (redisTemplate != null) {
             String key = KEY_PREFIX + episodeId;
-            redisTemplate.opsForSet().add(key, String.valueOf(userId));
-            redisTemplate.expire(key, 30, TimeUnit.SECONDS);
+            double score = System.currentTimeMillis();
+            redisTemplate.opsForZSet().add(key, String.valueOf(userId), score);
+            redisTemplate.opsForZSet().removeRangeByScore(key, 0, System.currentTimeMillis() - HEARTBEAT_TTL_MS);
         } else {
             localOnline.computeIfAbsent(episodeId, k -> new ConcurrentHashMap<>()).put(userId, System.currentTimeMillis());
         }
@@ -39,7 +54,8 @@ public class OnlineService {
     public long getOnlineCount(Long episodeId) {
         if (redisTemplate != null) {
             String key = KEY_PREFIX + episodeId;
-            Long count = redisTemplate.opsForSet().size(key);
+            redisTemplate.opsForZSet().removeRangeByScore(key, 0, System.currentTimeMillis() - HEARTBEAT_TTL_MS);
+            Long count = redisTemplate.opsForZSet().zCard(key);
             return count != null ? count : 0;
         } else {
             Map<Long, Long> users = localOnline.get(episodeId);
@@ -50,7 +66,9 @@ public class OnlineService {
     public Set<String> getOnlineUsers(Long episodeId) {
         if (redisTemplate != null) {
             String key = KEY_PREFIX + episodeId;
-            return redisTemplate.opsForSet().members(key);
+            redisTemplate.opsForZSet().removeRangeByScore(key, 0, System.currentTimeMillis() - HEARTBEAT_TTL_MS);
+            Set<String> members = redisTemplate.opsForZSet().range(key, 0, -1);
+            return members != null ? members : Set.of();
         } else {
             Map<Long, Long> users = localOnline.get(episodeId);
             if (users == null) return Collections.emptySet();
@@ -63,6 +81,8 @@ public class OnlineService {
 
     private void cleanLocal() {
         long now = System.currentTimeMillis();
-        localOnline.forEach((epId, users) -> users.values().removeIf(ts -> now - ts > HEARTBEAT_TTL_MS));
+        localOnline.forEach((epId, users) -> {
+            users.entrySet().removeIf(entry -> now - entry.getValue() > HEARTBEAT_TTL_MS);
+        });
     }
 }

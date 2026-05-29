@@ -5,6 +5,7 @@ import com.drama.model.WatchProgress;
 import com.drama.repository.WatchProgressRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -14,6 +15,7 @@ public class ProgressService {
 
     private final WatchProgressRepository progressRepository;
 
+    @Transactional
     public void reportProgress(ProgressReport report, Long userId) {
         Optional<WatchProgress> existing = progressRepository
                 .findByUserIdAndEpisodeId(userId, report.getEpisodeId());

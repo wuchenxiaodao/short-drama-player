@@ -57,7 +57,7 @@ class EpisodeServiceTest {
     void getPlayInfo_WhenEpisodeExists_ShouldReturnPlayInfo() {
         // Arrange
         when(episodeRepository.findById(1L)).thenReturn(Optional.of(testEpisode));
-        when(interactionPointRepository.findByEpisodeIdOrderByTimestampMsAsc(1L)).thenReturn(Arrays.asList(testInteractionPoint));
+        when(interactionPointRepository.findWithOptionsByEpisodeId(1L)).thenReturn(Arrays.asList(testInteractionPoint));
 
         // Act
         PlayInfo result = episodeService.getPlayInfo(1L, null);
@@ -68,7 +68,7 @@ class EpisodeServiceTest {
         assertEquals("/videos/test.mp4", result.getVideoUrl());
         assertEquals(180, result.getDurationSeconds());
         verify(episodeRepository).findById(1L);
-        verify(interactionPointRepository).findByEpisodeIdOrderByTimestampMsAsc(1L);
+        verify(interactionPointRepository).findWithOptionsByEpisodeId(1L);
     }
 
     @Test
@@ -87,7 +87,7 @@ class EpisodeServiceTest {
     void getPlayInfo_WithUserId_ShouldIncludeProgress() {
         // Arrange
         when(episodeRepository.findById(1L)).thenReturn(Optional.of(testEpisode));
-        when(interactionPointRepository.findByEpisodeIdOrderByTimestampMsAsc(1L)).thenReturn(Arrays.asList(testInteractionPoint));
+        when(interactionPointRepository.findWithOptionsByEpisodeId(1L)).thenReturn(Arrays.asList(testInteractionPoint));
         when(watchProgressRepository.findByUserIdAndEpisodeId(1L, 1L)).thenReturn(Optional.empty());
 
         // Act
@@ -103,7 +103,7 @@ class EpisodeServiceTest {
     void getPlayInfo_WithInteractions_ShouldReturnInteractions() {
         // Arrange
         when(episodeRepository.findById(1L)).thenReturn(Optional.of(testEpisode));
-        when(interactionPointRepository.findByEpisodeIdOrderByTimestampMsAsc(1L)).thenReturn(Arrays.asList(testInteractionPoint));
+        when(interactionPointRepository.findWithOptionsByEpisodeId(1L)).thenReturn(Arrays.asList(testInteractionPoint));
 
         // Act
         PlayInfo result = episodeService.getPlayInfo(1L, null);
@@ -112,6 +112,6 @@ class EpisodeServiceTest {
         assertNotNull(result);
         assertNotNull(result.getInteractions());
         assertEquals(1, result.getInteractions().size());
-        verify(interactionPointRepository).findByEpisodeIdOrderByTimestampMsAsc(1L);
+        verify(interactionPointRepository).findWithOptionsByEpisodeId(1L);
     }
 }
