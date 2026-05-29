@@ -60,11 +60,10 @@ public class DataInitializer implements CommandLineRunner {
         d.setIsNew(false);
         d = dramaRepository.save(d);
 
-        int[] eps = {63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81};
         Episode first = null;
-        for (int i = 0; i < eps.length; i++) {
-            Episode ep = createEpisode(d, eps[i], "第" + eps[i] + "集", 90);
-            if (i == 0) first = ep;
+        for (int i = 1; i <= 19; i++) {
+            Episode ep = createEpisode(d, i, "第" + i + "集", 90);
+            if (i == 1) first = ep;
         }
         if (first != null) {
             createInteraction(first, 30000L, InteractionPoint.InteractionType.VOTE,
@@ -139,7 +138,6 @@ public class DataInitializer implements CommandLineRunner {
         d = dramaRepository.save(d);
 
         for (int i = 1; i <= 24; i++) {
-            if (i == 18) continue;
             createEpisode(d, i, "第" + i + "集", 90);
         }
         Episode first = episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(d.getId()).get(0);
@@ -348,7 +346,7 @@ public class DataInitializer implements CommandLineRunner {
         ep.setDrama(drama);
         ep.setEpisodeNumber(number);
         ep.setTitle(title);
-        ep.setVideoUrl("/videos/" + drama.getTitle() + "/第" + number + "集.mp4");
+        ep.setVideoUrl("https://www.w3schools.com/html/mov_bbb.mp4");
         ep.setDurationSeconds(duration);
         return episodeRepository.save(ep);
     }
@@ -361,7 +359,6 @@ public class DataInitializer implements CommandLineRunner {
         point.setTimestampMs(timestampMs);
         point.setInteractionType(type);
         point.setQuestionText(question);
-        point = interactionPointRepository.save(point);
 
         for (int i = 0; i < optionDefs.size(); i++) {
             InteractionOption option = new InteractionOption();
