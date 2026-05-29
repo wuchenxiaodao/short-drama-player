@@ -14,4 +14,6 @@ public interface InteractionAnswerRepository extends JpaRepository<InteractionAn
     List<Object[]> countByOption(@Param("interactionId") Long interactionId);
 
     long countByInteractionPointId(Long interactionId);
+
+    List<InteractionAnswer> findByUserIdAndInteractionPointIdIn(Long userId, List<Long> interactionIds);
 }

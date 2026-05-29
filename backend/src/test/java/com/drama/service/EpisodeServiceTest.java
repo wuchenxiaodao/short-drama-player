@@ -6,6 +6,7 @@ import com.drama.model.Drama;
 import com.drama.model.Episode;
 import com.drama.model.InteractionPoint;
 import com.drama.repository.EpisodeRepository;
+import com.drama.repository.InteractionAnswerRepository;
 import com.drama.repository.InteractionPointRepository;
 import com.drama.repository.WatchProgressRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +35,9 @@ class EpisodeServiceTest {
 
     @Mock
     private WatchProgressRepository watchProgressRepository;
+
+    @Mock
+    private InteractionAnswerRepository answerRepository;
 
     @InjectMocks
     private EpisodeService episodeService;

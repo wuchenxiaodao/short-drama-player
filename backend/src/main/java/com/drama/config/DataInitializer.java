@@ -77,6 +77,52 @@ public class DataInitializer implements CommandLineRunner {
                     "隐藏彩蛋：寻宝笔记作者亲笔签名照",
                     List.of(opt("领取")));
         }
+        List<Episode> episodes = episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(d.getId());
+        if (episodes.size() > 1) {
+            Episode ep2 = episodes.get(1);
+            createInteraction(ep2, 30000L, InteractionPoint.InteractionType.CHOICE,
+                    "寻宝方向选择",
+                    List.of(opt("古墓"), opt("密室"), opt("地下河")));
+            createInteraction(ep2, 60000L, InteractionPoint.InteractionType.QUIZ,
+                    "这个暗号代表什么？",
+                    List.of(opt("日月"), optCorrect("山川"), opt("星辰")));
+            createInteraction(ep2, 45000L, InteractionPoint.InteractionType.EGG,
+                    "隐藏地图碎片1",
+                    List.of(opt("领取")));
+        }
+        if (episodes.size() > 2) {
+            Episode ep3 = episodes.get(2);
+            createInteraction(ep3, 25000L, InteractionPoint.InteractionType.VOTE,
+                    "你觉得内鬼是谁？",
+                    List.of(opt("老张"), opt("小李"), opt("王教授")));
+            createInteraction(ep3, 50000L, InteractionPoint.InteractionType.CHOICE,
+                    "分头行动还是一起走？",
+                    List.of(opt("分头行动"), opt("一起走")));
+            createInteraction(ep3, 70000L, InteractionPoint.InteractionType.EGG,
+                    "隐藏地图碎片2",
+                    List.of(opt("领取")));
+        }
+        if (episodes.size() > 3) {
+            Episode ep4 = episodes.get(3);
+            createInteraction(ep4, 35000L, InteractionPoint.InteractionType.QUIZ,
+                    "这把钥匙能打开什么？",
+                    List.of(opt("宝箱"), optCorrect("密室大门"), opt("地窖")));
+            createInteraction(ep4, 60000L, InteractionPoint.InteractionType.CHOICE,
+                    "遇到岔路口，你选哪条？",
+                    List.of(opt("左边亮光"), opt("右边暗道")));
+            createInteraction(ep4, 45000L, InteractionPoint.InteractionType.EGG,
+                    "隐藏地图碎片3",
+                    List.of(opt("领取")));
+        }
+        if (episodes.size() > 4) {
+            Episode ep5 = episodes.get(4);
+            createInteraction(ep5, 30000L, InteractionPoint.InteractionType.VOTE,
+                    "最终BOSS你猜是谁？",
+                    List.of(opt("黑衣人"), opt("叛徒同伴"), opt("幕后大老板")));
+            createInteraction(ep5, 60000L, InteractionPoint.InteractionType.EGG,
+                    "完整地图解锁",
+                    List.of(opt("领取")));
+        }
     }
 
     private void initTianxiaDiyiWanku() {
@@ -106,6 +152,31 @@ public class DataInitializer implements CommandLineRunner {
         createInteraction(first, 70000L, InteractionPoint.InteractionType.EGG,
                 "隐藏彩蛋：纨绔少爷的秘密武器",
                 List.of(opt("领取")));
+        List<Episode> episodes = episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(d.getId());
+        if (episodes.size() > 1) {
+            Episode ep2 = episodes.get(1);
+            createInteraction(ep2, 30000L, InteractionPoint.InteractionType.QUIZ,
+                    "男主的真实身份是？",
+                    List.of(opt("富二代"), optCorrect("隐藏高手"), opt("穿越者")));
+            createInteraction(ep2, 55000L, InteractionPoint.InteractionType.CHOICE,
+                    "面对挑衅你怎么做？",
+                    List.of(opt("正面回击"), opt("以退为进")));
+            createInteraction(ep2, 45000L, InteractionPoint.InteractionType.EGG,
+                    "纨绔少爷的隐藏技能",
+                    List.of(opt("领取")));
+        }
+        if (episodes.size() > 2) {
+            Episode ep3 = episodes.get(2);
+            createInteraction(ep3, 25000L, InteractionPoint.InteractionType.VOTE,
+                    "这集最精彩的是？",
+                    List.of(opt("打脸反派"), opt("英雄救美"), opt("装逼成功")));
+            createInteraction(ep3, 60000L, InteractionPoint.InteractionType.CHOICE,
+                    "下一步你选什么策略？",
+                    List.of(opt("主动出击"), opt("静观其变")));
+            createInteraction(ep3, 45000L, InteractionPoint.InteractionType.EGG,
+                    "纨绔语录收藏",
+                    List.of(opt("领取")));
+        }
     }
 
     private void initShibasuiGrandma() {
@@ -131,6 +202,28 @@ public class DataInitializer implements CommandLineRunner {
         createInteraction(first, 50000L, InteractionPoint.InteractionType.EGG,
                 "发现隐藏彩蛋：太奶奶的独家秘方",
                 List.of(opt("查看")));
+        List<Episode> episodes = episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(d.getId());
+        if (episodes.size() > 1) {
+            Episode ep2 = episodes.get(1);
+            createInteraction(ep2, 25000L, InteractionPoint.InteractionType.QUIZ,
+                    "太奶奶用了什么计策？",
+                    List.of(opt("美人计"), optCorrect("反间计"), opt("空城计")));
+            createInteraction(ep2, 55000L, InteractionPoint.InteractionType.VOTE,
+                    "家族里谁最不靠谱？",
+                    List.of(opt("二叔"), opt("三姑"), opt("表弟")));
+            createInteraction(ep2, 40000L, InteractionPoint.InteractionType.EGG,
+                    "太奶奶的暗器收藏",
+                    List.of(opt("领取")));
+        }
+        if (episodes.size() > 2) {
+            Episode ep3 = episodes.get(2);
+            createInteraction(ep3, 30000L, InteractionPoint.InteractionType.CHOICE,
+                    "太奶奶该不该原谅二叔？",
+                    List.of(opt("原谅"), opt("不原谅"), opt("看表现")));
+            createInteraction(ep3, 60000L, InteractionPoint.InteractionType.EGG,
+                    "家族秘史揭秘",
+                    List.of(opt("查看")));
+        }
     }
 
     private void initXingdeXiangyu() {
@@ -156,6 +249,16 @@ public class DataInitializer implements CommandLineRunner {
         createInteraction(first, 55000L, InteractionPoint.InteractionType.EGG,
                 "隐藏彩蛋：离婚协议书背面的秘密",
                 List.of(opt("查看")));
+        List<Episode> episodes = episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(d.getId());
+        if (episodes.size() > 1) {
+            Episode ep2 = episodes.get(1);
+            createInteraction(ep2, 30000L, InteractionPoint.InteractionType.VOTE,
+                    "男主是不是在装冷漠？",
+                    List.of(opt("是"), opt("不是"), opt("不好说")));
+            createInteraction(ep2, 60000L, InteractionPoint.InteractionType.EGG,
+                    "男主的秘密日记",
+                    List.of(opt("查看")));
+        }
     }
 
     private void initHuangnian() {
@@ -184,6 +287,25 @@ public class DataInitializer implements CommandLineRunner {
         createInteraction(first, 45000L, InteractionPoint.InteractionType.EGG,
                 "隐藏彩蛋：系统空间里的神秘礼物",
                 List.of(opt("领取")));
+        List<Episode> episodes = episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(d.getId());
+        if (episodes.size() > 1) {
+            Episode ep2 = episodes.get(1);
+            createInteraction(ep2, 30000L, InteractionPoint.InteractionType.CHOICE,
+                    "粮食不够了，先给谁吃？",
+                    List.of(opt("老人孩子"), opt("壮劳力"), opt("平均分配")));
+            createInteraction(ep2, 60000L, InteractionPoint.InteractionType.EGG,
+                    "系统升级奖励",
+                    List.of(opt("领取")));
+        }
+        if (episodes.size() > 2) {
+            Episode ep3 = episodes.get(2);
+            createInteraction(ep3, 25000L, InteractionPoint.InteractionType.VOTE,
+                    "村里人开始怀疑主角了，怎么办？",
+                    List.of(opt("坦白系统"), opt("继续隐瞒"), opt("找借口")));
+            createInteraction(ep3, 55000L, InteractionPoint.InteractionType.EGG,
+                    "隐藏食谱",
+                    List.of(opt("领取")));
+        }
     }
 
     private void initJialijiaWai() {
@@ -209,6 +331,16 @@ public class DataInitializer implements CommandLineRunner {
         createInteraction(first, 50000L, InteractionPoint.InteractionType.EGG,
                 "隐藏彩蛋：奶奶传下来的金手镯",
                 List.of(opt("领取")));
+        List<Episode> episodes = episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(d.getId());
+        if (episodes.size() > 1) {
+            Episode ep2 = episodes.get(1);
+            createInteraction(ep2, 25000L, InteractionPoint.InteractionType.VOTE,
+                    "老公该站谁那边？",
+                    List.of(opt("站老婆"), opt("站老妈"), opt("两头哄")));
+            createInteraction(ep2, 55000L, InteractionPoint.InteractionType.EGG,
+                    "家庭和睦秘籍",
+                    List.of(opt("领取")));
+        }
     }
 
     private Episode createEpisode(Drama drama, int number, String title, int duration) {
