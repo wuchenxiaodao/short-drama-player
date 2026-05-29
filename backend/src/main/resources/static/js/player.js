@@ -45,8 +45,18 @@ const player = {
     },
 
     onVideoEnded() {
-        // 自动播放下一集
-        console.log('视频播放结束');
+        const drama = state.currentDrama;
+        const currentEp = state.currentEpisode;
+        if (!drama || !currentEp) return;
+
+        const episodes = drama.episodes || [];
+        const currentIndex = episodes.findIndex(ep => ep.id === currentEp.episodeId);
+        if (currentIndex >= 0 && currentIndex < episodes.length - 1) {
+            const nextEpisode = episodes[currentIndex + 1];
+            app.playEpisode(nextEpisode.id);
+        } else {
+            errorHandler.showMessage('已是最后一集', 'info');
+        }
     },
 
     play() {
