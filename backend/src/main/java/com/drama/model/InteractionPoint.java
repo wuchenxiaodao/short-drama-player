@@ -3,6 +3,8 @@ package com.drama.model;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @Entity
@@ -26,10 +28,15 @@ public class InteractionPoint {
     @Column(length = 500)
     private String questionText;
 
-    @Column(length = 2000)
-    private String optionsJson;
+    @OneToMany(mappedBy = "interactionPoint", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OrderBy("optionIndex ASC")
+    private List<InteractionOption> options = new ArrayList<>();
 
-    private Long correctOptionId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "prerequisite_id")
+    private InteractionPoint prerequisite;
+
+    private Long prerequisiteChoiceOptionId;
 
     private LocalDateTime createdAt;
 

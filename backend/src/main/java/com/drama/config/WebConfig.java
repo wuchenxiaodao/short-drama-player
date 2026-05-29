@@ -15,9 +15,10 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
-                .allowedOrigins("*")
+                .allowedOrigins("http://localhost:3000", "http://localhost:8080")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*");
+                .allowedHeaders("*")
+                .allowCredentials(true);
     }
 
     @Override
@@ -29,12 +30,18 @@ public class WebConfig implements WebMvcConfigurer {
         String[] candidates = {
             userDir + File.separator + "videos",
             userDir + File.separator + ".." + File.separator + "videos",
-            userDir + File.separator + "short-drama-player" + File.separator + "videos"
+            userDir + File.separator + "short-drama-player" + File.separator + "videos",
+            userDir + File.separator + ".." + File.separator + "short-drama",
+            userDir + File.separator + "short-drama"
         };
         for (String path : candidates) {
             File dir = new File(path);
             if (dir.isDirectory() && new File(dir, "北派寻宝笔记").isDirectory()) {
-                videoPath = path + File.separator;
+                try {
+                    videoPath = dir.getCanonicalPath() + File.separator;
+                } catch (Exception e) {
+                    videoPath = path + File.separator;
+                }
                 break;
             }
         }

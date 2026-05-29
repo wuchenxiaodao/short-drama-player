@@ -3,8 +3,8 @@ package com.drama.controller;
 import com.drama.common.ApiResponse;
 import com.drama.dto.LoginRequest;
 import com.drama.dto.RegisterRequest;
-import com.drama.model.User;
-import com.drama.repository.UserRepository;
+import com.drama.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,39 +15,35 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final UserRepository userRepository;
+    private final AuthService authService;
 
     @PostMapping("/register")
-    public ApiResponse<Map<String, Object>> register(@RequestBody RegisterRequest request) {
-        if (userRepository.existsByUsername(request.getUsername())) {
-            return ApiResponse.error(400, "用户名已存在");
-        }
-        User user = new User();
-        user.setUsername(request.getUsername());
-        user.setPassword(request.getPassword());
-        user.setNickname(request.getNickname() != null ? request.getNickname() : request.getUsername());
-        user.setPoints(0);
-        userRepository.save(user);
-        return ApiResponse.success("注册成功", Map.of("userId", user.getId(), "nickname", user.getNickname()));
+    public ApiResponse<Map<String, Object>> register(@Valid @RequestBody RegisterRequest request) {
+        return ApiResponse.success("注册成功",
+            authService.register(request.getUsername(), request.getPassword(), request.getNickname()));
     }
 
     @PostMapping("/login")
-    public ApiResponse<Map<String, Object>> login(@RequestBody LoginRequest request) {
-        return userRepository.findByUsername(request.getUsername())
-                .filter(u -> u.getPassword().equals(request.getPassword()))
-                .map(u -> ApiResponse.success("登录成功", Map.<String, Object>of("userId", u.getId(), "nickname", u.getNickname(), "username", u.getUsername())))
-                .orElse(ApiResponse.error(401, "用户名或密码错误"));
+    public ApiResponse<Map<String, Object>> login(@Valid @RequestBody LoginRequest request) {
+        return ApiResponse.success("登录成功",
+            authService.login(request.getUsername(), request.getPassword()));
+    }
+
+    @GetMapping("/me")
+    public ApiResponse<Map<String, Object>> me(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ApiResponse.error(401, "请先登录");
+        }
+        // Token已在JwtFilter中验证，这里从SecurityContext获取
+        Long userId = com.drama.common.AuthUtils.getCurrentUserId();
+        if (userId == null) {
+            return ApiResponse.error(401, "请先登录");
+        }
+        return ApiResponse.success(authService.getUserInfo(userId));
     }
 
     @GetMapping("/{userId}")
     public ApiResponse<Map<String, Object>> getUser(@PathVariable Long userId) {
-        return userRepository.findById(userId)
-                .map(u -> ApiResponse.success(Map.<String, Object>of(
-                        "id", u.getId(),
-                        "username", u.getUsername(),
-                        "nickname", u.getNickname(),
-                        "points", u.getPoints(),
-                        "createdAt", u.getCreatedAt())))
-                .orElse(ApiResponse.error(404, "用户不存在"));
+        return ApiResponse.success(authService.getUserInfo(userId));
     }
 }

@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -34,15 +33,15 @@ public class InteractionService {
     private StringRedisTemplate redisTemplate;
 
     @Transactional
-    public boolean submitAnswer(AnswerRequest request) {
-        if (isAlreadyAnswered(request.getUserId(), request.getInteractionId())) {
+    public boolean submitAnswer(AnswerRequest request, Long userId) {
+        if (isAlreadyAnswered(userId, request.getInteractionId())) {
             return false;
         }
 
         InteractionPoint point = getInteractionPoint(request.getInteractionId());
-        User user = getUser(request.getUserId());
+        User user = getUser(userId);
 
-        saveAnswer(request, point);
+        saveAnswer(request, point, userId);
         updateRedisStats(request);
         processRewards(point, request, user);
 
@@ -63,9 +62,9 @@ public class InteractionService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
-    private void saveAnswer(AnswerRequest request, InteractionPoint point) {
+    private void saveAnswer(AnswerRequest request, InteractionPoint point, Long userId) {
         InteractionAnswer answer = new InteractionAnswer();
-        answer.setUserId(request.getUserId());
+        answer.setUserId(userId);
         answer.setInteractionPoint(point);
         answer.setSelectedOptionId(request.getChoiceId());
         answerRepository.save(answer);
@@ -76,11 +75,9 @@ public class InteractionService {
 
         String redisKey = "interaction:count:" + request.getInteractionId();
         redisTemplate.opsForHash().increment(redisKey, String.valueOf(request.getChoiceId()), 1);
-        redisTemplate.expire(redisKey, 24, TimeUnit.HOURS);
 
         String totalKey = "interaction:total:" + request.getInteractionId();
         redisTemplate.opsForValue().increment(totalKey);
-        redisTemplate.expire(totalKey, 24, TimeUnit.HOURS);
     }
 
     private void processRewards(InteractionPoint point, AnswerRequest request, User user) {
@@ -89,13 +86,14 @@ public class InteractionService {
         }
 
         if (point.getInteractionType() == InteractionPoint.InteractionType.EGG) {
-            collectEgg(request.getUserId(), request.getInteractionId(), point.getQuestionText());
+            collectEgg(user.getId(), request.getInteractionId(), point.getQuestionText());
             addPoints(user, 5);
         }
     }
 
     private boolean isCorrectAnswer(InteractionPoint point, Long choiceId) {
-        return point.getCorrectOptionId() != null && point.getCorrectOptionId().equals(choiceId);
+        return point.getOptions().stream()
+                .anyMatch(o -> o.getId().equals(choiceId) && Boolean.TRUE.equals(o.getIsCorrect()));
     }
 
     private void addPoints(User user, int points) {

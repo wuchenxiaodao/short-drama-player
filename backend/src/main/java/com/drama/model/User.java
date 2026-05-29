@@ -1,5 +1,6 @@
 package com.drama.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
@@ -15,7 +16,8 @@ public class User {
     @Column(unique = true, nullable = false)
     private String username;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
+    @JsonIgnore
     private String password;
 
     private String nickname;

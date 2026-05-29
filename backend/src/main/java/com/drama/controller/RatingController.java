@@ -1,6 +1,7 @@
 package com.drama.controller;
 
 import com.drama.common.ApiResponse;
+import com.drama.common.AuthUtils;
 import com.drama.model.Rating;
 import com.drama.repository.DramaRepository;
 import com.drama.repository.RatingRepository;
@@ -18,10 +19,10 @@ public class RatingController {
     private final DramaRepository dramaRepository;
 
     @PostMapping("/submit")
-    public ApiResponse<Map<String, Object>> submit(@RequestBody Map<String, Long> body) {
-        Long userId = body.get("userId");
-        Long dramaId = body.get("dramaId");
-        Integer score = body.get("score").intValue();
+    public ApiResponse<Map<String, Object>> submit(@RequestBody Map<String, Object> body) {
+        Long userId = AuthUtils.requireUserId();
+        Long dramaId = ((Number) body.get("dramaId")).longValue();
+        Integer score = ((Number) body.get("score")).intValue();
 
         if (score < 1 || score > 10) {
             return ApiResponse.error(400, "评分范围1-10");
@@ -33,7 +34,6 @@ public class RatingController {
         rating.setScore(score);
         ratingRepository.save(rating);
 
-        // Update drama rating
         Double avg = ratingRepository.getAverageScore(dramaId);
         Long count = ratingRepository.getRatingCount(dramaId);
         dramaRepository.findById(dramaId).ifPresent(d -> {
@@ -45,8 +45,8 @@ public class RatingController {
     }
 
     @GetMapping("/user")
-    public ApiResponse<Map<String, Object>> getUserRating(
-            @RequestParam Long userId, @RequestParam Long dramaId) {
+    public ApiResponse<Map<String, Object>> getUserRating(@RequestParam Long dramaId) {
+        Long userId = AuthUtils.requireUserId();
         return ratingRepository.findByUserIdAndDramaId(userId, dramaId)
                 .map(r -> ApiResponse.success(Map.<String, Object>of("score", r.getScore())))
                 .orElse(ApiResponse.success(Map.of("score", 0)));

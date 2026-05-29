@@ -18,6 +18,7 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
       timeout: 3000ms
 
 app:
@@ -25,3 +26,7 @@ app:
     base-url: ${VIDEO_BASE_URL:http://localhost:9000/videos}
   image:
     base-url: ${IMAGE_BASE_URL:http://localhost:9000/images}
+
+jwt:
+  secret: ${JWT_SECRET:a]9kL2mN5pQ8sT1vX3yA6bC0dE7fG4hI}
+  expiration-ms: 604800000

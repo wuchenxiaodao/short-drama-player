@@ -4,7 +4,9 @@ import com.drama.model.Drama;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -24,4 +26,9 @@ public interface DramaRepository extends JpaRepository<Drama, Long> {
     Page<Drama> search(@org.springframework.data.repository.query.Param("keyword") String keyword, Pageable pageable);
 
     Page<Drama> findByIsNewTrueOrderByCreatedAtDesc(Pageable pageable);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Drama d SET d.viewCount = d.viewCount + 1 WHERE d.id = :id")
+    void incrementViewCount(@org.springframework.data.repository.query.Param("id") Long id);
 }

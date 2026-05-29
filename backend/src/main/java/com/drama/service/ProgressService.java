@@ -1,10 +1,7 @@
 package com.drama.service;
 
 import com.drama.dto.ProgressReport;
-import com.drama.model.Episode;
 import com.drama.model.WatchProgress;
-import com.drama.repository.DramaRepository;
-import com.drama.repository.EpisodeRepository;
 import com.drama.repository.WatchProgressRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,25 +13,13 @@ import java.util.Optional;
 public class ProgressService {
 
     private final WatchProgressRepository progressRepository;
-    private final EpisodeRepository episodeRepository;
-    private final DramaRepository dramaRepository;
 
-    public void reportProgress(ProgressReport report) {
+    public void reportProgress(ProgressReport report, Long userId) {
         Optional<WatchProgress> existing = progressRepository
-                .findByUserIdAndEpisodeId(report.getUserId(), report.getEpisodeId());
-
-        // First time watching this episode -> increment view count
-        if (existing.isEmpty()) {
-            episodeRepository.findById(report.getEpisodeId()).ifPresent(ep -> {
-                dramaRepository.findById(ep.getDrama().getId()).ifPresent(d -> {
-                    d.setViewCount(d.getViewCount() + 1);
-                    dramaRepository.save(d);
-                });
-            });
-        }
+                .findByUserIdAndEpisodeId(userId, report.getEpisodeId());
 
         WatchProgress progress = existing.orElse(new WatchProgress());
-        progress.setUserId(report.getUserId());
+        progress.setUserId(userId);
         progress.setEpisodeId(report.getEpisodeId());
         progress.setPositionMs(report.getPositionMs());
         progress.setCompleted(false);

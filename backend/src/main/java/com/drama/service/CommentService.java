@@ -60,18 +60,18 @@ public class CommentService {
     }
 
     @Transactional
-    public CommentResponse postComment(CommentRequest request) {
-        User user = userRepository.findById(request.getUserId())
+    public CommentResponse postComment(CommentRequest request, Long userId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         Comment comment = new Comment();
-        comment.setUserId(request.getUserId());
+        comment.setUserId(userId);
         comment.setInteractionId(request.getInteractionId());
         comment.setContent(request.getContent());
         comment.setParentCommentId(request.getParentCommentId());
         commentRepository.save(comment);
 
-        return toResponse(comment, request.getUserId());
+        return toResponse(comment, userId);
     }
 
     @Transactional

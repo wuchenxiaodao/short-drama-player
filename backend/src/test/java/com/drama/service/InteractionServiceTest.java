@@ -53,7 +53,6 @@ class InteractionServiceTest {
         testPoint = TestDataFactory.createInteractionPoint(1L, testEpisode, 30L);
 
         testRequest = new AnswerRequest();
-        testRequest.setUserId(1L);
         testRequest.setInteractionId(1L);
         testRequest.setChoiceId(1L);
     }
@@ -66,7 +65,7 @@ class InteractionServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
 
         // Act
-        boolean result = interactionService.submitAnswer(testRequest);
+        boolean result = interactionService.submitAnswer(testRequest, 1L);
 
         // Assert
         assertTrue(result);
@@ -80,7 +79,7 @@ class InteractionServiceTest {
         when(answerRepository.findByUserIdAndInteractionPointId(1L, 1L)).thenReturn(Optional.of(existingAnswer));
 
         // Act
-        boolean result = interactionService.submitAnswer(testRequest);
+        boolean result = interactionService.submitAnswer(testRequest, 1L);
 
         // Assert
         assertFalse(result);
@@ -95,7 +94,7 @@ class InteractionServiceTest {
 
         // Act & Assert
         assertThrows(RuntimeException.class, () -> {
-            interactionService.submitAnswer(testRequest);
+            interactionService.submitAnswer(testRequest, 1L);
         });
     }
 
@@ -108,7 +107,7 @@ class InteractionServiceTest {
 
         // Act & Assert
         assertThrows(RuntimeException.class, () -> {
-            interactionService.submitAnswer(testRequest);
+            interactionService.submitAnswer(testRequest, 1L);
         });
     }
 

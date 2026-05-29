@@ -1,6 +1,7 @@
 package com.drama.controller;
 
 import com.drama.common.ApiResponse;
+import com.drama.common.AuthUtils;
 import com.drama.dto.DramaDetail;
 import com.drama.dto.DramaSummary;
 import com.drama.service.DramaService;
@@ -30,10 +31,8 @@ public class DramaController {
     }
 
     @GetMapping("/{id}/detail")
-    public ApiResponse<DramaDetail> detail(
-            @PathVariable Long id,
-            @RequestParam(required = false) Long userId) {
-        return ApiResponse.success(dramaService.getDetail(id, userId));
+    public ApiResponse<DramaDetail> detail(@PathVariable Long id) {
+        return ApiResponse.success(dramaService.getDetail(id, AuthUtils.getCurrentUserId()));
     }
 
     @GetMapping("/search")

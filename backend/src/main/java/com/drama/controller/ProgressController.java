@@ -1,6 +1,7 @@
 package com.drama.controller;
 
 import com.drama.common.ApiResponse;
+import com.drama.common.AuthUtils;
 import com.drama.dto.ProgressReport;
 import com.drama.service.ProgressService;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +16,8 @@ public class ProgressController {
 
     @PostMapping("/report")
     public ApiResponse<Void> report(@RequestBody ProgressReport report) {
-        progressService.reportProgress(report);
+        Long userId = AuthUtils.requireUserId();
+        progressService.reportProgress(report, userId);
         return ApiResponse.success("进度已保存", null);
     }
 }

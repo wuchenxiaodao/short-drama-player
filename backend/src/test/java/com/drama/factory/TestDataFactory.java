@@ -55,8 +55,32 @@ public class TestDataFactory {
         point.setTimestampMs(timestampMs);
         point.setInteractionType(InteractionPoint.InteractionType.VOTE);
         point.setQuestionText("测试问题？");
-        point.setOptionsJson("[{\"id\":1,\"text\":\"选项A\"},{\"id\":2,\"text\":\"选项B\"},{\"id\":3,\"text\":\"选项C\"}]");
-        point.setCorrectOptionId(1L);
+        point.setOptions(new ArrayList<>());
+
+        InteractionOption optA = new InteractionOption();
+        optA.setId(1L);
+        optA.setInteractionPoint(point);
+        optA.setOptionIndex(1);
+        optA.setOptionText("选项A");
+        optA.setIsCorrect(true);
+        point.getOptions().add(optA);
+
+        InteractionOption optB = new InteractionOption();
+        optB.setId(2L);
+        optB.setInteractionPoint(point);
+        optB.setOptionIndex(2);
+        optB.setOptionText("选项B");
+        optB.setIsCorrect(false);
+        point.getOptions().add(optB);
+
+        InteractionOption optC = new InteractionOption();
+        optC.setId(3L);
+        optC.setInteractionPoint(point);
+        optC.setOptionIndex(3);
+        optC.setOptionText("选项C");
+        optC.setIsCorrect(false);
+        point.getOptions().add(optC);
+
         return point;
     }
 

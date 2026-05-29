@@ -28,3 +28,7 @@ app:
     base-url: https://test-streams.mux.dev
   image:
     base-url: https://picsum.photos
+
+jwt:
+  secret: a]9kL2mN5pQ8sT1vX3yA6bC0dE7fG4hI
+  expiration-ms: 604800000

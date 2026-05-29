@@ -1,6 +1,7 @@
 package com.drama.controller;
 
 import com.drama.common.ApiResponse;
+import com.drama.common.AuthUtils;
 import com.drama.dto.AnswerRequest;
 import com.drama.dto.InteractionStats;
 import com.drama.service.InteractionService;
@@ -16,7 +17,8 @@ public class InteractionController {
 
     @PostMapping("/answer")
     public ApiResponse<Object> answer(@RequestBody AnswerRequest request) {
-        boolean success = interactionService.submitAnswer(request);
+        Long userId = AuthUtils.requireUserId();
+        boolean success = interactionService.submitAnswer(request, userId);
         if (success) {
             InteractionStats stats = interactionService.getStats(request.getInteractionId());
             return ApiResponse.success("答题成功", stats);

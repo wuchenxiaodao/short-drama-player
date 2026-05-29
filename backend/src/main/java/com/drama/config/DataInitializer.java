@@ -2,6 +2,7 @@ package com.drama.config;
 
 import com.drama.model.Drama;
 import com.drama.model.Episode;
+import com.drama.model.InteractionOption;
 import com.drama.model.InteractionPoint;
 import com.drama.model.User;
 import com.drama.repository.DramaRepository;
@@ -10,7 +11,10 @@ import com.drama.repository.InteractionPointRepository;
 import com.drama.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -20,13 +24,14 @@ public class DataInitializer implements CommandLineRunner {
     private final EpisodeRepository episodeRepository;
     private final InteractionPointRepository interactionPointRepository;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) {
         if (userRepository.findByUsername("demo").isEmpty()) {
             User user = new User();
             user.setUsername("demo");
-            user.setPassword("123456");
+            user.setPassword(passwordEncoder.encode("123456"));
             user.setNickname("演示用户");
             user.setPoints(0);
             userRepository.save(user);
@@ -64,16 +69,13 @@ public class DataInitializer implements CommandLineRunner {
         if (first != null) {
             createInteraction(first, 30000L, InteractionPoint.InteractionType.VOTE,
                     "这个线索你觉得指向哪里？",
-                    "[{\"id\":1,\"text\":\"古墓\"},{\"id\":2,\"text\":\"密室\"},{\"id\":3,\"text\":\"地下河\"}]",
-                    null);
+                    List.of(opt("古墓"), opt("密室"), opt("地下河")));
             createInteraction(first, 60000L, InteractionPoint.InteractionType.QUIZ,
                     "笔记中提到的朝代是？",
-                    "[{\"id\":1,\"text\":\"明朝\"},{\"id\":2,\"text\":\"清朝\"},{\"id\":3,\"text\":\"唐朝\"}]",
-                    2L);
+                    List.of(opt("明朝"), optCorrect("清朝"), opt("唐朝")));
             createInteraction(first, 45000L, InteractionPoint.InteractionType.EGG,
                     "隐藏彩蛋：寻宝笔记作者亲笔签名照",
-                    "[{\"id\":1,\"text\":\"领取\"}]",
-                    null);
+                    List.of(opt("领取")));
         }
     }
 
@@ -91,22 +93,19 @@ public class DataInitializer implements CommandLineRunner {
         d = dramaRepository.save(d);
 
         for (int i = 1; i <= 24; i++) {
-            if (i == 18) continue; // missing episode
+            if (i == 18) continue;
             createEpisode(d, i, "第" + i + "集", 90);
         }
         Episode first = episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(d.getId()).get(0);
         createInteraction(first, 25000L, InteractionPoint.InteractionType.VOTE,
                 "男主这波操作你打几分？",
-                "[{\"id\":1,\"text\":\"满分\"},{\"id\":2,\"text\":\"及格\"},{\"id\":3,\"text\":\"不及格\"}]",
-                null);
+                List.of(opt("满分"), opt("及格"), opt("不及格")));
         createInteraction(first, 55000L, InteractionPoint.InteractionType.CHOICE,
                 "如果你是男主，你会怎么应对？",
-                "[{\"id\":1,\"text\":\"正面硬刚\"},{\"id\":2,\"text\":\"智取\"},{\"id\":3,\"text\":\"假装认怂\"}]",
-                null);
+                List.of(opt("正面硬刚"), opt("智取"), opt("假装认怂")));
         createInteraction(first, 70000L, InteractionPoint.InteractionType.EGG,
                 "隐藏彩蛋：纨绔少爷的秘密武器",
-                "[{\"id\":1,\"text\":\"领取\"}]",
-                null);
+                List.of(opt("领取")));
     }
 
     private void initShibasuiGrandma() {
@@ -128,12 +127,10 @@ public class DataInitializer implements CommandLineRunner {
         Episode first = episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(d.getId()).get(0);
         createInteraction(first, 20000L, InteractionPoint.InteractionType.VOTE,
                 "太奶奶这招高不高？",
-                "[{\"id\":1,\"text\":\"太高了\"},{\"id\":2,\"text\":\"一般般\"},{\"id\":3,\"text\":\"看不懂\"}]",
-                null);
+                List.of(opt("太高了"), opt("一般般"), opt("看不懂")));
         createInteraction(first, 50000L, InteractionPoint.InteractionType.EGG,
                 "发现隐藏彩蛋：太奶奶的独家秘方",
-                "[{\"id\":1,\"text\":\"查看\"}]",
-                null);
+                List.of(opt("查看")));
     }
 
     private void initXingdeXiangyu() {
@@ -155,12 +152,10 @@ public class DataInitializer implements CommandLineRunner {
         Episode first = episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(d.getId()).get(0);
         createInteraction(first, 35000L, InteractionPoint.InteractionType.VOTE,
                 "你觉得他们应该离婚吗？",
-                    "[{\"id\":1,\"text\":\"应该\"},{\"id\":2,\"text\":\"不应该\"},{\"id\":3,\"text\":\"再看看\"}]",
-                null);
+                List.of(opt("应该"), opt("不应该"), opt("再看看")));
         createInteraction(first, 55000L, InteractionPoint.InteractionType.EGG,
                 "隐藏彩蛋：离婚协议书背面的秘密",
-                "[{\"id\":1,\"text\":\"查看\"}]",
-                null);
+                List.of(opt("查看")));
     }
 
     private void initHuangnian() {
@@ -182,16 +177,13 @@ public class DataInitializer implements CommandLineRunner {
         Episode first = episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(d.getId()).get(0);
         createInteraction(first, 28000L, InteractionPoint.InteractionType.QUIZ,
                 "系统给了主角什么能力？",
-                "[{\"id\":1,\"text\":\"空间储存\"},{\"id\":2,\"text\":\"预知未来\"},{\"id\":3,\"text\":\"点石成金\"}]",
-                1L);
+                List.of(optCorrect("空间储存"), opt("预知未来"), opt("点石成金")));
         createInteraction(first, 60000L, InteractionPoint.InteractionType.VOTE,
                 "如果你穿越到荒年，第一件事做什么？",
-                "[{\"id\":1,\"text\":\"囤粮食\"},{\"id\":2,\"text\":\"找水源\"},{\"id\":3,\"text\":\"建庇护所\"}]",
-                null);
+                List.of(opt("囤粮食"), opt("找水源"), opt("建庇护所")));
         createInteraction(first, 45000L, InteractionPoint.InteractionType.EGG,
                 "隐藏彩蛋：系统空间里的神秘礼物",
-                "[{\"id\":1,\"text\":\"领取\"}]",
-                null);
+                List.of(opt("领取")));
     }
 
     private void initJialijiaWai() {
@@ -213,12 +205,10 @@ public class DataInitializer implements CommandLineRunner {
         Episode first = episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(d.getId()).get(0);
         createInteraction(first, 30000L, InteractionPoint.InteractionType.VOTE,
                 "婆媳矛盾谁对谁错？",
-                "[{\"id\":1,\"text\":\"婆婆对\"},{\"id\":2,\"text\":\"媳妇对\"},{\"id\":3,\"text\":\"都有问题\"}]",
-                null);
+                List.of(opt("婆婆对"), opt("媳妇对"), opt("都有问题")));
         createInteraction(first, 50000L, InteractionPoint.InteractionType.EGG,
                 "隐藏彩蛋：奶奶传下来的金手镯",
-                "[{\"id\":1,\"text\":\"领取\"}]",
-                null);
+                List.of(opt("领取")));
     }
 
     private Episode createEpisode(Drama drama, int number, String title, int duration) {
@@ -233,14 +223,32 @@ public class DataInitializer implements CommandLineRunner {
 
     private void createInteraction(Episode episode, Long timestampMs,
                                    InteractionPoint.InteractionType type,
-                                   String question, String options, Long correctId) {
+                                   String question, List<OptionDef> optionDefs) {
         InteractionPoint point = new InteractionPoint();
         point.setEpisode(episode);
         point.setTimestampMs(timestampMs);
         point.setInteractionType(type);
         point.setQuestionText(question);
-        point.setOptionsJson(options);
-        point.setCorrectOptionId(correctId);
+        point = interactionPointRepository.save(point);
+
+        for (int i = 0; i < optionDefs.size(); i++) {
+            InteractionOption option = new InteractionOption();
+            option.setInteractionPoint(point);
+            option.setOptionIndex(i + 1);
+            option.setOptionText(optionDefs.get(i).text);
+            option.setIsCorrect(optionDefs.get(i).isCorrect);
+            point.getOptions().add(option);
+        }
         interactionPointRepository.save(point);
     }
+
+    private static OptionDef opt(String text) {
+        return new OptionDef(text, false);
+    }
+
+    private static OptionDef optCorrect(String text) {
+        return new OptionDef(text, true);
+    }
+
+    private record OptionDef(String text, boolean isCorrect) {}
 }

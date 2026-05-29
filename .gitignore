@@ -29,3 +29,5 @@ android/local.properties
 Thumbs.db
 *.mp4
 short-drama/
+.gstack/
+.env

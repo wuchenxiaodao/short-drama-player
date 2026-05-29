@@ -19,12 +19,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
@@ -59,14 +61,13 @@ class DramaServiceTest {
 
     @Test
     void getRecommended_ShouldReturnDramas() {
-        // Arrange
         when(dramaRepository.findTopRated(any(PageRequest.class))).thenReturn(dramaPage);
-        when(ratingRepository.getRatingCount(anyLong())).thenReturn(10L);
+        List<Object[]> countResult = new ArrayList<>();
+        countResult.add(new Object[]{1L, 10L});
+        when(ratingRepository.countByDramaIds(anyList())).thenReturn(countResult);
 
-        // Act
         Page<DramaSummary> result = dramaService.getRecommended(0, 10);
 
-        // Assert
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
         assertEquals("测试短剧", result.getContent().get(0).getTitle());
@@ -75,14 +76,13 @@ class DramaServiceTest {
 
     @Test
     void getHot_ShouldReturnDramas() {
-        // Arrange
         when(dramaRepository.findByIsHotTrueOrderByViewCountDesc(any(PageRequest.class))).thenReturn(dramaPage);
-        when(ratingRepository.getRatingCount(anyLong())).thenReturn(10L);
+        List<Object[]> countResult = new ArrayList<>();
+        countResult.add(new Object[]{1L, 10L});
+        when(ratingRepository.countByDramaIds(anyList())).thenReturn(countResult);
 
-        // Act
         Page<DramaSummary> result = dramaService.getHot(0, 10);
 
-        // Assert
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
         verify(dramaRepository).findByIsHotTrueOrderByViewCountDesc(any(PageRequest.class));
@@ -90,14 +90,13 @@ class DramaServiceTest {
 
     @Test
     void search_ShouldReturnMatchingDramas() {
-        // Arrange
         when(dramaRepository.search(anyString(), any(PageRequest.class))).thenReturn(dramaPage);
-        when(ratingRepository.getRatingCount(anyLong())).thenReturn(10L);
+        List<Object[]> countResult = new ArrayList<>();
+        countResult.add(new Object[]{1L, 10L});
+        when(ratingRepository.countByDramaIds(anyList())).thenReturn(countResult);
 
-        // Act
         Page<DramaSummary> result = dramaService.search("测试", 0, 10);
 
-        // Assert
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
         verify(dramaRepository).search(anyString(), any(PageRequest.class));
@@ -105,14 +104,13 @@ class DramaServiceTest {
 
     @Test
     void getNew_ShouldReturnDramas() {
-        // Arrange
         when(dramaRepository.findByIsNewTrueOrderByCreatedAtDesc(any(PageRequest.class))).thenReturn(dramaPage);
-        when(ratingRepository.getRatingCount(anyLong())).thenReturn(10L);
+        List<Object[]> countResult = new ArrayList<>();
+        countResult.add(new Object[]{1L, 10L});
+        when(ratingRepository.countByDramaIds(anyList())).thenReturn(countResult);
 
-        // Act
         Page<DramaSummary> result = dramaService.getNew(0, 10);
 
-        // Assert
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
         verify(dramaRepository).findByIsNewTrueOrderByCreatedAtDesc(any(PageRequest.class));
@@ -120,29 +118,23 @@ class DramaServiceTest {
 
     @Test
     void getDetail_WhenDramaExists_ShouldReturnDetail() {
-        // Arrange
         when(dramaRepository.findById(1L)).thenReturn(Optional.of(testDrama));
         when(episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(1L)).thenReturn(Arrays.asList(testEpisode));
         when(ratingRepository.getRatingCount(1L)).thenReturn(10L);
         when(dramaRepository.findByCategoryAndIdNot(anyString(), anyLong(), any(PageRequest.class))).thenReturn(Arrays.asList());
 
-        // Act
         DramaDetail result = dramaService.getDetail(1L, null);
 
-        // Assert
         assertNotNull(result);
         assertEquals("测试短剧", result.getTitle());
         assertEquals(1, result.getEpisodes().size());
-        verify(dramaRepository, times(2)).findById(1L); // 被调用2次：一次在getDetail，一次在incrementViewCount
         verify(episodeRepository).findByDramaIdOrderByEpisodeNumberAsc(1L);
     }
 
     @Test
     void getDetail_WhenDramaNotExists_ShouldThrowException() {
-        // Arrange
         when(dramaRepository.findById(999L)).thenReturn(Optional.empty());
 
-        // Act & Assert
         assertThrows(RuntimeException.class, () -> {
             dramaService.getDetail(999L, null);
         });
@@ -151,19 +143,16 @@ class DramaServiceTest {
 
     @Test
     void getDetail_WithUserId_ShouldIncludeProgress() {
-        // Arrange
         when(dramaRepository.findById(1L)).thenReturn(Optional.of(testDrama));
         when(episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(1L)).thenReturn(Arrays.asList(testEpisode));
-        when(watchProgressRepository.findByUserIdAndEpisodeId(1L, 1L)).thenReturn(Optional.empty());
+        when(watchProgressRepository.findByUserIdAndEpisodeIdIn(1L, Arrays.asList(1L))).thenReturn(List.of());
         when(ratingRepository.getRatingCount(1L)).thenReturn(10L);
         when(dramaRepository.findByCategoryAndIdNot(anyString(), anyLong(), any(PageRequest.class))).thenReturn(Arrays.asList());
 
-        // Act
         DramaDetail result = dramaService.getDetail(1L, 1L);
 
-        // Assert
         assertNotNull(result);
         assertEquals("测试短剧", result.getTitle());
-        verify(watchProgressRepository).findByUserIdAndEpisodeId(1L, 1L);
+        verify(watchProgressRepository).findByUserIdAndEpisodeIdIn(1L, Arrays.asList(1L));
     }
 }

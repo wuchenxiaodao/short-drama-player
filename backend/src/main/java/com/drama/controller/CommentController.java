@@ -1,6 +1,7 @@
 package com.drama.controller;
 
 import com.drama.common.ApiResponse;
+import com.drama.common.AuthUtils;
 import com.drama.dto.CommentRequest;
 import com.drama.dto.CommentResponse;
 import com.drama.service.CommentService;
@@ -32,21 +33,20 @@ public class CommentController {
     }
 
     @GetMapping("/replies/{parentCommentId}")
-    public ApiResponse<List<CommentResponse>> getReplies(
-            @PathVariable Long parentCommentId,
-            @RequestParam(required = false) Long userId) {
+    public ApiResponse<List<CommentResponse>> getReplies(@PathVariable Long parentCommentId) {
+        Long userId = AuthUtils.getCurrentUserId();
         return ApiResponse.success(commentService.getReplies(parentCommentId, userId));
     }
 
     @PostMapping
     public ApiResponse<CommentResponse> postComment(@RequestBody CommentRequest request) {
-        return ApiResponse.success(commentService.postComment(request));
+        Long userId = AuthUtils.requireUserId();
+        return ApiResponse.success(commentService.postComment(request, userId));
     }
 
     @PostMapping("/{commentId}/like")
-    public ApiResponse<Map<String, Object>> toggleLike(
-            @PathVariable Long commentId,
-            @RequestParam Long userId) {
+    public ApiResponse<Map<String, Object>> toggleLike(@PathVariable Long commentId) {
+        Long userId = AuthUtils.requireUserId();
         boolean liked = commentService.toggleLike(userId, commentId);
         return ApiResponse.success(Map.of("liked", liked));
     }
