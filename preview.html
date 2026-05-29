@@ -215,6 +215,14 @@ video{width:100%;display:block;max-height:240px;object-fit:contain;background:#0
 /* Search results */
 .search-results{padding:0 12px}
 .search-empty{text-align:center;padding:80px 0;color:var(--text-secondary);font-size:14px}
+.search-history{padding:0 16px;margin-top:8px}
+.search-history-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.search-history-title span{font-size:13px;color:var(--text-secondary);font-weight:500}
+.search-history-title .clear-history{font-size:12px;color:var(--light-gray);cursor:pointer;padding:4px 8px;border-radius:8px}
+.search-history-title .clear-history:active{background:rgba(255,255,255,.06)}
+.search-tags{display:flex;flex-wrap:wrap;gap:8px}
+.search-tag{padding:6px 14px;background:rgba(255,255,255,.06);border-radius:16px;font-size:13px;color:var(--text-secondary);cursor:pointer;transition:all .2s;border:1px solid var(--border-subtle);-webkit-tap-highlight-color:transparent}
+.search-tag:active{transform:scale(0.95);background:rgba(56,189,248,.1);color:var(--cyan);border-color:rgba(56,189,248,.3)}
 /* Download progress */
 .download-bar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--surface-elevated);border-radius:12px;margin:8px 16px;border:1px solid var(--border-subtle)}
 .download-bar .dl-progress{flex:1;height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
@@ -286,6 +294,10 @@ input,button{-webkit-appearance:none;appearance:none}
   <div id="searchResults" class="search-results" style="display:none">
     <div class="drama-grid" id="searchGrid"></div>
     <div class="search-empty" id="searchEmpty" style="display:none">未找到相关短剧</div>
+  </div>
+  <div id="searchHistory" class="search-history" style="display:none">
+    <div class="search-history-title"><span>搜索历史</span><span class="clear-history" onclick="clearSearchHistory()">清除</span></div>
+    <div class="search-tags" id="searchTags"></div>
   </div>
 </div>
 
@@ -788,6 +800,7 @@ function showHomePage() {
   document.getElementById('searchInput').value = '';
   document.getElementById('homeContent').style.display = 'block';
   document.getElementById('searchResults').style.display = 'none';
+  renderSearchHistory();
 }
 
 // ========== Home ==========
@@ -863,15 +876,48 @@ function onSearchInput() {
   searchTimer = setTimeout(doSearch, 300);
 }
 
+function getSearchHistory() {
+  try { return JSON.parse(localStorage.getItem('search_history') || '[]'); } catch { return []; }
+}
+
+function saveSearchHistory(kw) {
+  let history = getSearchHistory().filter(h => h !== kw);
+  history.unshift(kw);
+  if (history.length > 15) history = history.slice(0, 15);
+  localStorage.setItem('search_history', JSON.stringify(history));
+}
+
+function renderSearchHistory() {
+  const history = getSearchHistory();
+  const container = document.getElementById('searchHistory');
+  const tags = document.getElementById('searchTags');
+  if (history.length === 0) { container.style.display = 'none'; return; }
+  container.style.display = 'block';
+  tags.innerHTML = history.map(kw => `<span class="search-tag" onclick="searchFromHistory('${kw.replace(/'/g, "\\'")}')">${kw}</span>`).join('');
+}
+
+function clearSearchHistory() {
+  localStorage.removeItem('search_history');
+  renderSearchHistory();
+}
+
+function searchFromHistory(kw) {
+  document.getElementById('searchInput').value = kw;
+  doSearch();
+}
+
 async function doSearch() {
   const kw = document.getElementById('searchInput').value.trim();
   if (!kw) {
     document.getElementById('homeContent').style.display = 'block';
     document.getElementById('searchResults').style.display = 'none';
+    renderSearchHistory();
     return;
   }
   document.getElementById('homeContent').style.display = 'none';
   document.getElementById('searchResults').style.display = 'block';
+  document.getElementById('searchHistory').style.display = 'none';
+  saveSearchHistory(kw);
   try {
     const data = await api(`/api/drama/search?keyword=${encodeURIComponent(kw)}&page=0&size=20`);
     if (!data.content || data.content.length === 0) {
