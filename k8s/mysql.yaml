@@ -32,8 +32,8 @@ spec:
             - name: MYSQL_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: mysql-secret
-                  key: root-password
+                  name: drama-secrets
+                  key: mysql-root-password
             - name: MYSQL_DATABASE
               value: drama_player
           volumeMounts:
@@ -67,11 +67,4 @@ spec:
     - port: 3306
       targetPort: 3306
   clusterIP: None
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: mysql-secret
-type: Opaque
-data:
-  root-password: cm9vdA==  # base64 encoded "root"
+
