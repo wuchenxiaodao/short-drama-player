@@ -577,7 +577,12 @@ let backendOK = false;
 async function api(url, opts) {
   if(backendOK) {
     try {
+      opts = opts || {};
+      opts.headers = opts.headers || {};
+      const token = localStorage.getItem('drama_token');
+      if (token) opts.headers['Authorization'] = 'Bearer ' + token;
       const r=await fetch(API+url,opts);
+      if (r.status === 401) { localStorage.removeItem('drama_token'); localStorage.removeItem('drama_user'); currentUser=null; showAuthPage(); return {message:'请重新登录'}; }
       const json=await r.json();
       if (json.code !== undefined) return json.data !== null && json.data !== undefined ? json.data : {success: json.code === 200, message: json.message};
       return json;
@@ -728,6 +733,7 @@ async function doAuth() {
       const r = await api('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password, nickname }) });
       if (r.userId) {
         currentUser = { userId: r.userId, nickname: r.nickname, username };
+        if (r.token) localStorage.setItem('drama_token', r.token);
         saveUser();
         showToast('注册成功！');
         navTo('homePage');
@@ -738,6 +744,7 @@ async function doAuth() {
       const r = await api('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
       if (r.userId) {
         currentUser = { userId: r.userId, nickname: r.nickname, username: r.username || username };
+        if (r.token) localStorage.setItem('drama_token', r.token);
         saveUser();
         showToast('登录成功！');
         navTo('homePage');
@@ -752,7 +759,7 @@ async function doAuth() {
 
 function saveUser() { localStorage.setItem('drama_user', JSON.stringify(currentUser)); }
 function loadUser() { try { currentUser = JSON.parse(localStorage.getItem('drama_user')); } catch(e) {} }
-function logout() { if(!confirm('确定要退出登录吗？')) return; currentUser = null; localStorage.removeItem('drama_user'); showAuthPage(); }
+function logout() { if(!confirm('确定要退出登录吗？')) return; currentUser = null; localStorage.removeItem('drama_user'); localStorage.removeItem('drama_token'); showAuthPage(); }
 
 function showAuthPage() {
   document.querySelectorAll('.page,.detail-page,.player-page').forEach(p => p.classList.remove('active'));
@@ -938,7 +945,7 @@ function renderStarPicker(current) {
 
 async function submitRating(score) {
   if (!currentUser) { showToast('请先登录'); return; }
-  const r = await api('/api/rating/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.userId, dramaId: currentDrama.id, score }) });
+  const r = await api('/api/rating/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dramaId: currentDrama.id, score }) });
   if (r.success) {
     renderStarPicker(score);
     document.getElementById('detailRating').textContent = r.averageRating;
@@ -1122,7 +1129,7 @@ function reportProgress(currentTime, episodeId) {
   const now = Date.now();
   if (now - lastReportTime < 5000) return;
   lastReportTime = now;
-  api('/api/progress/report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.userId, episodeId, positionMs: Math.floor(currentTime * 1000) }) });
+  api('/api/progress/report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ episodeId, positionMs: Math.floor(currentTime * 1000) }) });
 }
 
 function generateHighlights(playInfo) {
@@ -1242,7 +1249,7 @@ function closeFloatCard(id) {
 async function collectEgg(interId, cardId) {
   if (!currentUser) { showToast('请先登录'); return; }
   try {
-    const r = await api('/api/interaction/answer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.userId, interactionId: interId, choiceId: 1 }) });
+    const r = await api('/api/interaction/answer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ interactionId: interId, choiceId: 1 }) });
     if (r.success) { showPoints('+5'); showToast('&#127873; 彩蛋已收集！+5积分'); const card = document.getElementById(cardId); if (card) { const btn = card.querySelector('.if-egg-btn'); if (btn) { btn.textContent = '&#10003; 已收集'; btn.disabled = true; btn.style.opacity = '0.5'; } } }
     else { showToast('已经领取过了'); }
   } catch (e) { showToast('领取失败'); }
@@ -1255,7 +1262,7 @@ async function floatSelect(optId, interId, cardId) {
   if (!card) return;
   card.querySelectorAll('.if-opt').forEach(b => { b.disabled = true; b.style.pointerEvents = 'none'; b.classList.add(b.dataset.id == optId ? 'selected' : ''); });
   try {
-    const r = await api('/api/interaction/answer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.userId, interactionId: interId, choiceId: optId }) });
+    const r = await api('/api/interaction/answer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ interactionId: interId, choiceId: optId }) });
     if (r.success) {
       const inter = currentEpisode.interactions.find(i => i.id === interId);
       if (inter?.type === 'QUIZ') {
@@ -1291,7 +1298,7 @@ function startOnlineHeartbeat(episodeId) {
 
 function sendHeartbeat(episodeId) {
   if (!currentUser) return;
-  api('/api/online/heartbeat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.userId, episodeId }) });
+  api('/api/online/heartbeat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ episodeId }) });
 }
 
 function updateOnlineCount(episodeId) {
