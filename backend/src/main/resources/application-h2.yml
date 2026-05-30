@@ -3,12 +3,12 @@ server:
 
 spring:
   datasource:
-    url: jdbc:h2:mem:drama_player;DB_CLOSE_DELAY=-1;MODE=MYSQL;CHARSET=UTF-8
+    url: jdbc:h2:mem:drama_player;DB_CLOSE_DELAY=-1;MODE=MYSQL
     username: sa
     password:
     driver-class-name: org.h2.Driver
     hikari:
-      connection-init-sql: SET NAMES UTF-8
+      connection-init-sql: SET NAMES DEFAULT
   jpa:
     hibernate:
       ddl-auto: create
