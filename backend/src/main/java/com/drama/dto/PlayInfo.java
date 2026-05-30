@@ -24,6 +24,8 @@ public class PlayInfo {
             private Long id;
             private String text;
             private Boolean isCorrect;
+            private Long nextInteractionId;
+            private String feedbackText;
         }
     }
 }

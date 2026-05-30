@@ -22,4 +22,11 @@ public class InteractionOption {
     private String optionText;
 
     private Boolean isCorrect;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "next_interaction_id")
+    private InteractionPoint nextInteraction;
+
+    @Column(length = 500)
+    private String feedbackText;
 }

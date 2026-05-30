@@ -67,6 +67,10 @@ const interaction = {
         const type = this.currentPoint.type;
         let resultHtml = '';
 
+        const selectedOption = this.currentPoint.options?.find(o => o.id === selectedOptionId);
+        const feedbackText = selectedOption?.feedbackText || '';
+        const nextInteractionId = selectedOption?.nextInteractionId || null;
+
         if (type === 'QUIZ') {
             const correctOpt = this.currentPoint.options.find(o => o.isCorrect);
             const isCorrect = correctOpt && selectedOptionId === correctOpt.id;
@@ -84,13 +88,31 @@ const interaction = {
                 });
                 resultHtml = '❌ 答错了';
             }
-        } else if (type === 'VOTE' || type === 'CHOICE') {
+            if (feedbackText) {
+                resultHtml += `<div class="feedback-text" style="margin-top:8px;padding:8px;background:rgba(255,255,255,0.1);border-radius:6px;font-size:14px;">${this.escapeHtml(feedbackText)}</div>`;
+            }
+        } else if (type === 'CHOICE') {
+            resultHtml = feedbackText || '你做出了选择！';
+            if (nextInteractionId) {
+                resultHtml += '<div class="branch-hint" style="margin-top:8px;font-size:12px;color:#aaa;">你的选择将影响后续剧情...</div>';
+            }
+        } else if (type === 'VOTE') {
             resultHtml = this.buildStatsHtml(result);
+            if (feedbackText) {
+                resultHtml += `<div class="feedback-text" style="margin-top:8px;padding:8px;background:rgba(255,255,255,0.1);border-radius:6px;font-size:14px;">${this.escapeHtml(feedbackText)}</div>`;
+            }
         } else if (type === 'EGG') {
             resultHtml = '🥚 彩蛋已收集 +5分';
             this.triggerEmojiRain(['🥚', '🎁', '✨']);
+            if (feedbackText) {
+                resultHtml += `<div class="feedback-text" style="margin-top:8px;padding:8px;background:rgba(255,255,255,0.1);border-radius:6px;font-size:14px;">${this.escapeHtml(feedbackText)}</div>`;
+            }
         } else {
             resultHtml = '已提交';
+        }
+
+        if (nextInteractionId) {
+            this.pendingBranchId = nextInteractionId;
         }
 
         resultHtml += '<button class="continue-btn" onclick="interaction.close()">继续观看</button>';

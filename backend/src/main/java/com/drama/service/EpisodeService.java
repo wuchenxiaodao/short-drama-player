@@ -94,6 +94,8 @@ public class EpisodeService {
             opt.setId(o.getId());
             opt.setText(o.getOptionText());
             opt.setIsCorrect(o.getIsCorrect());
+            opt.setNextInteractionId(o.getNextInteraction() != null ? o.getNextInteraction().getId() : null);
+            opt.setFeedbackText(o.getFeedbackText());
             return opt;
         }).collect(Collectors.toList()));
         return info;

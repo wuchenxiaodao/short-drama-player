@@ -14,6 +14,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -79,9 +80,17 @@ public class DataInitializer implements CommandLineRunner {
         List<Episode> episodes = episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(d.getId());
         if (episodes.size() > 1) {
             Episode ep2 = episodes.get(1);
-            createInteraction(ep2, 30000L, InteractionPoint.InteractionType.CHOICE,
-                    "寻宝方向选择",
-                    List.of(opt("古墓"), opt("密室"), opt("地下河")));
+            buildChoiceWithBranches(ep2, "寻宝方向选择", 30000L,
+                    new BranchOption("古墓", "💪 你选择了正面硬刚！石门轰然倒塌，但惊动了守墓人...",
+                            "QUIZ", 50000L, "守墓人出现了！他的弱点是什么？",
+                            List.of(opt("他左眼的伤疤"), optCorrect("他手中的法器"), opt("他的影子"))),
+                    new BranchOption("密室", "🤫 你选择了智取！发现了一条隐蔽的裂缝，成功潜入...",
+                            "QUIZ", 50000L, "暗道中出现了三扇门，哪扇门是正确的？",
+                            List.of(opt("左边刻着龙纹的门"), optCorrect("中间没有花纹的门"), opt("右边刻着蛇纹的门"))),
+                    new BranchOption("地下河", "👀 你选择了谨慎行事！在外围发现了重要线索...",
+                            "VOTE", 50000L, "你发现有人在监视古墓，你打算？",
+                            List.of(opt("跟踪监视者"), opt("回去告诉队友"), opt("设下陷阱等他来")))
+            );
             createInteraction(ep2, 60000L, InteractionPoint.InteractionType.QUIZ,
                     "这个暗号代表什么？",
                     List.of(opt("日月"), optCorrect("山川"), opt("星辰")));
@@ -96,7 +105,8 @@ public class DataInitializer implements CommandLineRunner {
                     List.of(opt("老张"), opt("小李"), opt("王教授")));
             createInteraction(ep3, 50000L, InteractionPoint.InteractionType.CHOICE,
                     "分头行动还是一起走？",
-                    List.of(opt("分头行动"), opt("一起走")));
+                    List.of(optWithFeedback("分头行动", "🏃 你选择了分头行动，效率翻倍但风险也翻倍..."),
+                            optWithFeedback("一起走", "👥 你选择了团队协作，安全第一...")));
             createInteraction(ep3, 70000L, InteractionPoint.InteractionType.EGG,
                     "隐藏地图碎片2",
                     List.of(opt("领取")));
@@ -108,7 +118,8 @@ public class DataInitializer implements CommandLineRunner {
                     List.of(opt("宝箱"), optCorrect("密室大门"), opt("地窖")));
             createInteraction(ep4, 60000L, InteractionPoint.InteractionType.CHOICE,
                     "遇到岔路口，你选哪条？",
-                    List.of(opt("左边亮光"), opt("右边暗道")));
+                    List.of(optWithFeedback("左边亮光", "💡 你选择了光明的道路，前方似乎安全..."),
+                            optWithFeedback("右边暗道", "🌑 你选择了黑暗的暗道，充满了未知...")));
             createInteraction(ep4, 45000L, InteractionPoint.InteractionType.EGG,
                     "隐藏地图碎片3",
                     List.of(opt("领取")));
@@ -144,9 +155,17 @@ public class DataInitializer implements CommandLineRunner {
         createInteraction(first, 25000L, InteractionPoint.InteractionType.VOTE,
                 "男主这波操作你打几分？",
                 List.of(opt("满分"), opt("及格"), opt("不及格")));
-        createInteraction(first, 55000L, InteractionPoint.InteractionType.CHOICE,
-                "如果你是男主，你会怎么应对？",
-                List.of(opt("正面硬刚"), opt("智取"), opt("假装认怂")));
+        buildChoiceWithBranches(first, "如果你是男主，你会怎么应对？", 55000L,
+                new BranchOption("正面硬刚", "⚔️ 你选择了正面硬刚！气势如虹，敌人被你的霸气震慑...",
+                        "QUIZ", 70000L, "敌人露出了破绽，你抓住了吗？",
+                        List.of(optCorrect("抓住了，一击制敌"), opt("犹豫了一下，错失良机"))),
+                new BranchOption("智取", "🧠 你选择了智取！以巧破力，四两拨千斤...",
+                        "VOTE", 70000L, "你的计策成功了，下一步？",
+                        List.of(opt("乘胜追击"), opt("见好就收"), opt("留条后路"))),
+                new BranchOption("假装认怂", "😏 你选择了韬光养晦！暗中积蓄力量...",
+                        "QUIZ", 70000L, "敌人放松警惕了，你准备？",
+                        List.of(opt("突然反击"), opt("继续潜伏"), opt("找帮手")))
+        );
         createInteraction(first, 70000L, InteractionPoint.InteractionType.EGG,
                 "隐藏彩蛋：纨绔少爷的秘密武器",
                 List.of(opt("领取")));
@@ -158,7 +177,8 @@ public class DataInitializer implements CommandLineRunner {
                     List.of(opt("富二代"), optCorrect("隐藏高手"), opt("穿越者")));
             createInteraction(ep2, 55000L, InteractionPoint.InteractionType.CHOICE,
                     "面对挑衅你怎么做？",
-                    List.of(opt("正面回击"), opt("以退为进")));
+                    List.of(optWithFeedback("正面回击", "👊 你选择了正面回击！寸步不让，气势逼人..."),
+                            optWithFeedback("以退为进", "🔄 你选择了以退为进！以柔克刚，后发制人...")));
             createInteraction(ep2, 45000L, InteractionPoint.InteractionType.EGG,
                     "纨绔少爷的隐藏技能",
                     List.of(opt("领取")));
@@ -170,7 +190,8 @@ public class DataInitializer implements CommandLineRunner {
                     List.of(opt("打脸反派"), opt("英雄救美"), opt("装逼成功")));
             createInteraction(ep3, 60000L, InteractionPoint.InteractionType.CHOICE,
                     "下一步你选什么策略？",
-                    List.of(opt("主动出击"), opt("静观其变")));
+                    List.of(optWithFeedback("主动出击", "🗡️ 你选择了主动出击！先发制人..."),
+                            optWithFeedback("静观其变", "👁️ 你选择了静观其变！知己知彼...")));
             createInteraction(ep3, 45000L, InteractionPoint.InteractionType.EGG,
                     "纨绔语录收藏",
                     List.of(opt("领取")));
@@ -215,9 +236,17 @@ public class DataInitializer implements CommandLineRunner {
         }
         if (episodes.size() > 2) {
             Episode ep3 = episodes.get(2);
-            createInteraction(ep3, 30000L, InteractionPoint.InteractionType.CHOICE,
-                    "太奶奶该不该原谅二叔？",
-                    List.of(opt("原谅"), opt("不原谅"), opt("看表现")));
+            buildChoiceWithBranches(ep3, "太奶奶该不该原谅二叔？", 30000L,
+                    new BranchOption("原谅", "💕 你选择了原谅！以德服人，化敌为友...",
+                            "VOTE", 50000L, "二叔会改过自新吗？",
+                            List.of(opt("会的"), opt("难说"), opt("走着瞧"))),
+                    new BranchOption("不原谅", "❌ 你选择了不原谅！有些底线不能破...",
+                            "QUIZ", 50000L, "不原谅的后果是什么？",
+                            List.of(opt("二叔离开家族"), optCorrect("二叔暗中使坏"), opt("家族分裂"))),
+                    new BranchOption("看表现", "👀 你选择了观察！先看他怎么做...",
+                            "VOTE", 50000L, "二叔的表现如何？",
+                            List.of(opt("还不错"), opt("老样子"), opt("变本加厉")))
+            );
             createInteraction(ep3, 60000L, InteractionPoint.InteractionType.EGG,
                     "家族秘史揭秘",
                     List.of(opt("查看")));
@@ -288,9 +317,17 @@ public class DataInitializer implements CommandLineRunner {
         List<Episode> episodes = episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(d.getId());
         if (episodes.size() > 1) {
             Episode ep2 = episodes.get(1);
-            createInteraction(ep2, 30000L, InteractionPoint.InteractionType.CHOICE,
-                    "粮食不够了，先给谁吃？",
-                    List.of(opt("老人孩子"), opt("壮劳力"), opt("平均分配")));
+            buildChoiceWithBranches(ep2, "粮食不够了，先给谁吃？", 30000L,
+                    new BranchOption("老人孩子", "👶 你选择了优先照顾老弱！善心可鉴...",
+                            "VOTE", 50000L, "壮劳力有意见了，怎么办？",
+                            List.of(opt("安抚他们"), opt("解释原因"), opt("找其他办法"))),
+                    new BranchOption("壮劳力", "💪 你选择了壮劳力优先！保证劳动力...",
+                            "QUIZ", 50000L, "壮劳力吃饱了，下一步？",
+                            List.of(optCorrect("组织开荒种地"), opt("继续找粮食"), opt("外出打猎"))),
+                    new BranchOption("平均分配", "⚖️ 你选择了公平分配！一碗水端平...",
+                            "VOTE", 50000L, "分配方案大家满意吗？",
+                            List.of(opt("满意"), opt("不太满意"), opt("勉强接受")))
+            );
             createInteraction(ep2, 60000L, InteractionPoint.InteractionType.EGG,
                     "系统升级奖励",
                     List.of(opt("领取")));
@@ -366,18 +403,94 @@ public class DataInitializer implements CommandLineRunner {
             option.setOptionIndex(i + 1);
             option.setOptionText(optionDefs.get(i).text);
             option.setIsCorrect(optionDefs.get(i).isCorrect);
+            option.setFeedbackText(optionDefs.get(i).feedbackText);
             point.getOptions().add(option);
         }
         interactionPointRepository.save(point);
     }
 
+    private void buildChoiceWithBranches(Episode episode, String question, Long timestampMs,
+                                         BranchOption... branchOptions) {
+        InteractionPoint choicePoint = new InteractionPoint();
+        choicePoint.setEpisode(episode);
+        choicePoint.setTimestampMs(timestampMs);
+        choicePoint.setInteractionType(InteractionPoint.InteractionType.CHOICE);
+        choicePoint.setQuestionText(question);
+
+        List<InteractionOption> options = new ArrayList<>();
+        for (int i = 0; i < branchOptions.length; i++) {
+            BranchOption bo = branchOptions[i];
+            InteractionOption opt = new InteractionOption();
+            opt.setInteractionPoint(choicePoint);
+            opt.setOptionIndex(i + 1);
+            opt.setOptionText(bo.optionText);
+            opt.setIsCorrect(false);
+            opt.setFeedbackText(bo.feedbackText);
+            options.add(opt);
+        }
+        choicePoint.setOptions(options);
+        interactionPointRepository.save(choicePoint);
+
+        for (int i = 0; i < branchOptions.length; i++) {
+            BranchOption bo = branchOptions[i];
+            InteractionOption savedOpt = options.get(i);
+
+            InteractionPoint branch = new InteractionPoint();
+            branch.setEpisode(episode);
+            branch.setTimestampMs(bo.branchTimestampMs);
+            branch.setInteractionType(InteractionPoint.InteractionType.valueOf(bo.branchType));
+            branch.setQuestionText(bo.branchQuestion);
+            branch.setPrerequisite(choicePoint);
+            branch.setPrerequisiteChoiceOptionId(savedOpt.getId());
+
+            List<InteractionOption> branchOpts = new ArrayList<>();
+            for (int j = 0; j < bo.branchOptionDefs.size(); j++) {
+                InteractionOption bOpt = new InteractionOption();
+                bOpt.setInteractionPoint(branch);
+                bOpt.setOptionIndex(j + 1);
+                bOpt.setOptionText(bo.branchOptionDefs.get(j).text);
+                bOpt.setIsCorrect(bo.branchOptionDefs.get(j).isCorrect);
+                branchOpts.add(bOpt);
+            }
+            branch.setOptions(branchOpts);
+            interactionPointRepository.save(branch);
+
+            savedOpt.setNextInteraction(branch);
+            interactionPointRepository.flush();
+        }
+    }
+
     private static OptionDef opt(String text) {
-        return new OptionDef(text, false);
+        return new OptionDef(text, false, null);
     }
 
     private static OptionDef optCorrect(String text) {
-        return new OptionDef(text, true);
+        return new OptionDef(text, true, null);
     }
 
-    private record OptionDef(String text, boolean isCorrect) {}
+    private static OptionDef optWithFeedback(String text, String feedback) {
+        return new OptionDef(text, false, feedback);
+    }
+
+    private record OptionDef(String text, boolean isCorrect, String feedbackText) {}
+
+    private static class BranchOption {
+        String optionText;
+        String feedbackText;
+        String branchType;
+        Long branchTimestampMs;
+        String branchQuestion;
+        List<OptionDef> branchOptionDefs;
+
+        BranchOption(String optionText, String feedbackText, String branchType,
+                     Long branchTimestampMs, String branchQuestion,
+                     List<OptionDef> branchOptionDefs) {
+            this.optionText = optionText;
+            this.feedbackText = feedbackText;
+            this.branchType = branchType;
+            this.branchTimestampMs = branchTimestampMs;
+            this.branchQuestion = branchQuestion;
+            this.branchOptionDefs = branchOptionDefs;
+        }
+    }
 }
