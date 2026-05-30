@@ -51,7 +51,11 @@ const player = {
 
         if (episode.lastPositionMs && episode.lastPositionMs > 0) {
             this.videoElement.addEventListener('loadedmetadata', () => {
-                this.videoElement.currentTime = episode.lastPositionMs / 1000;
+                const resumeSec = episode.lastPositionMs / 1000;
+                if (this.videoElement.duration > resumeSec + 2) {
+                    this.videoElement.currentTime = resumeSec;
+                    this.showResumeHint(resumeSec);
+                }
             }, { once: true });
         }
     },
@@ -82,7 +86,20 @@ const player = {
         api.reportProgress(this.currentEpisode.episodeId || this.currentEpisode.id, positionMs).catch(() => {});
     },
 
+    showResumeHint(positionSec) {
+        const hint = document.createElement('div');
+        hint.className = 'resume-hint';
+        hint.textContent = `已恢复到 ${Math.floor(positionSec / 60)}:${String(Math.floor(positionSec % 60)).padStart(2, '0')}`;
+        hint.style.cssText = 'position:absolute;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);color:#fff;padding:6px 16px;border-radius:20px;font-size:13px;z-index:10;transition:opacity 0.5s;';
+        const container = document.getElementById('player-container') || this.videoElement.parentElement;
+        container.style.position = 'relative';
+        container.appendChild(hint);
+        setTimeout(() => { hint.style.opacity = '0'; }, 2500);
+        setTimeout(() => { hint.remove(); }, 3000);
+    },
+
     onVideoEnded() {
+        this.reportProgress();
         const drama = state.currentDrama;
         const currentEp = state.currentEpisode;
         if (!drama || !currentEp) return;
