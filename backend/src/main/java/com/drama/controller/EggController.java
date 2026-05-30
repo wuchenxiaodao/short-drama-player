@@ -26,7 +26,7 @@ public class EggController {
     public ApiResponse<EggCollectionResponse> getCollection() {
         Long userId = AuthUtils.requireUserId();
 
-        List<InteractionPoint> allEggs = interactionPointRepository.findByInteractionType(InteractionPoint.InteractionType.EGG);
+        List<InteractionPoint> allEggs = interactionPointRepository.findByInteractionTypeWithEpisodeAndDrama(InteractionPoint.InteractionType.EGG);
         List<UserEgg> userEggs = userEggRepository.findByUserId(userId);
         Set<Long> collectedIds = userEggs.stream()
                 .map(UserEgg::getInteractionId)
