@@ -23,7 +23,7 @@ public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
 
-    @Value("${cors.allowed-origins:http://localhost:3000,http://localhost:8080}")
+    @Value("${cors.allowed-origins:http://localhost:*,http://127.0.0.1:*,http://10.0.2.2:*,http://172.16.*:*}")
     private String allowedOrigins;
 
     public SecurityConfig(JwtFilter jwtFilter) {
@@ -54,6 +54,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/comment/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/danmaku/episode/**").permitAll()
                 .requestMatchers("/api/rating/stats").permitAll()
+                .requestMatchers("/api/video/**").permitAll()
                 .requestMatchers("/api/online/episode/*/count").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/h2-console/**").permitAll()
                 .requestMatchers("/", "/preview.html", "/index.html", "/css/**", "/js/**", "/assets/**").permitAll()
@@ -69,7 +70,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(allowedOrigins.split(",")));
+        config.setAllowedOriginPatterns(List.of(allowedOrigins.split(",")));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

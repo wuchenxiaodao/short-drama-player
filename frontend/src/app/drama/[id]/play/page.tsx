@@ -21,14 +21,13 @@ import {
   sendDanmaku as sendDanmakuApi,
   submitAnswer,
   reportProgress,
+  resolveUrl,
 } from '@/lib/api-client';
 import { formatTimeAgo, formatDuration, cn } from '@/lib/utils';
 import { useAuthStore } from '@/lib/auth';
 import VideoPlayer from '@/components/VideoPlayer';
 import InteractionOverlay from '@/components/InteractionOverlay';
 import DanmakuLayer from '@/components/danmaku/DanmakuLayer';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
 
 export default function PlayPage() {
   const params = useParams();
@@ -52,35 +51,42 @@ export default function PlayPage() {
   const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
 
+  const [episodeTitle, setEpisodeTitle] = useState('');
+
   useEffect(() => {
     if (!dramaId) return;
     setLoading(true);
     getDramaDetail(dramaId)
-      .then(setDrama)
+      .then((detail: any) => {
+        setDrama(detail);
+        const epInfo = detail?.episodes?.find(
+          (e: any) => e.episodeNumber === episodeNumber
+        );
+        if (epInfo) {
+          setEpisodeTitle(epInfo.title || `第${episodeNumber}集`);
+          return loadEpisodeData(epInfo.id);
+        }
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [dramaId]);
-
-  useEffect(() => {
-    if (!dramaId || !episodeNumber) return;
-    setLoading(true);
-
-    Promise.all([
-      getEpisodePlayInfo(dramaId, episodeNumber).catch(() => null),
-      getDanmakuForEpisode(dramaId, episodeNumber),
-      getInteractionPoints(dramaId, episodeNumber),
-      getWatchProgress(dramaId, episodeNumber),
-      getComments(dramaId, 1, 5).catch(() => []),
-    ])
-      .then(([ep, danmakus, interactionPoints, progress, comms]) => {
-        setEpisode(ep);
-        setDanmakuList(danmakus);
-        setInteractions(interactionPoints);
-        setResumePositionMs(progress);
-        setComments(comms);
-      })
-      .finally(() => setLoading(false));
   }, [dramaId, episodeNumber]);
+
+  async function loadEpisodeData(episodeId: number) {
+    try {
+      const ep = await getEpisodePlayInfo(episodeId);
+      setEpisode(ep);
+
+      const [danmakus, comms] = await Promise.all([
+        getDanmaku(episodeId).catch(() => []),
+        getComments(dramaId, 0, 5).catch(() => ({ content: [] })),
+      ]);
+      setDanmakuList(Array.isArray(danmakus) ? danmakus : []);
+      const commentData = comms as any;
+      setComments(Array.isArray(commentData) ? commentData : (commentData?.content || []));
+    } catch (err) {
+      console.error('Failed to load episode data:', err);
+    }
+  }
 
   useEffect(() => {
     return () => {
@@ -167,7 +173,7 @@ export default function PlayPage() {
     return <PlayPageSkeleton />;
   }
 
-  if (!drama || !episode) {
+  if (!drama) {
     return (
       <div className="min-h-screen flex items-center justify-center text-drama-muted">
         加载失败
@@ -181,24 +187,28 @@ export default function PlayPage() {
     <div className="min-h-screen pb-12">
       <div className="relative bg-black">
         <div className="max-w-5xl mx-auto">
-          <VideoPlayer
-            src={episode.videoUrl}
-            streams={episode.streams}
-            onTimeUpdate={handleTimeUpdate}
-            onEnded={handleEnded}
-            initialPosition={resumePositionMs}
-          />
-          <DanmakuLayer
-            danmakuList={danmakuList}
-            currentTimeMs={currentTimeMs}
-            onSend={handleSendDanmaku}
-            enabled={danmakuEnabled}
-          />
-          <InteractionOverlay
-            interactions={interactions}
-            currentTimeMs={currentTimeMs}
-            onAnswer={handleInteractionAnswer}
-          />
+          {episode && (
+            <>
+              <VideoPlayer
+                src={resolveUrl(episode.videoUrl)}
+                streams={episode.streams?.map(s => ({ ...s, url: resolveUrl(s.url) }))}
+                onTimeUpdate={handleTimeUpdate}
+                onEnded={handleEnded}
+                initialPosition={resumePositionMs}
+              />
+              <DanmakuLayer
+                danmakuList={danmakuList}
+                currentTimeMs={currentTimeMs}
+                onSend={handleSendDanmaku}
+                enabled={danmakuEnabled}
+              />
+              <InteractionOverlay
+                interactions={interactions}
+                currentTimeMs={currentTimeMs}
+                onAnswer={handleInteractionAnswer}
+              />
+            </>
+          )}
         </div>
       </div>
 
@@ -215,7 +225,7 @@ export default function PlayPage() {
               {drama.title}
             </h1>
             <p className="text-xs text-drama-muted">
-              第{episodeNumber}集 · {episode.title} · {formatDuration(episode.durationSeconds)}
+              第{episodeNumber}集{episodeTitle ? ` · ${episodeTitle}` : ''}{episode ? ` · ${formatDuration(episode.durationSeconds)}` : ''}
             </p>
           </div>
         </div>
@@ -272,7 +282,7 @@ export default function PlayPage() {
             {comments.map((comment) => (
               <div key={comment.id} className="flex gap-3 py-1">
                 <div className="w-7 h-7 rounded-full bg-drama-surface flex items-center justify-center flex-shrink-0 text-xs text-drama-muted">
-                  {comment.username.charAt(0).toUpperCase()}
+                  {comment.username?.charAt(0)?.toUpperCase() || '?'}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
@@ -306,63 +316,6 @@ export default function PlayPage() {
       </div>
     </div>
   );
-}
-
-async function getDanmakuForEpisode(dramaId: number, episodeNumber: number): Promise<Danmaku[]> {
-  try {
-    const episode = await getEpisodePlayInfo(dramaId, episodeNumber);
-    return await getDanmaku(episode.id);
-  } catch {
-    return [];
-  }
-}
-
-async function getInteractionPoints(dramaId: number, episodeNumber: number): Promise<InteractionPoint[]> {
-  try {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-storage') : null;
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    if (token) {
-      try {
-        const parsed = JSON.parse(token);
-        if (parsed?.state?.token) {
-          headers['Authorization'] = `Bearer ${parsed.state.token}`;
-        }
-      } catch {}
-    }
-    const res = await fetch(
-      `${API_BASE_URL}/api/dramas/${dramaId}/episodes/${episodeNumber}/interactions`,
-      { headers }
-    );
-    if (!res.ok) return [];
-    const json = await res.json();
-    return json.data || json || [];
-  } catch {
-    return [];
-  }
-}
-
-async function getWatchProgress(dramaId: number, episodeNumber: number): Promise<number> {
-  try {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-storage') : null;
-    if (!token) return 0;
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    try {
-      const parsed = JSON.parse(token);
-      if (parsed?.state?.token) {
-        headers['Authorization'] = `Bearer ${parsed.state.token}`;
-      }
-    } catch {}
-    const episode = await getEpisodePlayInfo(dramaId, episodeNumber);
-    const res = await fetch(
-      `${API_BASE_URL}/api/watch-progress?episodeId=${episode.id}`,
-      { headers }
-    );
-    if (!res.ok) return 0;
-    const json = await res.json();
-    return json.data?.positionMs || 0;
-  } catch {
-    return 0;
-  }
 }
 
 function PlayPageSkeleton() {

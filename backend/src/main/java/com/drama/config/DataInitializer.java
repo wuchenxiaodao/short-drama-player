@@ -418,9 +418,10 @@ public class DataInitializer implements CommandLineRunner {
         ep.setDrama(drama);
         ep.setEpisodeNumber(number);
         ep.setTitle(title);
-        ep.setVideoUrl("https://www.w3schools.com/html/mov_bbb.mp4");
+        String videoPath = "/videos/" + drama.getTitle() + "/第" + number + "集.mp4";
+        ep.setVideoUrl(videoPath);
         ep.setDurationSeconds(duration);
-        ep.setStreams("[{\"quality\":\"720p\",\"url\":\"https://www.w3schools.com/html/mov_bbb.mp4\"},{\"quality\":\"1080p\",\"url\":\"https://www.w3schools.com/html/mov_bbb.mp4\"}]");
+        ep.setStreams("[{\"quality\":\"720p\",\"url\":\"" + videoPath + "\"},{\"quality\":\"1080p\",\"url\":\"" + videoPath + "\"}]");
         return episodeRepository.save(ep);
     }
 

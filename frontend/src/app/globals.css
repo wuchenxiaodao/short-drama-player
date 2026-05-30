@@ -149,3 +149,14 @@
 .interaction-overlay > * {
   pointer-events: auto;
 }
+
+[nextjs-dialog-overlay],
+[nextjs-portal],
+[data-nextjs-dialog-overlay],
+[data-nextjs-toast] {
+  display: none !important;
+}
+
+iframe[src*="__nextjs"] {
+  display: none !important;
+}

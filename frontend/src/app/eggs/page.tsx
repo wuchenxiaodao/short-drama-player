@@ -62,7 +62,7 @@ export default function EggsPage() {
         ]);
 
         const collectedMap = new Map<number, UserEgg>();
-        collected.forEach((egg) => collectedMap.set(egg.interactionId, egg));
+        collected.forEach((egg: UserEgg) => collectedMap.set(egg.interactionId, egg));
 
         const dramaMap = new Map<number, DramaEggGroup>();
         catalog.forEach((entry) => {

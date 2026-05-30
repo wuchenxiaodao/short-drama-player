@@ -15,8 +15,24 @@ import type {
 } from './types';
 import { useAuthStore } from './auth';
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
+function getApiBaseUrl(): string {
+  if (typeof window !== 'undefined') {
+    const envUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (envUrl) return envUrl;
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return 'http://localhost:8080';
+    }
+    return `http://${host}:8080`;
+  }
+  return 'http://localhost:8080';
+}
+
+export function resolveUrl(url: string | undefined | null): string {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  return `${getApiBaseUrl()}${url.startsWith('/') ? '' : '/'}${url}`;
+}
 
 class ApiError extends Error {
   code: number;
@@ -51,7 +67,7 @@ async function request<T>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+  const res = await fetch(`${getApiBaseUrl()}${path}`, {
     method,
     headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,
