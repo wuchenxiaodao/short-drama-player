@@ -203,6 +203,10 @@ class DanmakuSystem {
     }
 
     async sendDanmaku(episodeId, content, positionMs) {
+        if (!state.isLoggedIn()) {
+            app.showLoginPage();
+            return;
+        }
         try {
             await api.request(`${API_BASE_URL}/danmaku/send`, {
                 method: 'POST',
