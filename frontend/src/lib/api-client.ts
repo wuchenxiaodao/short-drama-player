@@ -62,6 +62,10 @@ async function request<T>(
     throw new ApiError(401, '未授权，请重新登录');
   }
 
+  if (res.status === 403) {
+    throw new ApiError(403, '没有权限访问');
+  }
+
   const json: ApiResponse<T> = await res.json();
 
   if (json.code !== 0 && json.code !== 200) {
@@ -89,214 +93,130 @@ async function apiDelete<T>(path: string): Promise<T> {
 
 export { ApiError, apiGet, apiPost, apiPut, apiDelete };
 
-export async function getRecommendDramas(): Promise<Drama[]> {
-  return apiGet<Drama[]>('/api/dramas/recommend');
+export async function getRecommendDramas(page = 0, size = 10) {
+  return apiGet<any>(`/api/drama/recommend?page=${page}&size=${size}`);
 }
 
-export async function getHotDramas(): Promise<Drama[]> {
-  return apiGet<Drama[]>('/api/dramas/hot');
+export async function getHotDramas(page = 0, size = 10) {
+  return apiGet<any>(`/api/drama/hot?page=${page}&size=${size}`);
 }
 
-export async function getNewDramas(): Promise<Drama[]> {
-  return apiGet<Drama[]>('/api/dramas/new');
+export async function getNewDramas(page = 0, size = 10) {
+  return apiGet<any>(`/api/drama/new?page=${page}&size=${size}`);
 }
 
-export async function searchDramas(keyword: string): Promise<Drama[]> {
-  return apiGet<Drama[]>(`/api/dramas/search?keyword=${encodeURIComponent(keyword)}`);
+export async function searchDramas(keyword: string, page = 0, size = 20) {
+  return apiGet<any>(`/api/drama/search?keyword=${encodeURIComponent(keyword)}&page=${page}&size=${size}`);
 }
 
-export async function getDramaDetail(id: number): Promise<Drama> {
-  return apiGet<Drama>(`/api/dramas/${id}`);
+export async function getDramaDetail(id: number) {
+  return apiGet<any>(`/api/drama/${id}/detail`);
 }
 
-export async function getEpisodePlayInfo(
-  dramaId: number,
-  episodeNumber: number
-): Promise<Episode> {
-  return apiGet<Episode>(`/api/dramas/${dramaId}/episodes/${episodeNumber}`);
+export async function getEpisodePlayInfo(episodeId: number) {
+  return apiGet<any>(`/api/episode/${episodeId}/playinfo`);
 }
 
-export async function getEpisodeStreams(
-  dramaId: number,
-  episodeNumber: number
-): Promise<Stream[]> {
-  return apiGet<Stream[]>(
-    `/api/dramas/${dramaId}/episodes/${episodeNumber}/streams`
-  );
+export async function getEpisodeStreams(episodeId: number) {
+  return apiGet<any>(`/api/episode/${episodeId}/streams`);
 }
 
-export async function submitAnswer(
-  interactionId: number,
-  selectedOptionId: number
-): Promise<InteractionAnswer> {
-  return apiPost<InteractionAnswer>(`/api/interactions/${interactionId}/answer`, {
-    selectedOptionId,
-  });
+export async function submitAnswer(interactionId: number, choiceId: number) {
+  return apiPost<any>('/api/interaction/answer', { interactionId, choiceId });
 }
 
-export async function getInteractionStats(
-  dramaId: number
-): Promise<InteractionStats> {
-  return apiGet<InteractionStats>(`/api/interactions/stats?dramaId=${dramaId}`);
+export async function getInteractionStats(interactionId: number) {
+  return apiGet<any>(`/api/interaction/${interactionId}/stats`);
 }
 
-export async function getInteractionOverview(
-  dramaId: number,
-  episodeNumber: number
-): Promise<InteractionStats> {
-  return apiGet<InteractionStats>(
-    `/api/interactions/overview?dramaId=${dramaId}&episodeNumber=${episodeNumber}`
-  );
+export async function getInteractionOverview() {
+  return apiGet<any>('/api/interaction/stats/overview');
 }
 
-export async function getDramaInteractionStats(
-  dramaId: number
-): Promise<InteractionStats> {
-  return apiGet<InteractionStats>(`/api/dramas/${dramaId}/interactions/stats`);
+export async function getDramaInteractionStats(dramaId: number) {
+  return apiGet<any>(`/api/interaction/stats/drama/${dramaId}`);
 }
 
-export async function sendEmoji(
-  interactionId: number,
-  emoji: string
-): Promise<void> {
-  return apiPost<void>(`/api/interactions/${interactionId}/emoji`, { emoji });
+export async function sendEmoji(episodeId: number, emoji: string, positionMs: number) {
+  return apiPost<any>('/api/interaction/emoji', { episodeId, emoji, positionMs });
 }
 
-export async function getComments(
-  dramaId: number,
-  page = 1,
-  size = 20
-): Promise<Comment[]> {
-  return apiGet<Comment[]>(
-    `/api/dramas/${dramaId}/comments?page=${page}&size=${size}`
-  );
+export async function getComments(dramaId: number, page = 0, size = 20, sort = 'hot') {
+  return apiGet<any>(`/api/comment/drama/${dramaId}?page=${page}&size=${size}&sort=${sort}`);
 }
 
-export async function postComment(
-  dramaId: number,
-  content: string,
-  parentId?: number
-): Promise<Comment> {
-  return apiPost<Comment>(`/api/dramas/${dramaId}/comments`, {
-    content,
-    parentId,
-  });
+export async function postComment(dramaId: number, content: string, parentId?: number) {
+  return apiPost<any>('/api/comment', { dramaId, content, parentCommentId: parentId });
 }
 
-export async function toggleCommentLike(
-  commentId: number
-): Promise<void> {
-  return apiPost<void>(`/api/comments/${commentId}/like`);
+export async function toggleCommentLike(commentId: number) {
+  return apiPost<any>(`/api/comment/${commentId}/like`);
 }
 
-export async function getDanmaku(
-  episodeId: number
-): Promise<Danmaku[]> {
-  return apiGet<Danmaku[]>(`/api/episodes/${episodeId}/danmaku`);
+export async function getDanmaku(episodeId: number) {
+  return apiGet<any>(`/api/danmaku/episode/${episodeId}`);
 }
 
-export async function sendDanmaku(
-  episodeId: number,
-  content: string,
-  positionMs: number
-): Promise<Danmaku> {
-  return apiPost<Danmaku>(`/api/episodes/${episodeId}/danmaku`, {
-    content,
-    positionMs,
-  });
+export async function sendDanmaku(episodeId: number, content: string, positionMs: number) {
+  return apiPost<any>('/api/danmaku/send', { episodeId, content, positionMs });
 }
 
-export async function toggleFavorite(dramaId: number): Promise<void> {
-  return apiPost<void>(`/api/dramas/${dramaId}/favorite`);
+export async function toggleFavorite(dramaId: number) {
+  return apiPost<any>(`/api/favorite/${dramaId}`);
 }
 
-export async function checkFavorite(dramaId: number): Promise<boolean> {
-  return apiGet<boolean>(`/api/dramas/${dramaId}/favorite/check`);
+export async function checkFavorite(dramaId: number) {
+  return apiGet<any>(`/api/favorite/check/${dramaId}`);
 }
 
-export async function getFavorites(): Promise<Favorite[]> {
-  return apiGet<Favorite[]>('/api/favorites');
+export async function getFavorites() {
+  return apiGet<any>('/api/favorite/list');
 }
 
-export async function submitRating(
-  dramaId: number,
-  score: number
-): Promise<Rating> {
-  return apiPost<Rating>(`/api/dramas/${dramaId}/rating`, { score });
+export async function submitRating(dramaId: number, score: number) {
+  return apiPost<any>('/api/rating/submit', { dramaId, score });
 }
 
-export async function getUserRating(dramaId: number): Promise<Rating | null> {
-  return apiGet<Rating | null>(`/api/dramas/${dramaId}/rating/mine`);
+export async function getUserRating(dramaId: number) {
+  return apiGet<any>(`/api/rating/user?dramaId=${dramaId}`);
 }
 
-export async function getRatingStats(
-  dramaId: number
-): Promise<{ average: number; count: number }> {
-  return apiGet<{ average: number; count: number }>(
-    `/api/dramas/${dramaId}/rating/stats`
-  );
+export async function getRatingStats(dramaId: number) {
+  return apiGet<any>(`/api/rating/stats?dramaId=${dramaId}`);
 }
 
-export async function reportProgress(
-  episodeId: number,
-  positionMs: number,
-  completed: boolean
-): Promise<void> {
-  return apiPost<void>('/api/watch-progress', {
-    episodeId,
-    positionMs,
-    completed,
-  });
+export async function reportProgress(episodeId: number, positionMs: number, completed = false) {
+  return apiPost<any>('/api/progress/report', { episodeId, positionMs, completed });
 }
 
-export async function login(
-  username: string,
-  password: string
-): Promise<{ token: string; userId: number }> {
-  return apiPost<{ token: string; userId: number }>('/api/auth/login', {
-    username,
-    password,
-  });
+export async function login(username: string, password: string) {
+  return apiPost<any>('/api/auth/login', { username, password });
 }
 
-export async function register(
-  username: string,
-  password: string,
-  nickname: string
-): Promise<{ token: string; userId: number }> {
-  return apiPost<{ token: string; userId: number }>('/api/auth/register', {
-    username,
-    password,
-    nickname,
-  });
+export async function register(username: string, password: string, nickname: string) {
+  return apiPost<any>('/api/auth/register', { username, password, nickname });
 }
 
-export async function getMe(): Promise<User> {
-  return apiGet<User>('/api/auth/me');
+export async function getMe() {
+  return apiGet<any>('/api/auth/me');
 }
 
-export async function getEggCollection(): Promise<UserEgg[]> {
-  return apiGet<UserEgg[]>('/api/eggs/collection');
+export async function getEggCollection() {
+  return apiGet<any>('/api/eggs/collection');
 }
 
-export async function getPointsBalance(): Promise<number> {
-  return apiGet<number>('/api/points/balance');
+export async function getPointsBalance() {
+  return apiGet<any>('/api/points/balance');
 }
 
-export async function buyHint(interactionId: number): Promise<string> {
-  return apiPost<string>(`/api/interactions/${interactionId}/hint`, {});
+export async function buyHint(interactionId: number) {
+  return apiPost<any>('/api/points/hint', { interactionId });
 }
 
-export async function getCategories(): Promise<string[]> {
-  return apiGet<string[]>('/api/categories');
+export async function getCategories() {
+  return apiGet<any>('/api/drama/categories');
 }
 
-export async function getDramasByCategory(
-  category: string,
-  page = 1,
-  size = 20
-): Promise<Drama[]> {
-  return apiGet<Drama[]>(
-    `/api/dramas?category=${encodeURIComponent(category)}&page=${page}&size=${size}`
-  );
+export async function getDramasByCategory(category: string, page = 0, size = 10) {
+  return apiGet<any>(`/api/drama/category/${encodeURIComponent(category)}?page=${page}&size=${size}`);
 }

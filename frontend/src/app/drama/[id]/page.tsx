@@ -57,8 +57,8 @@ export default function DramaDetailPage() {
         setDrama(d);
         setIsFavorited(!!fav);
         if (d) {
-          getDramasByCategory(d.category, 1, 8)
-            .then(setRelatedDramas)
+          getDramasByCategory(d.category, 0, 8)
+            .then((res: any) => setRelatedDramas(res.content || []))
             .catch(() => {});
         }
       })
@@ -67,8 +67,8 @@ export default function DramaDetailPage() {
 
   useEffect(() => {
     if (!dramaId) return;
-    getComments(dramaId, 1, 20)
-      .then(setComments)
+    getComments(dramaId, 0, 20)
+      .then((res: any) => setComments(res.content || []))
       .catch(() => {});
   }, [dramaId, commentPage]);
 
@@ -292,10 +292,8 @@ function CommentSection({
   onSubmit,
   onLike,
   submitting,
-  isLoggedIn,
+  isLoggedIn: isLoggedInProp,
 }: CommentSectionProps) {
-  const router = useRouter();
-
   return (
     <div className="bg-drama-card rounded-xl p-4">
       <h3 className="text-sm font-medium text-drama-text mb-3 flex items-center gap-1.5">
@@ -309,14 +307,13 @@ function CommentSection({
           value={commentText}
           onChange={(e) => onCommentTextChange(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && onSubmit()}
-          placeholder={isLoggedIn ? '说点什么...' : '登录后评论'}
-          disabled={!isLoggedIn}
+          placeholder={isLoggedInProp ? '说点什么...' : '登录后评论'}
+          disabled={!isLoggedInProp}
           className="flex-1 bg-drama-surface border border-drama-border rounded-lg px-3 py-2 text-sm text-drama-text placeholder:text-drama-muted outline-none focus:border-primary-400/50 transition-colors disabled:opacity-50"
         />
         <button
           onClick={() => {
-            if (!isLoggedIn) {
-              router.push('/login');
+            if (!isLoggedInProp) {
               return;
             }
             onSubmit();

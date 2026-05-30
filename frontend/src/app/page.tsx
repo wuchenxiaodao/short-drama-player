@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Flame, Clock } from 'lucide-react';
-import { apiGet, getRecommendDramas } from '@/lib/api-client';
+import { getRecommendDramas, getHotDramas, getNewDramas, getDramasByCategory } from '@/lib/api-client';
 import type { Drama } from '@/lib/types';
 import Banner from '@/components/Banner';
 import DramaGrid from '@/components/DramaGrid';
@@ -22,8 +22,8 @@ export default function HomePage() {
   const observerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    getRecommendDramas()
-      .then(setRecommendDramas)
+    getRecommendDramas(0, 5)
+      .then((res: any) => setRecommendDramas(res.content || []))
       .catch(() => {});
   }, []);
 
@@ -31,14 +31,20 @@ export default function HomePage() {
     async (cat: string, pageNum: number, sortType: SortType, append: boolean) => {
       setLoading(true);
       try {
-        const categoryParam = cat === '全部' ? '' : cat;
-        const sortParam = sortType === 'hot' ? 'viewCount' : 'createdAt';
-        const params = new URLSearchParams();
-        if (categoryParam) params.set('category', categoryParam);
-        params.set('page', String(pageNum));
-        params.set('size', '20');
-        params.set('sort', sortParam);
-        const data = await apiGet<Drama[]>(`/api/dramas?${params.toString()}`);
+        let data: any;
+        const p = pageNum - 1;
+        if (cat === '全部') {
+          if (sortType === 'hot') {
+            const res = await getHotDramas(p, 20);
+            data = res.content || [];
+          } else {
+            const res = await getNewDramas(p, 20);
+            data = res.content || [];
+          }
+        } else {
+          const res = await getDramasByCategory(cat, p, 20);
+          data = res.content || [];
+        }
         if (append) {
           setDramas((prev) => [...prev, ...data]);
         } else {
