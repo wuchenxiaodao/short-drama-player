@@ -26,6 +26,9 @@ public class Episode {
 
     private Integer durationSeconds;
 
+    @Column(columnDefinition = "TEXT")
+    private String streams;
+
     private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "episode", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

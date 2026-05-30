@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/drama")
 @RequiredArgsConstructor
@@ -55,5 +57,18 @@ public class DramaController {
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size) {
         return ApiResponse.success(dramaService.getNew(page, size));
+    }
+
+    @GetMapping("/categories")
+    public ApiResponse<List<String>> categories() {
+        return ApiResponse.success(dramaService.getCategories());
+    }
+
+    @GetMapping("/category/{category}")
+    public ApiResponse<Page<DramaSummary>> byCategory(
+            @PathVariable String category,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size) {
+        return ApiResponse.success(dramaService.getByCategory(category, page, size));
     }
 }

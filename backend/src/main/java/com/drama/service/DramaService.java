@@ -55,6 +55,14 @@ public class DramaService {
         return mapToSummaryPage(dramaRepository.findByIsNewTrueOrderByCreatedAtDesc(PageRequest.of(page, size)));
     }
 
+    public Page<DramaSummary> getByCategory(String category, int page, int size) {
+        return mapToSummaryPage(dramaRepository.findByCategoryOrderByRatingDesc(category, PageRequest.of(page, size)));
+    }
+
+    public List<String> getCategories() {
+        return dramaRepository.findDistinctCategories();
+    }
+
     public DramaDetail getDetail(Long dramaId, Long userId) {
         Drama drama = dramaRepository.findById(dramaId)
                 .orElseThrow(() -> new com.drama.common.BusinessException(404, "短剧不存在"));
@@ -160,6 +168,10 @@ public class DramaService {
         s.setViewCount(d.getViewCount());
         s.setIsNew(d.getIsNew());
         s.setIsHot(d.getIsHot());
+        s.setDescription(d.getDescription() != null && d.getDescription().length() > 50 ? d.getDescription().substring(0, 50) + "..." : d.getDescription());
+        s.setStatus(d.getIsNew() ? "ONGOING" : "COMPLETED");
+        List<Episode> episodes = episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(d.getId());
+        s.setTotalDurationSeconds(episodes.stream().mapToInt(e -> e.getDurationSeconds() != null ? e.getDurationSeconds() : 0).sum());
         return s;
     }
 

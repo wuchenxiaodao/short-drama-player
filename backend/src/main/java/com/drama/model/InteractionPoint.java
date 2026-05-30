@@ -47,7 +47,7 @@ public class InteractionPoint {
     private LocalDateTime createdAt;
 
     public enum InteractionType {
-        CHOICE, VOTE, EGG, QUIZ
+        CHOICE, VOTE, EGG, QUIZ, INFO, LINK, EMOJI
     }
 
     @PrePersist

@@ -77,6 +77,17 @@ public class DataInitializer implements CommandLineRunner {
             createInteraction(first, 45000L, InteractionPoint.InteractionType.EGG,
                     "隐藏彩蛋：寻宝笔记作者亲笔签名照",
                     List.of(opt("领取")));
+            createInteraction(first, 15000L, InteractionPoint.InteractionType.INFO,
+                    "寻宝笔记背景知识",
+                    List.of(),
+                    "{\"title\":\"寻宝笔记背景\",\"content\":\"这本笔记源自清朝一位隐士的手记，记录了多处古墓的线索。\",\"imageUrl\":\"https://picsum.photos/seed/info1/400/225\"}", null);
+            createInteraction(first, 80000L, InteractionPoint.InteractionType.LINK,
+                    "了解更多古墓知识",
+                    List.of(),
+                    "{\"title\":\"古墓探秘\",\"url\":\"https://example.com/tomb\",\"description\":\"点击了解古墓探秘的精彩内容\"}", null);
+            createInteraction(first, 50000L, InteractionPoint.InteractionType.EMOJI,
+                    "🔥,😂,❤️,😱,👏",
+                    List.of());
         }
         List<Episode> episodes = episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(d.getId());
         if (episodes.size() > 1) {
@@ -170,6 +181,17 @@ public class DataInitializer implements CommandLineRunner {
         createInteraction(first, 70000L, InteractionPoint.InteractionType.EGG,
                 "隐藏彩蛋：纨绔少爷的秘密武器",
                 List.of(opt("领取")));
+        createInteraction(first, 20000L, InteractionPoint.InteractionType.INFO,
+                "纨绔少爷身世揭秘",
+                List.of(),
+                "{\"title\":\"纨绔少爷身世\",\"content\":\"他并非真正的纨绔子弟，而是隐藏身份的绝世高手。\",\"imageUrl\":\"https://picsum.photos/seed/info2/400/225\"}", null);
+        createInteraction(first, 85000L, InteractionPoint.InteractionType.LINK,
+                "推荐：同类型古装剧",
+                List.of(),
+                "{\"title\":\"更多古装剧\",\"url\":\"https://example.com/ancient\",\"description\":\"喜欢纨绔题材？点击发现更多精彩古装剧\"}", null);
+        createInteraction(first, 40000L, InteractionPoint.InteractionType.EMOJI,
+                "🔥,😂,❤️,😱,👏",
+                List.of());
         List<Episode> episodes = episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(d.getId());
         if (episodes.size() > 1) {
             Episode ep2 = episodes.get(1);
@@ -223,6 +245,17 @@ public class DataInitializer implements CommandLineRunner {
         createInteraction(first, 50000L, InteractionPoint.InteractionType.EGG,
                 "发现隐藏彩蛋：太奶奶的独家秘方",
                 List.of(opt("查看")));
+        createInteraction(first, 15000L, InteractionPoint.InteractionType.INFO,
+                "太奶奶的传奇经历",
+                List.of(),
+                "{\"title\":\"太奶奶传奇\",\"content\":\"十八岁穿越回现代，凭借前世智慧重振家族。\",\"imageUrl\":\"https://picsum.photos/seed/info3/400/225\"}", null);
+        createInteraction(first, 75000L, InteractionPoint.InteractionType.LINK,
+                "推荐：同类型都市剧",
+                List.of(),
+                "{\"title\":\"更多都市剧\",\"url\":\"https://example.com/urban\",\"description\":\"喜欢太奶奶题材？点击发现更多精彩都市剧\"}", null);
+        createInteraction(first, 35000L, InteractionPoint.InteractionType.EMOJI,
+                "🔥,😂,❤️,😱,👏",
+                List.of());
         List<Episode> episodes = episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(d.getId());
         if (episodes.size() > 1) {
             Episode ep2 = episodes.get(1);
@@ -387,6 +420,7 @@ public class DataInitializer implements CommandLineRunner {
         ep.setTitle(title);
         ep.setVideoUrl("https://www.w3schools.com/html/mov_bbb.mp4");
         ep.setDurationSeconds(duration);
+        ep.setStreams("[{\"quality\":\"720p\",\"url\":\"https://www.w3schools.com/html/mov_bbb.mp4\"},{\"quality\":\"1080p\",\"url\":\"https://www.w3schools.com/html/mov_bbb.mp4\"}]");
         return episodeRepository.save(ep);
     }
 

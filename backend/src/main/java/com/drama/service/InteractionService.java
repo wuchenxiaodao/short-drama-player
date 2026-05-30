@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -170,5 +171,36 @@ public class InteractionService {
             optionStats.put(e.getKey(), os);
         }
         return optionStats;
+    }
+
+    public Map<String, Object> getOverviewStats() {
+        Map<String, Object> stats = new HashMap<>();
+        long totalInteractions = answerRepository.count();
+        long totalUsers = userRepository.count();
+        stats.put("totalInteractions", totalInteractions);
+        stats.put("participationRate", totalUsers > 0 ? Math.round(totalInteractions * 100.0 / totalUsers * 10.0) / 10.0 : 0);
+
+        List<Object[]> typeCounts = interactionPointRepository.countByType();
+        Map<String, Long> typeDist = new HashMap<>();
+        for (Object[] row : typeCounts) {
+            typeDist.put(row[0].toString(), (Long) row[1]);
+        }
+        stats.put("typeDistribution", typeDist);
+
+        List<Object[]> topInteractions = answerRepository.findTop5Interactions(
+                org.springframework.data.domain.PageRequest.of(0, 5));
+        stats.put("topInteractions", topInteractions);
+
+        return stats;
+    }
+
+    public Map<String, Object> getDramaStats(Long dramaId) {
+        Map<String, Object> stats = new HashMap<>();
+        List<InteractionPoint> points = interactionPointRepository.findByEpisodeDramaId(dramaId);
+        stats.put("totalInteractionPoints", points.size());
+        stats.put("typeDistribution", points.stream().collect(
+                Collectors.groupingBy(p -> p.getInteractionType().name(), Collectors.counting())
+        ));
+        return stats;
     }
 }

@@ -14,4 +14,7 @@ public class DramaSummary {
     private Long viewCount;
     private Boolean isNew;
     private Boolean isHot;
+    private String description;
+    private String status;
+    private Integer totalDurationSeconds;
 }

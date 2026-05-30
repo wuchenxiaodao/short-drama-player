@@ -1,0 +1,204 @@
+'use client';
+
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Search, X, TrendingUp } from 'lucide-react';
+import { searchDramas } from '@/lib/api-client';
+import type { Drama } from '@/lib/types';
+import DramaGrid from '@/components/DramaGrid';
+
+const HOT_SEARCHES = ['北派寻宝', '天下第一', '十八岁太奶奶'];
+const MAX_HISTORY = 15;
+const STORAGE_KEY = 'search-history';
+
+function getSearchHistory(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+function saveSearchHistory(keyword: string) {
+  const history = getSearchHistory().filter((h) => h !== keyword);
+  history.unshift(keyword);
+  if (history.length > MAX_HISTORY) history.length = MAX_HISTORY;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+}
+
+export default function SearchPage() {
+  const [keyword, setKeyword] = useState('');
+  const [results, setResults] = useState<Drama[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
+  const [history, setHistory] = useState<string[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setHistory(getSearchHistory());
+    inputRef.current?.focus();
+  }, []);
+
+  const doSearch = useCallback(async (kw: string) => {
+    if (!kw.trim()) {
+      setResults([]);
+      setSearched(false);
+      return;
+    }
+    setLoading(true);
+    setSearched(true);
+    try {
+      const data = await searchDramas(kw.trim());
+      setResults(data);
+    } catch {
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (!keyword.trim()) {
+      setResults([]);
+      setSearched(false);
+      return;
+    }
+    timerRef.current = setTimeout(() => {
+      doSearch(keyword);
+    }, 300);
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [keyword, doSearch]);
+
+  function handleSearch(kw: string) {
+    const trimmed = kw.trim();
+    if (!trimmed) return;
+    setKeyword(trimmed);
+    saveSearchHistory(trimmed);
+    setHistory(getSearchHistory());
+    doSearch(trimmed);
+  }
+
+  function handleClearHistory() {
+    localStorage.removeItem(STORAGE_KEY);
+    setHistory([]);
+  }
+
+  function handleRemoveHistory(item: string) {
+    const updated = getSearchHistory().filter((h) => h !== item);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    setHistory(updated);
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+      <div className="flex gap-3">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-drama-muted" />
+          <input
+            ref={inputRef}
+            type="text"
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch(keyword)}
+            placeholder="搜索短剧名称..."
+            className="w-full pl-10 pr-4 py-3 bg-drama-card border border-drama-border rounded-xl text-drama-text placeholder:text-drama-muted focus:outline-none focus:border-primary-500 transition-colors"
+          />
+          {keyword && (
+            <button
+              onClick={() => setKeyword('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-drama-muted hover:text-drama-text"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+        <button
+          onClick={() => handleSearch(keyword)}
+          className="px-6 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl font-medium hover:from-primary-600 hover:to-primary-700 transition-all"
+        >
+          搜索
+        </button>
+      </div>
+
+      {!searched && (
+        <>
+          {history.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-medium text-drama-text">搜索历史</h3>
+                <button
+                  onClick={handleClearHistory}
+                  className="text-xs text-drama-muted hover:text-primary-400 transition-colors"
+                >
+                  清除
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {history.map((item) => (
+                  <span
+                    key={item}
+                    className="group inline-flex items-center gap-1 px-3 py-1.5 bg-drama-card rounded-full text-sm text-drama-muted hover:text-drama-text hover:bg-drama-surface cursor-pointer transition-colors"
+                    onClick={() => handleSearch(item)}
+                  >
+                    {item}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveHistory(item);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <TrendingUp className="w-4 h-4 text-primary-400" />
+              <h3 className="text-sm font-medium text-drama-text">热门搜索</h3>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {HOT_SEARCHES.map((item) => (
+                <span
+                  key={item}
+                  onClick={() => handleSearch(item)}
+                  className="px-3 py-1.5 bg-primary-500/10 border border-primary-500/20 rounded-full text-sm text-primary-400 hover:bg-primary-500/20 cursor-pointer transition-colors"
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      {searched && (
+        <div>
+          {results.length === 0 && !loading ? (
+            <div className="text-center py-20">
+              <Search className="w-12 h-12 text-drama-muted mx-auto mb-4" />
+              <p className="text-drama-muted">未找到相关短剧</p>
+            </div>
+          ) : (
+            <DramaGrid dramas={results} loading={loading} />
+          )}
+        </div>
+      )}
+
+      {!searched && !keyword && (
+        <div className="text-center py-20">
+          <Search className="w-12 h-12 text-drama-muted mx-auto mb-4" />
+          <p className="text-drama-muted">输入关键词搜索短剧</p>
+        </div>
+      )}
+    </div>
+  );
+}

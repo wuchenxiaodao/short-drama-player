@@ -45,4 +45,7 @@ public interface DramaRepository extends JpaRepository<Drama, Long> {
     @Query("UPDATE Drama d SET d.rating = :rating WHERE d.id = :id")
     void updateRating(@org.springframework.data.repository.query.Param("id") Long id,
                       @org.springframework.data.repository.query.Param("rating") Double rating);
+
+    @Query("SELECT DISTINCT d.category FROM Drama d ORDER BY d.category")
+    List<String> findDistinctCategories();
 }

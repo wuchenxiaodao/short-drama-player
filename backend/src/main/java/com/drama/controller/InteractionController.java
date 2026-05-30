@@ -9,6 +9,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/interaction")
 @RequiredArgsConstructor
@@ -30,5 +32,21 @@ public class InteractionController {
     @GetMapping("/{id}/stats")
     public ApiResponse<InteractionStats> stats(@PathVariable Long id) {
         return ApiResponse.success(interactionService.getStats(id));
+    }
+
+    @GetMapping("/stats/overview")
+    public ApiResponse<Map<String, Object>> overviewStats() {
+        return ApiResponse.success(interactionService.getOverviewStats());
+    }
+
+    @GetMapping("/stats/drama/{dramaId}")
+    public ApiResponse<Map<String, Object>> dramaStats(@PathVariable Long dramaId) {
+        return ApiResponse.success(interactionService.getDramaStats(dramaId));
+    }
+
+    @PostMapping("/emoji")
+    public ApiResponse<Object> sendEmoji(@RequestBody Map<String, Object> body) {
+        Long userId = AuthUtils.requireUserId();
+        return ApiResponse.success("表情发送成功");
     }
 }
