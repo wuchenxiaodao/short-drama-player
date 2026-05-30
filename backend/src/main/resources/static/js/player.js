@@ -8,6 +8,7 @@ const player = {
     init() {
         this.videoElement = document.getElementById('video-player');
         this.setupEventListeners();
+        this.setupErrorHandling();
     },
 
     setupEventListeners() {
@@ -19,6 +20,23 @@ const player = {
 
         this.videoElement.addEventListener('ended', () => {
             this.onVideoEnded();
+        });
+    },
+
+    setupErrorHandling() {
+        this.videoElement.addEventListener('error', () => {
+            const errorDisplay = document.getElementById('player-error');
+            if (errorDisplay) {
+                errorDisplay.textContent = '视频加载失败，请检查网络连接或稍后重试';
+                errorDisplay.style.display = 'block';
+            }
+        });
+
+        this.videoElement.addEventListener('loadeddata', () => {
+            const errorDisplay = document.getElementById('player-error');
+            if (errorDisplay) {
+                errorDisplay.style.display = 'none';
+            }
         });
     },
 
