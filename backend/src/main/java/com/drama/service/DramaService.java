@@ -176,6 +176,7 @@ public class DramaService {
         Long count = redisTemplate.opsForValue().increment(key);
         if (count != null && count % 10 == 0) {
             syncViewCountToDatabase(dramaId, 10L);
+            redisTemplate.opsForValue().set(key, "0");
         }
     }
 
