@@ -239,6 +239,38 @@ const app = {
         }
 
         this.loadEpisodes(drama);
+        this.checkFavoriteStatus(drama.id);
+    },
+
+    async checkFavoriteStatus(dramaId) {
+        try {
+            const res = await api.request(`${API_BASE_URL}/favorite/check/${dramaId}`);
+            const btn = document.getElementById('favorite-btn');
+            if (btn && res.data?.favorited) {
+                btn.classList.add('favorited');
+                btn.innerHTML = '❤️ 已追剧';
+            }
+        } catch (e) {}
+    },
+
+    async toggleFavorite(dramaId) {
+        if (!state.isLoggedIn()) {
+            this.showLoginPage();
+            return;
+        }
+        try {
+            const res = await api.request(`${API_BASE_URL}/favorite/${dramaId}`, { method: 'POST' });
+            const btn = document.getElementById('favorite-btn');
+            if (res.data?.favorited) {
+                btn.classList.add('favorited');
+                btn.innerHTML = '❤️ 已追剧';
+            } else {
+                btn.classList.remove('favorited');
+                btn.innerHTML = '🤍 追剧';
+            }
+        } catch (e) {
+            errorHandler.handle(e, 'toggleFavorite');
+        }
     },
 
     loadEpisodes(drama) {
