@@ -45,6 +45,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/drama/recommend", "/api/drama/hot",
                     "/api/drama/new", "/api/drama/search").permitAll()
                 .requestMatchers("/api/drama/*/detail").permitAll()
+                .requestMatchers("/api/favorite/check/**").permitAll()
                 .requestMatchers("/api/episode/*/playinfo").permitAll()
                 .requestMatchers("/api/interaction/*/stats").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/comment/**").permitAll()
