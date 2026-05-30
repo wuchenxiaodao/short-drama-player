@@ -9,6 +9,7 @@ import com.drama.repository.InteractionPointRepository;
 import com.drama.repository.UserRepository;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -30,6 +31,7 @@ public class PointsController {
     }
 
     @PostMapping("/hint")
+    @Transactional
     public ApiResponse<Map<String, Object>> buyHint(@RequestBody BuyHintRequest request) {
         Long userId = AuthUtils.requireUserId();
         User user = userRepository.findById(userId)

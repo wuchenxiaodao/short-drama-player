@@ -7,6 +7,7 @@ import com.drama.model.Favorite;
 import com.drama.repository.FavoriteRepository;
 import com.drama.service.DramaService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public class FavoriteController {
     private final DramaService dramaService;
 
     @PostMapping("/{dramaId}")
+    @Transactional
     public ApiResponse<Map<String, Object>> toggleFavorite(@PathVariable Long dramaId) {
         Long userId = AuthUtils.requireUserId();
         var existing = favoriteRepository.findByUserIdAndDramaId(userId, dramaId);
