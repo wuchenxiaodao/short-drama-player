@@ -33,8 +33,14 @@ const interaction = {
             `;
         });
 
+        html += `</div>`;
+
+        if (this.currentPoint.type === 'QUIZ') {
+            html += `<button class="hint-btn" onclick="interaction.buyHint()">💡 使用提示 (${this.currentPoint.hintCost || 50}积分)</button>`;
+        }
+
         html += `
-                </div>
+                <div id="interaction-hint" class="interaction-hint" style="display:none"></div>
                 <div id="interaction-result" class="interaction-result"></div>
             </div>
         `;
@@ -154,6 +160,30 @@ const interaction = {
         }
 
         setTimeout(() => container.remove(), 3000);
+    },
+
+    async buyHint() {
+        if (!state.isLoggedIn()) {
+            app.showLoginPage();
+            return;
+        }
+        try {
+            const res = await api.request(`${API_BASE_URL}/points/hint`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ interactionId: this.currentPoint.id })
+            });
+            const data = res.data || res;
+            const hintDiv = document.getElementById('interaction-hint');
+            if (hintDiv) {
+                hintDiv.textContent = '💡 ' + (data.hint || '暂无提示');
+                hintDiv.style.display = 'block';
+            }
+            const hintBtn = document.querySelector('.hint-btn');
+            if (hintBtn) hintBtn.style.display = 'none';
+        } catch (e) {
+            errorHandler.handle(e, 'buyHint');
+        }
     },
 
     close() {

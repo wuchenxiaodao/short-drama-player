@@ -72,7 +72,8 @@ public class DataInitializer implements CommandLineRunner {
                     List.of(opt("古墓"), opt("密室"), opt("地下河")));
             createInteraction(first, 60000L, InteractionPoint.InteractionType.QUIZ,
                     "笔记中提到的朝代是？",
-                    List.of(opt("明朝"), optCorrect("清朝"), opt("唐朝")));
+                    List.of(opt("明朝"), optCorrect("清朝"), opt("唐朝")),
+                    "仔细看笔记中的年号记载", 30);
             createInteraction(first, 45000L, InteractionPoint.InteractionType.EGG,
                     "隐藏彩蛋：寻宝笔记作者亲笔签名照",
                     List.of(opt("领取")));
@@ -174,7 +175,8 @@ public class DataInitializer implements CommandLineRunner {
             Episode ep2 = episodes.get(1);
             createInteraction(ep2, 30000L, InteractionPoint.InteractionType.QUIZ,
                     "男主的真实身份是？",
-                    List.of(opt("富二代"), optCorrect("隐藏高手"), opt("穿越者")));
+                    List.of(opt("富二代"), optCorrect("隐藏高手"), opt("穿越者")),
+                    "注意男主手上的老茧", 50);
             createInteraction(ep2, 55000L, InteractionPoint.InteractionType.CHOICE,
                     "面对挑衅你怎么做？",
                     List.of(optWithFeedback("正面回击", "👊 你选择了正面回击！寸步不让，气势逼人..."),
@@ -391,11 +393,20 @@ public class DataInitializer implements CommandLineRunner {
     private void createInteraction(Episode episode, Long timestampMs,
                                    InteractionPoint.InteractionType type,
                                    String question, List<OptionDef> optionDefs) {
+        createInteraction(episode, timestampMs, type, question, optionDefs, null, null);
+    }
+
+    private void createInteraction(Episode episode, Long timestampMs,
+                                   InteractionPoint.InteractionType type,
+                                   String question, List<OptionDef> optionDefs,
+                                   String hint, Integer hintCost) {
         InteractionPoint point = new InteractionPoint();
         point.setEpisode(episode);
         point.setTimestampMs(timestampMs);
         point.setInteractionType(type);
         point.setQuestionText(question);
+        if (hint != null) point.setHint(hint);
+        if (hintCost != null) point.setHintCost(hintCost);
 
         for (int i = 0; i < optionDefs.size(); i++) {
             InteractionOption option = new InteractionOption();

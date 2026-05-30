@@ -176,3 +176,31 @@
     font-size: 14px;
     color: var(--light-gray);
 }
+
+.hint-btn {
+    width: 100%;
+    padding: 10px;
+    margin-top: 12px;
+    background: rgba(255, 215, 0, 0.1);
+    border: 1px solid var(--highlight-gold);
+    color: var(--highlight-gold);
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.hint-btn:hover {
+    background: rgba(255, 215, 0, 0.2);
+}
+
+.interaction-hint {
+    margin-top: 8px;
+    padding: 10px;
+    background: rgba(255, 215, 0, 0.1);
+    border: 1px solid var(--highlight-gold);
+    border-radius: 8px;
+    color: var(--highlight-gold);
+    font-size: 13px;
+    line-height: 1.4;
+}

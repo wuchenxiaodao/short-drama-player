@@ -38,6 +38,12 @@ public class InteractionPoint {
 
     private Long prerequisiteChoiceOptionId;
 
+    @Column(length = 200)
+    private String hint;
+
+    @Column
+    private Integer hintCost = 50;
+
     private LocalDateTime createdAt;
 
     public enum InteractionType {
