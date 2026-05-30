@@ -323,6 +323,25 @@ const app = {
         container.innerHTML = html;
     },
 
+    shareDrama(drama) {
+        const shareData = {
+            title: drama.title,
+            text: `我在看《${drama.title}》，超好看！`,
+            url: window.location.origin + '/#drama/' + drama.id
+        };
+        if (navigator.share) {
+            navigator.share(shareData).catch(() => {});
+        } else if (navigator.clipboard) {
+            navigator.clipboard.writeText(shareData.url).then(() => {
+                errorHandler.showMessage('链接已复制到剪贴板', 'success');
+            }).catch(() => {
+                prompt('复制以下链接分享给朋友：', shareData.url);
+            });
+        } else {
+            prompt('复制以下链接分享给朋友：', shareData.url);
+        }
+    },
+
     loadEpisodes(drama) {
         const container = document.getElementById('episode-grid');
         const episodes = drama.episodes || [];

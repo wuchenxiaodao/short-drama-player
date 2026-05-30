@@ -52,6 +52,9 @@ const player = {
         this.videoElement.src = episode.videoUrl;
         document.getElementById('player-title').textContent = episode.title || '';
 
+        const savedSpeed = parseFloat(localStorage.getItem('playbackSpeed') || '1');
+        this.videoElement.playbackRate = savedSpeed;
+
         if (!this.danmaku) {
             this.danmaku = new DanmakuSystem(this.videoElement);
         }
@@ -128,6 +131,11 @@ const player = {
 
     pause() {
         this.videoElement.pause();
+    },
+
+    changeSpeed(speed) {
+        this.videoElement.playbackRate = speed;
+        localStorage.setItem('playbackSpeed', speed.toString());
     },
 
     sendCurrentDanmaku() {
