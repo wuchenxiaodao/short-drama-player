@@ -12,4 +12,6 @@ public interface InteractionPointRepository extends JpaRepository<InteractionPoi
 
     @Query("SELECT ip FROM InteractionPoint ip LEFT JOIN FETCH ip.options WHERE ip.episode.id = :episodeId ORDER BY ip.timestampMs ASC")
     List<InteractionPoint> findWithOptionsByEpisodeId(@Param("episodeId") Long episodeId);
+
+    List<InteractionPoint> findByInteractionType(InteractionPoint.InteractionType interactionType);
 }

@@ -895,3 +895,77 @@ body {
     font-size: 14px;
     padding: 20px;
 }
+
+/* 彩蛋图鉴 */
+.egg-progress-section {
+    margin-bottom: 24px;
+}
+
+.egg-progress-text {
+    color: var(--highlight-gold);
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.egg-progress-bar {
+    height: 6px;
+    background: var(--medium-gray);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.egg-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--highlight-gold), #ff9800);
+    border-radius: 3px;
+    transition: width 0.5s;
+}
+
+.egg-drama-section {
+    margin-bottom: 24px;
+}
+
+.egg-drama-section h3 {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+.egg-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 12px;
+}
+
+.egg-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.egg-card.collected {
+    border: 1px solid var(--highlight-gold);
+    background: rgba(255, 215, 0, 0.08);
+}
+
+.egg-card.locked {
+    opacity: 0.5;
+}
+
+.egg-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.egg-name {
+    color: var(--text-primary);
+    font-size: 12px;
+}
+
+.egg-content {
+    color: var(--text-secondary);
+    font-size: 11px;
+    margin-top: 4px;
+}

@@ -18,6 +18,7 @@
                 <div class="top-bar-right">
                     <div id="theme-toggle" class="theme-toggle" onclick="themeManager.toggle()">☀️</div>
                     <div class="search-icon" onclick="app.showSearch()">🔍</div>
+                    <div class="search-icon" onclick="app.showEggCollection()">🥚</div>
                     <div id="auth-btn" class="auth-btn" onclick="app.showLoginPage()">登录</div>
                 </div>
             </div>
@@ -91,6 +92,15 @@
                 <button class="back-btn" onclick="app.goBack()">←</button>
                 <span id="player-title"></span>
             </div>
+        </div>
+
+        <!-- 彩蛋图鉴页 -->
+        <div id="eggs-page" class="page">
+            <div class="detail-header">
+                <button class="back-btn" onclick="app.goBack()">←</button>
+                <h2>🥚 彩蛋图鉴</h2>
+            </div>
+            <div id="eggs-content" class="detail-content"></div>
         </div>
 
         <!-- 登录页 -->

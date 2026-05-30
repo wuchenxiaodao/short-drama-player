@@ -274,6 +274,55 @@ const app = {
         }
     },
 
+    async showEggCollection() {
+        if (!state.isLoggedIn()) {
+            this.showLoginPage();
+            return;
+        }
+        try {
+            const res = await api.request(`${API_BASE_URL}/eggs/collection`);
+            this.renderEggCollection(res.data || res);
+            this.navigateTo('eggs');
+        } catch (e) {
+            errorHandler.handle(e, 'showEggCollection');
+        }
+    },
+
+    renderEggCollection(data) {
+        const container = document.getElementById('eggs-content');
+        if (!container) return;
+        const total = data.totalEggs || 0;
+        const collected = data.collectedEggs || 0;
+        const pct = total > 0 ? (collected / total * 100).toFixed(0) : 0;
+
+        let html = `
+            <div class="egg-progress-section">
+                <div class="egg-progress-text">已收集 ${collected}/${total}</div>
+                <div class="egg-progress-bar"><div class="egg-progress-fill" style="width:${pct}%"></div></div>
+            </div>`;
+
+        for (const [dramaId, eggs] of Object.entries(data.byDrama || {})) {
+            const dramaTitle = eggs[0]?.dramaTitle || '未知短剧';
+            html += `<div class="egg-drama-section"><h3>${dramaTitle}</h3><div class="egg-grid">`;
+            for (const egg of eggs) {
+                if (egg.collected) {
+                    html += `<div class="egg-card collected">
+                        <div class="egg-icon">🥚</div>
+                        <div class="egg-name">${egg.questionText || '神秘彩蛋'}</div>
+                        ${egg.eggContent ? `<div class="egg-content">${egg.eggContent}</div>` : ''}
+                    </div>`;
+                } else {
+                    html += `<div class="egg-card locked">
+                        <div class="egg-icon">❓</div>
+                        <div class="egg-name">未发现</div>
+                    </div>`;
+                }
+            }
+            html += `</div></div>`;
+        }
+        container.innerHTML = html;
+    },
+
     loadEpisodes(drama) {
         const container = document.getElementById('episode-grid');
         const episodes = drama.episodes || [];
