@@ -240,6 +240,7 @@ const app = {
 
         this.loadEpisodes(drama);
         this.checkFavoriteStatus(drama.id);
+        this.loadDramaComments(drama.id);
     },
 
     async checkFavoriteStatus(dramaId) {
@@ -387,6 +388,76 @@ const app = {
     clearSearchHistory() {
         localStorage.removeItem('search_history');
         this.renderSearchHistory();
+    },
+
+    async loadDramaComments(dramaId, page = 0) {
+        try {
+            const res = await api.request(`${API_BASE_URL}/comment/drama/${dramaId}?sort=hot&page=${page}&size=20`);
+            const data = res.data || res;
+            const container = document.getElementById('drama-comments-list');
+            const countEl = document.getElementById('drama-comment-count');
+            if (countEl) countEl.textContent = `(${data.total || 0})`;
+            if (!container) return;
+            if (!data.comments || data.comments.length === 0) {
+                container.innerHTML = '<div class="comment-empty">暂无评论，快来抢沙发！</div>';
+                return;
+            }
+            container.innerHTML = data.comments.map(c => `
+                <div class="comment-item">
+                    <div class="comment-header">
+                        <span class="comment-user">${c.nickname || '匿名用户'}</span>
+                        <span class="comment-time">${this.formatTime(c.createdAt)}</span>
+                    </div>
+                    <div class="comment-content">${c.content}</div>
+                    <div class="comment-actions">
+                        <span class="comment-like ${c.isLiked ? 'liked' : ''}" onclick="app.likeDramaComment(${c.id})">👍 ${c.likeCount || 0}</span>
+                    </div>
+                </div>
+            `).join('');
+        } catch (e) {}
+    },
+
+    async postDramaComment() {
+        if (!state.isLoggedIn()) {
+            this.showLoginPage();
+            return;
+        }
+        const input = document.getElementById('drama-comment-input');
+        const content = input?.value?.trim();
+        if (!content) return;
+        try {
+            await api.request(`${API_BASE_URL}/comment`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ dramaId: state.currentDrama?.id, content })
+            });
+            input.value = '';
+            this.loadDramaComments(state.currentDrama?.id);
+        } catch (e) {
+            errorHandler.handle(e, 'postDramaComment');
+        }
+    },
+
+    async likeDramaComment(commentId) {
+        if (!state.isLoggedIn()) {
+            this.showLoginPage();
+            return;
+        }
+        try {
+            await api.request(`${API_BASE_URL}/comment/${commentId}/like`, { method: 'POST' });
+            this.loadDramaComments(state.currentDrama?.id);
+        } catch (e) {}
+    },
+
+    formatTime(dateStr) {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        const now = new Date();
+        const diff = now - date;
+        if (diff < 60000) return '刚刚';
+        if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`;
+        if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`;
+        return `${date.getMonth() + 1}/${date.getDate()}`;
     },
 
     goBack() {

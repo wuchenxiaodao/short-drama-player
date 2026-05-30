@@ -56,6 +56,14 @@
                     <h3>选集</h3>
                     <div id="episode-grid" class="episode-grid"></div>
                 </div>
+                <div class="drama-comments-section">
+                    <h3>评论 <span id="drama-comment-count"></span></h3>
+                    <div class="comment-input-wrap">
+                        <textarea id="drama-comment-input" placeholder="说点什么..." maxlength="500"></textarea>
+                        <button onclick="app.postDramaComment()">发送</button>
+                    </div>
+                    <div id="drama-comments-list" class="comments-list"></div>
+                </div>
             </div>
         </div>
 

@@ -7,8 +7,9 @@ import lombok.Data;
 
 @Data
 public class CommentRequest {
-    @NotNull(message = "互动ID不能为空")
     private Long interactionId;
+
+    private Long dramaId;
 
     @NotBlank(message = "评论内容不能为空")
     @Size(max = 500, message = "评论内容不能超过500字")

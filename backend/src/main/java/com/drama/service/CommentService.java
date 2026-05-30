@@ -106,11 +106,67 @@ public class CommentService {
         Comment comment = new Comment();
         comment.setUserId(userId);
         comment.setInteractionId(request.getInteractionId());
+        comment.setDramaId(request.getDramaId());
         comment.setContent(request.getContent());
         comment.setParentCommentId(request.getParentCommentId());
         commentRepository.save(comment);
 
         return toResponse(comment, user, false, 0L);
+    }
+
+    public CommentResponse.PageResult getDramaComments(Long dramaId, String sort, int page, int size) {
+        Page<Comment> commentPage;
+        if ("latest".equals(sort)) {
+            commentPage = commentRepository
+                    .findByDramaIdAndParentCommentIdIsNullOrderByCreatedAtDesc(dramaId, PageRequest.of(page, size));
+        } else {
+            commentPage = commentRepository
+                    .findByDramaIdAndParentCommentIdIsNullOrderByLikeCountDescCreatedAtDesc(dramaId, PageRequest.of(page, size));
+        }
+
+        List<Comment> comments = commentPage.getContent();
+        if (comments.isEmpty()) {
+            CommentResponse.PageResult result = new CommentResponse.PageResult();
+            result.setComments(List.of());
+            result.setTotal(0);
+            result.setPage(page);
+            return result;
+        }
+
+        List<Long> commentIds = comments.stream().map(Comment::getId).collect(Collectors.toList());
+
+        Map<Long, Long> replyCountMap = new HashMap<>();
+        List<Object[]> replyCounts = commentRepository.countRepliesByParentIds(commentIds);
+        for (Object[] row : replyCounts) {
+            replyCountMap.put((Long) row[0], (Long) row[1]);
+        }
+
+        List<Long> userIds = comments.stream().map(Comment::getUserId).distinct().collect(Collectors.toList());
+        Map<Long, User> userMap = userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(User::getId, u -> u));
+
+        Long currentUserId = AuthUtils.getCurrentUserId();
+        Set<Long> likedCommentIds = Set.of();
+        if (currentUserId != null) {
+            List<CommentLike> likes = commentLikeRepository.findByUserIdAndCommentIdIn(currentUserId, commentIds);
+            likedCommentIds = likes.stream().map(CommentLike::getCommentId).collect(Collectors.toSet());
+        }
+
+        Set<Long> finalLiked = likedCommentIds;
+        Map<Long, Long> finalReplyMap = replyCountMap;
+        List<CommentResponse> responses = comments.stream()
+                .map(c -> toResponse(c, userMap.get(c.getUserId()), finalLiked.contains(c.getId()), finalReplyMap.getOrDefault(c.getId(), 0L)))
+                .collect(Collectors.toList());
+
+        CommentResponse.PageResult result = new CommentResponse.PageResult();
+        result.setComments(responses);
+        result.setTotal(commentPage.getTotalElements());
+        result.setPage(page);
+        return result;
+    }
+
+    public long getDramaCommentCount(Long dramaId) {
+        return commentRepository.countByDramaId(dramaId);
     }
 
     @Transactional

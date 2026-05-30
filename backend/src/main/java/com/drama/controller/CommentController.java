@@ -41,6 +41,20 @@ public class CommentController {
         return ApiResponse.success(commentService.getReplies(parentCommentId, userId));
     }
 
+    @GetMapping("/drama/{dramaId}")
+    public ApiResponse<CommentResponse.PageResult> getDramaComments(
+            @PathVariable Long dramaId,
+            @RequestParam(defaultValue = "hot") String sort,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
+        return ApiResponse.success(commentService.getDramaComments(dramaId, sort, page, size));
+    }
+
+    @GetMapping("/drama/{dramaId}/count")
+    public ApiResponse<Map<String, Long>> getDramaCommentCount(@PathVariable Long dramaId) {
+        return ApiResponse.success(Map.of("count", commentService.getDramaCommentCount(dramaId)));
+    }
+
     @PostMapping
     public ApiResponse<CommentResponse> postComment(@Valid @RequestBody CommentRequest request) {
         Long userId = AuthUtils.requireUserId();

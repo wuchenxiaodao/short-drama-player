@@ -15,8 +15,11 @@ public class Comment {
     @Column(nullable = false)
     private Long userId;
 
-    @Column(nullable = false)
+    @Column
     private Long interactionId;
+
+    @Column
+    private Long dramaId;
 
     @Column(length = 500, nullable = false)
     private String content;

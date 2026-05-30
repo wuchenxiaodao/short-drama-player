@@ -22,6 +22,12 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     long countByInteractionId(Long interactionId);
 
+    Page<Comment> findByDramaIdAndParentCommentIdIsNullOrderByLikeCountDescCreatedAtDesc(Long dramaId, Pageable pageable);
+
+    Page<Comment> findByDramaIdAndParentCommentIdIsNullOrderByCreatedAtDesc(Long dramaId, Pageable pageable);
+
+    long countByDramaId(Long dramaId);
+
     @Query("SELECT c.parentCommentId, COUNT(c) FROM Comment c WHERE c.parentCommentId IN :parentIds GROUP BY c.parentCommentId")
     List<Object[]> countRepliesByParentIds(@Param("parentIds") List<Long> parentIds);
 
