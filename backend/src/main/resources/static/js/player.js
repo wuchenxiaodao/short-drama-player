@@ -11,12 +11,15 @@ const player = {
         this.setupErrorHandling();
     },
 
+    danmaku: null,
+
     setupEventListeners() {
         this.videoElement.addEventListener('timeupdate', utils.throttle(() => {
             this.currentTime = this.videoElement.currentTime;
             this.checkInteractionPoints();
             this.reportProgress();
-        }, 1000));
+            this.danmaku?.checkDanmaku(Math.floor(this.currentTime * 1000));
+        }, 500));
 
         this.videoElement.addEventListener('ended', () => {
             this.onVideoEnded();
@@ -48,6 +51,11 @@ const player = {
         }));
         this.videoElement.src = episode.videoUrl;
         document.getElementById('player-title').textContent = episode.title || '';
+
+        if (!this.danmaku) {
+            this.danmaku = new DanmakuSystem(this.videoElement);
+        }
+        this.danmaku.loadDanmaku(episode.episodeId || episode.id);
 
         if (episode.lastPositionMs && episode.lastPositionMs > 0) {
             this.videoElement.addEventListener('loadedmetadata', () => {
@@ -120,5 +128,89 @@ const player = {
 
     pause() {
         this.videoElement.pause();
+    },
+
+    sendCurrentDanmaku() {
+        const input = document.getElementById('danmaku-input');
+        const content = input?.value?.trim();
+        if (!content || !this.currentEpisode) return;
+        const positionMs = Math.floor(this.currentTime * 1000);
+        this.danmaku.sendDanmaku(this.currentEpisode.episodeId || this.currentEpisode.id, content, positionMs);
+        input.value = '';
+    },
+
+    toggleDanmaku() {
+        if (!this.danmaku) return;
+        const isOn = this.danmaku.toggle();
+        const btn = document.getElementById('danmaku-toggle');
+        if (btn) btn.textContent = isOn ? '弹幕🔊' : '弹幕🔇';
     }
 };
+
+class DanmakuSystem {
+    constructor(videoElement) {
+        this.videoElement = videoElement;
+        this.container = null;
+        this.danmakuList = [];
+        this.isDanmakuOn = true;
+        this.init();
+    }
+
+    init() {
+        this.container = document.createElement('div');
+        this.container.className = 'danmaku-container';
+        const parent = this.videoElement.parentElement;
+        parent.style.position = 'relative';
+        parent.appendChild(this.container);
+    }
+
+    async loadDanmaku(episodeId) {
+        try {
+            const res = await api.request(`${API_BASE_URL}/danmaku/episode/${episodeId}`);
+            const list = res.data || res;
+            this.danmakuList = (list || []).map(d => ({ ...d, shown: false }));
+        } catch (e) {
+            this.danmakuList = [];
+        }
+    }
+
+    checkDanmaku(currentTimeMs) {
+        if (!this.isDanmakuOn) return;
+        for (const d of this.danmakuList) {
+            if (!d.shown && Math.abs(d.positionMs - currentTimeMs) < 800) {
+                d.shown = true;
+                this.showDanmaku(d.content);
+            }
+        }
+    }
+
+    showDanmaku(text) {
+        const el = document.createElement('div');
+        el.className = 'danmaku-item';
+        el.textContent = text;
+        const duration = 6 + Math.random() * 4;
+        el.style.cssText = `position:absolute;right:-${text.length * 16}px;top:${5 + Math.random() * 75}%;color:#fff;font-size:14px;white-space:nowrap;text-shadow:1px 1px 2px rgba(0,0,0,0.8);animation:danmaku-scroll ${duration}s linear forwards;pointer-events:none;z-index:5;`;
+        this.container.appendChild(el);
+        setTimeout(() => el.remove(), (duration + 1) * 1000);
+    }
+
+    async sendDanmaku(episodeId, content, positionMs) {
+        try {
+            await api.request(`${API_BASE_URL}/danmaku/send`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ episodeId, content, positionMs })
+            });
+            this.showDanmaku(content);
+            this.danmakuList.push({ positionMs, content, shown: true });
+        } catch (e) {
+            errorHandler.handle(e, 'sendDanmaku');
+        }
+    }
+
+    toggle() {
+        this.isDanmakuOn = !this.isDanmakuOn;
+        this.container.style.display = this.isDanmakuOn ? 'block' : 'none';
+        return this.isDanmakuOn;
+    }
+}

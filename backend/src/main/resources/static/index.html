@@ -92,6 +92,12 @@
                 <button class="back-btn" onclick="app.goBack()">←</button>
                 <span id="player-title"></span>
             </div>
+            <div class="danmaku-input-bar">
+                <input type="text" id="danmaku-input" placeholder="发一条弹幕..." maxlength="100"
+                       onkeydown="if(event.key==='Enter')player.sendCurrentDanmaku()">
+                <button class="danmaku-send-btn" onclick="player.sendCurrentDanmaku()">发送</button>
+                <button class="danmaku-toggle-btn" id="danmaku-toggle" onclick="player.toggleDanmaku()">弹幕🔊</button>
+            </div>
         </div>
 
         <!-- 彩蛋图鉴页 -->

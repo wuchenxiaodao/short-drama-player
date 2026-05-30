@@ -48,6 +48,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/episode/*/playinfo").permitAll()
                 .requestMatchers("/api/interaction/*/stats").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/comment/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/danmaku/episode/**").permitAll()
                 .requestMatchers("/api/rating/stats").permitAll()
                 .requestMatchers("/api/online/episode/*/count").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/h2-console/**").permitAll()
