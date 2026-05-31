@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-短剧互动播放器 — an Android app for watching short dramas with interactive elements (polls, quizzes, story choices, easter eggs). Backend is a Spring Boot REST API; frontend is a Kotlin/Jetpack Compose Android app using WebView to render the player UI.
+短剧互动播放器 — 一款为短剧设计的沉浸式互动娱乐平台，核心体验是"观看-互动-再参与"的闭环。后端是 Spring Boot REST API，前端是 SPA 单页应用。
 
 ## Commands
 
@@ -42,14 +42,6 @@ docker-compose logs -f backend # tail backend logs
 docker-compose down            # stop all
 ```
 
-### Android
-
-Open `android/` in Android Studio. Build/run from there. Min SDK 24, target SDK 34.
-
-### Quick Preview
-
-Open `preview.html` in a browser for a no-install UI demo.
-
 ## Architecture
 
 ### Backend (`backend/`)
@@ -72,14 +64,6 @@ JPA uses `ddl-auto=update` so schema evolves from entity definitions. The `sql/i
 ### Content (`short-drama/`)
 
 Video files organized by drama title (e.g. `短剧名/第1集.mp4`). These are local assets not committed to git — the `videos/` gitignore rule excludes them. The `DataInitializer` seeds drama metadata; video paths are resolved at runtime.
-
-### Android (`android/`)
-
-Minimal shell — `MainActivity` loads a WebView. The actual player UI lives in `preview.html` and is rendered inside the WebView. Native Kotlin code handles Android lifecycle and WebView configuration only.
-
-### Preview (`preview.html`)
-
-Dual-purpose: standalone browser demo AND the WebView content loaded by the Android app. All player UI (interaction popups, episode list, progress tracking) is implemented here in vanilla JS/CSS.
 
 ### Kubernetes (`k8s/`)
 
@@ -115,3 +99,12 @@ All prefixed with `/api`:
 | GET | `/user/{userId}/eggs/count` | Easter egg count |
 | GET | `/user/{userId}/medals` | Earned medals |
 | GET | `/user/{userId}/medals/check/{medalCode}` | Check specific medal |
+| GET | `/favorite/list` | User's favorites |
+| GET | `/favorite/check?dramaId=...` | Check if favorited |
+| POST | `/favorite/toggle` | Toggle favorite |
+| GET | `/danmaku/episode/{episodeId}` | Episode danmaku |
+| POST | `/danmaku` | Send danmaku |
+| GET | `/points` | User points |
+| GET | `/points/history` | Points history |
+| GET | `/drama/categories` | Category list |
+| GET | `/drama/continue` | Continue watching |

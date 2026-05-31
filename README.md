@@ -7,14 +7,10 @@
 | 模块 | 技术 |
 |------|------|
 | 后端 | Java 17 + Spring Boot 3.2 + Spring Security + JWT + JPA + H2/MySQL + Redis |
-| 前端 | 纯 HTML5 + CSS3 + JavaScript（preview.html） |
+| 前端 | SPA（单页应用） - HTML5 + CSS3 + JavaScript |
 | 部署 | Docker Compose / Kubernetes (ACK/TKE) |
 
 ## 快速开始
-
-### 网页预览（无需安装）
-
-双击 `preview.html` 即可在浏览器中体验完整 UI 流程。
 
 ### 后端 API 本地运行
 
@@ -90,6 +86,28 @@ docker-compose up -d
 | POST | `/api/comment` | 发表评论（需登录） |
 | POST | `/api/comment/{id}/like` | 点赞/取消点赞（需登录） |
 
+### 收藏（需登录）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/favorite/list` | 收藏列表 |
+| GET | `/api/favorite/check?dramaId=...` | 检查是否收藏 |
+| POST | `/api/favorite/toggle` | 切换收藏状态 |
+
+### 弹幕（部分需登录）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/danmaku/episode/{episodeId}` | 弹幕列表（公开） |
+| POST | `/api/danmaku` | 发送弹幕（需登录） |
+
+### 积分（需登录）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/points` | 获取积分 |
+| GET | `/api/points/history` | 积分历史 |
+
 ### 在线状态（部分需登录）
 
 | 方法 | 路径 | 说明 |
@@ -119,6 +137,8 @@ docker-compose up -d
 - `comments` — 评论（content, likeCount）
 - `comment_likes` — 点赞记录（userId, commentId）
 - `ratings` — 评分（userId, dramaId, score）
+- `favorites` — 收藏记录（userId, dramaId）
+- `danmaku` — 弹幕（userId, episodeId, content, timestampMs）
 - `user_eggs` — 彩蛋收集（userId, interactionId, eggContent）
 
 ## 环境要求
@@ -135,7 +155,10 @@ docker-compose up -d
 - [x] 搜索优化（剧集标题 + 搜索历史）
 - [x] 并发安全（原子 SQL UPDATE）
 - [x] CORS 配置 + 分页上限
-- [ ] Android 原生应用
-- [ ] 弹幕功能
-- [ ] 彩蛋收集图鉴
-- [ ] 成就勋章墙
+- [x] 弹幕功能
+- [x] 彩蛋收集图鉴
+- [x] 成就勋章墙
+- [x] 收藏功能
+- [x] 评论系统
+- [x] 封面图优化
+- [x] 分类筛选
