@@ -17,6 +17,9 @@ public class PlayInfo {
         private Long timestampMs;
         private String type;
         private String questionText;
+        private Long prerequisiteId;
+        private Long prerequisiteChoiceOptionId;
+        private Boolean prerequisiteMet;
         private List<OptionInfo> options;
 
         @Data

@@ -74,7 +74,7 @@ const player = {
     checkInteractionPoints() {
         const currentTimeMs = Math.floor(this.currentTime * 1000);
         const point = this.interactionPoints.find(p =>
-            Math.abs(p.timestampMs - currentTimeMs) < 1000 && !p.shown
+            Math.abs(p.timestampMs - currentTimeMs) < 1000 && !p.shown && p.prerequisiteMet !== false
         );
 
         if (point) {

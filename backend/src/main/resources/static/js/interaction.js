@@ -119,6 +119,11 @@ const interaction = {
 
         if (nextInteractionId) {
             this.pendingBranchId = nextInteractionId;
+            player.interactionPoints.forEach(p => {
+                if (p.prerequisiteId === this.currentPoint.id && p.prerequisiteChoiceOptionId === selectedOptionId) {
+                    p.prerequisiteMet = true;
+                }
+            });
         }
 
         resultHtml += '<button class="continue-btn" onclick="interaction.close()">继续观看</button>';

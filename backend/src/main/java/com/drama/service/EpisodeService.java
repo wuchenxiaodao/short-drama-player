@@ -54,13 +54,9 @@ public class EpisodeService {
 
     private List<PlayInfo.InteractionInfo> buildInteractionInfoList(Long episodeId, Long userId) {
         List<InteractionPoint> points = interactionPointRepository.findWithOptionsByEpisodeId(episodeId);
-        if (userId == null) {
-            return points.stream().map(this::buildInteractionInfo).collect(Collectors.toList());
-        }
-        Map<Long, Long> userAnswers = getUserAnswerMap(userId, points);
+        Map<Long, Long> userAnswers = userId != null ? getUserAnswerMap(userId, points) : Map.of();
         return points.stream()
-                .filter(p -> shouldShowInteraction(p, userAnswers))
-                .map(this::buildInteractionInfo)
+                .map(p -> buildInteractionInfo(p, userAnswers))
                 .collect(Collectors.toList());
     }
 
@@ -77,18 +73,22 @@ public class EpisodeService {
                 .collect(Collectors.toMap(a -> a.getInteractionPoint().getId(), InteractionAnswer::getSelectedOptionId));
     }
 
-    private boolean shouldShowInteraction(InteractionPoint point, Map<Long, Long> userAnswers) {
-        if (point.getPrerequisite() == null) return true;
-        Long userChoice = userAnswers.get(point.getPrerequisite().getId());
-        return userChoice != null && userChoice.equals(point.getPrerequisiteChoiceOptionId());
-    }
-
-    private PlayInfo.InteractionInfo buildInteractionInfo(InteractionPoint point) {
+    private PlayInfo.InteractionInfo buildInteractionInfo(InteractionPoint point, Map<Long, Long> userAnswers) {
         PlayInfo.InteractionInfo info = new PlayInfo.InteractionInfo();
         info.setId(point.getId());
         info.setTimestampMs(point.getTimestampMs());
         info.setType(point.getInteractionType().name());
         info.setQuestionText(point.getQuestionText());
+
+        if (point.getPrerequisite() != null) {
+            info.setPrerequisiteId(point.getPrerequisite().getId());
+            info.setPrerequisiteChoiceOptionId(point.getPrerequisiteChoiceOptionId());
+            Long userChoice = userAnswers.get(point.getPrerequisite().getId());
+            info.setPrerequisiteMet(userChoice != null && userChoice.equals(point.getPrerequisiteChoiceOptionId()));
+        } else {
+            info.setPrerequisiteMet(true);
+        }
+
         info.setOptions(point.getOptions().stream().map(o -> {
             PlayInfo.InteractionInfo.OptionInfo opt = new PlayInfo.InteractionInfo.OptionInfo();
             opt.setId(o.getId());
