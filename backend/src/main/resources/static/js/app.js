@@ -448,9 +448,14 @@ const app = {
                 <span class="clear-history" onclick="app.clearSearchHistory()">清除</span>
             </div>
             <div class="search-tags">
-                ${history.map(kw => `<span class="search-tag" onclick="app.doSearch('${kw.replace(/'/g, "\\'")}')">${kw}</span>`).join('')}
+                ${history.map(kw => `<span class="search-tag" data-keyword="${interaction.escapeHtml(kw)}">${interaction.escapeHtml(kw)}</span>`).join('')}
             </div>
         `;
+        container.querySelectorAll('.search-tag').forEach(tag => {
+            tag.addEventListener('click', () => {
+                this.doSearch(tag.dataset.keyword);
+            });
+        });
     },
 
     clearSearchHistory() {
