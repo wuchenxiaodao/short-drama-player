@@ -63,6 +63,45 @@ public class DramaService {
         return dramaRepository.findDistinctCategories();
     }
 
+    public List<DramaSummary> getContinueWatching(Long userId) {
+        if (userId == null) return List.of();
+        List<WatchProgress> progresses = watchProgressRepository.findTop10ByUserIdAndCompletedFalseOrderByUpdatedAtDesc(userId);
+        if (progresses.isEmpty()) return List.of();
+
+        Map<Long, WatchProgress> latestByDrama = new HashMap<>();
+        for (WatchProgress p : progresses) {
+            Episode ep = episodeRepository.findById(p.getEpisodeId()).orElse(null);
+            if (ep == null) continue;
+            Long dramaId = ep.getDrama().getId();
+            if (!latestByDrama.containsKey(dramaId)) {
+                latestByDrama.put(dramaId, p);
+            }
+        }
+
+        List<Long> dramaIds = latestByDrama.entrySet().stream()
+                .sorted((a, b) -> b.getValue().getUpdatedAt().compareTo(a.getValue().getUpdatedAt()))
+                .limit(6)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+
+        if (dramaIds.isEmpty()) return List.of();
+
+        Map<Long, Drama> dramaMap = dramaRepository.findAllById(dramaIds).stream()
+                .collect(Collectors.toMap(Drama::getId, d -> d));
+
+        Map<Long, Long> ratingCountMap = new HashMap<>();
+        List<Object[]> counts = ratingRepository.countByDramaIds(dramaIds);
+        for (Object[] row : counts) {
+            ratingCountMap.put((Long) row[0], (Long) row[1]);
+        }
+
+        return dramaIds.stream()
+                .map(dramaMap::get)
+                .filter(d -> d != null)
+                .map(d -> toSummary(d, ratingCountMap.getOrDefault(d.getId(), 0L)))
+                .collect(Collectors.toList());
+    }
+
     public DramaDetail getDetail(Long dramaId, Long userId) {
         Drama drama = dramaRepository.findById(dramaId)
                 .orElseThrow(() -> new com.drama.common.BusinessException(404, "短剧不存在"));

@@ -136,12 +136,35 @@ const app = {
     async loadHomePage() {
         loadingManager.show();
         try {
-            await Promise.all([
-                this.loadRecommendDramas(),
-                this.loadHotDramas()
-            ]);
+            const tasks = [this.loadRecommendDramas(), this.loadHotDramas()];
+            if (state.isLoggedIn()) {
+                tasks.push(this.loadContinueWatching());
+            } else {
+                const section = document.getElementById('continue-section');
+                if (section) section.style.display = 'none';
+            }
+            await Promise.all(tasks);
         } finally {
             loadingManager.hide();
+        }
+    },
+
+    async loadContinueWatching() {
+        try {
+            const res = await api.request(`${API_BASE_URL}/drama/continue`);
+            const dramas = res.data || res;
+            const section = document.getElementById('continue-section');
+            const container = document.getElementById('continue-list');
+            if (!section || !container) return;
+            if (!dramas || dramas.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+            section.style.display = 'block';
+            this.renderDramaList(container, dramas);
+        } catch (e) {
+            const section = document.getElementById('continue-section');
+            if (section) section.style.display = 'none';
         }
     },
 

@@ -59,6 +59,11 @@ public class DramaController {
         return ApiResponse.success(dramaService.getNew(page, size));
     }
 
+    @GetMapping("/continue")
+    public ApiResponse<List<DramaSummary>> continueWatching() {
+        return ApiResponse.success(dramaService.getContinueWatching(AuthUtils.getCurrentUserId()));
+    }
+
     @GetMapping("/categories")
     public ApiResponse<List<String>> categories() {
         return ApiResponse.success(dramaService.getCategories());
