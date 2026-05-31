@@ -47,11 +47,7 @@ const app = {
     },
 
     updateAuthUI(loggedIn) {
-        const authBtn = document.getElementById('auth-btn');
-        if (authBtn) {
-            authBtn.textContent = loggedIn ? '退出' : '登录';
-            authBtn.onclick = loggedIn ? () => this.logout() : () => this.showLoginPage();
-        }
+        // Mine page auth button is handled in loadMinePage
     },
 
     showLoginPage() {
@@ -71,6 +67,7 @@ const app = {
             if (data.token) {
                 localStorage.setItem('drama_token', data.token);
                 state.token = data.token;
+                state.user = { username: data.username, nickname: data.nickname, points: data.points };
                 this.updateAuthUI(true);
                 this.navigateTo('home');
                 errorHandler.showMessage('登录成功', 'success');
@@ -106,6 +103,7 @@ const app = {
     logout() {
         localStorage.removeItem('drama_token');
         state.token = null;
+        state.user = null;
         this.updateAuthUI(false);
         this.navigateTo('home');
         errorHandler.showMessage('已退出登录', 'info');
@@ -128,8 +126,14 @@ const app = {
         }
         state.setPage(page);
 
+        document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
+            item.classList.toggle('active', item.dataset.page === page);
+        });
+
         if (page === 'home') {
             this.loadHomePage();
+        } else if (page === 'mine') {
+            this.loadMinePage();
         }
     },
 
@@ -612,6 +616,55 @@ const app = {
             errorHandler.showMessage('评分成功', 'success');
         } catch (e) {
             errorHandler.handle(e, 'rateDrama');
+        }
+    },
+
+    loadMinePage() {
+        const nicknameEl = document.getElementById('mine-nickname');
+        const pointsEl = document.getElementById('mine-points');
+        const authBtn = document.getElementById('mine-auth-btn');
+
+        if (state.isLoggedIn()) {
+            nicknameEl.textContent = state.user?.nickname || state.user?.username || '用户';
+            pointsEl.textContent = `积分：${state.user?.points || 0}`;
+            authBtn.textContent = '退出登录';
+            authBtn.onclick = () => this.logout();
+        } else {
+            nicknameEl.textContent = '未登录';
+            pointsEl.textContent = '登录后享受更多功能';
+            authBtn.textContent = '登录 / 注册';
+            authBtn.onclick = () => this.showLoginPage();
+        }
+    },
+
+    async showFavoriteList() {
+        if (!state.isLoggedIn()) {
+            this.showLoginPage();
+            return;
+        }
+        try {
+            const res = await api.request(`${API_BASE_URL}/favorite/list`);
+            const dramas = res.data || res;
+            const container = document.createElement('div');
+            container.className = 'drama-grid';
+            if (!dramas || dramas.length === 0) {
+                container.innerHTML = '<div class="search-empty">暂无追剧</div>';
+            } else {
+                this.renderDramaList(container, dramas);
+            }
+
+            const pageEl = document.getElementById('mine-page');
+            const existing = pageEl.querySelector('.favorite-list-section');
+            if (existing) existing.remove();
+
+            const section = document.createElement('div');
+            section.className = 'favorite-list-section';
+            section.style.padding = '0 16px';
+            section.innerHTML = '<h3 style="margin-bottom:12px;color:var(--text-primary)">我的追剧</h3>';
+            section.appendChild(container);
+            pageEl.appendChild(section);
+        } catch (e) {
+            errorHandler.handle(e, 'showFavoriteList');
         }
     },
 

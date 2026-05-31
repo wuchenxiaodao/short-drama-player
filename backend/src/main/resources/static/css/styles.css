@@ -1070,3 +1070,148 @@ body {
     font-size: 11px;
     margin-top: 4px;
 }
+
+/* 底部导航栏 */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 430px;
+    display: flex;
+    background: var(--card-bg);
+    border-top: 1px solid var(--medium-gray);
+    z-index: 100;
+    padding: 8px 0;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+}
+
+.bottom-nav .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 0;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: color 0.2s;
+}
+
+.bottom-nav .nav-item.active {
+    color: var(--electric-purple);
+}
+
+.nav-icon {
+    font-size: 20px;
+}
+
+.nav-label {
+    font-size: 11px;
+}
+
+/* 我的页面 */
+.mine-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 60px 20px 24px;
+    background: linear-gradient(135deg, var(--purple-dark), var(--electric-purple));
+}
+
+.mine-avatar {
+    width: 64px;
+    height: 64px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+}
+
+.mine-info {
+    flex: 1;
+}
+
+.mine-nickname {
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 4px;
+}
+
+.mine-points {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.mine-menu {
+    padding: 16px;
+}
+
+.mine-menu-item {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.mine-menu-item:hover {
+    background: var(--medium-gray);
+}
+
+.mine-menu-icon {
+    font-size: 20px;
+    margin-right: 12px;
+}
+
+.mine-menu-text {
+    flex: 1;
+    font-size: 15px;
+    color: var(--text-primary);
+}
+
+.mine-menu-arrow {
+    font-size: 18px;
+    color: var(--text-secondary);
+}
+
+.mine-auth-section {
+    padding: 24px 16px;
+}
+
+.mine-auth-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--card-bg);
+    border: 1px solid var(--medium-gray);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mine-auth-btn:hover {
+    border-color: var(--electric-purple);
+    color: var(--electric-purple);
+}
+
+/* 媒体查询适配 */
+@media (min-width: 768px) {
+    .bottom-nav {
+        max-width: 768px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .bottom-nav {
+        max-width: 1024px;
+    }
+}
