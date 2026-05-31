@@ -55,6 +55,17 @@
                         <button id="favorite-btn" class="favorite-btn" onclick="app.toggleFavorite(state.currentDrama?.id)">🤍 追剧</button>
                         <button class="share-btn" onclick="app.shareDrama(state.currentDrama)">📤 分享</button>
                     </div>
+                    <div class="detail-rating">
+                        <span class="rating-score" id="rating-score">0.0</span>
+                        <div class="rating-stars" id="rating-stars">
+                            <span class="star" data-score="1">★</span>
+                            <span class="star" data-score="2">★</span>
+                            <span class="star" data-score="3">★</span>
+                            <span class="star" data-score="4">★</span>
+                            <span class="star" data-score="5">★</span>
+                        </div>
+                        <span class="rating-count" id="rating-count">(0人评分)</span>
+                    </div>
                 </div>
                 <div class="episode-list">
                     <h3>选集</h3>

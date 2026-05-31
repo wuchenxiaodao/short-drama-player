@@ -241,6 +241,7 @@ const app = {
         this.loadEpisodes(drama);
         this.checkFavoriteStatus(drama.id);
         this.loadDramaComments(drama.id);
+        this.loadRating(drama.id);
     },
 
     async checkFavoriteStatus(dramaId) {
@@ -531,6 +532,52 @@ const app = {
         if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`;
         if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`;
         return `${date.getMonth() + 1}/${date.getDate()}`;
+    },
+
+    async loadRating(dramaId) {
+        try {
+            const res = await api.request(`${API_BASE_URL}/rating/stats?dramaId=${dramaId}`);
+            const data = res.data || res;
+            const scoreEl = document.getElementById('rating-score');
+            const countEl = document.getElementById('rating-count');
+            if (scoreEl) scoreEl.textContent = (data.average || 0).toFixed(1);
+            if (countEl) countEl.textContent = `(${data.count || 0}人评分)`;
+            this.highlightStars(Math.round(data.average || 0));
+
+            const starsContainer = document.getElementById('rating-stars');
+            if (starsContainer) {
+                starsContainer.querySelectorAll('.star').forEach(star => {
+                    star.onclick = () => this.rateDrama(dramaId, parseInt(star.dataset.score));
+                });
+            }
+        } catch (e) {}
+    },
+
+    highlightStars(score) {
+        const stars = document.querySelectorAll('#rating-stars .star');
+        stars.forEach(star => {
+            const starScore = parseInt(star.dataset.score);
+            star.classList.toggle('active', starScore <= score);
+        });
+    },
+
+    async rateDrama(dramaId, score) {
+        if (!state.isLoggedIn()) {
+            this.showLoginPage();
+            return;
+        }
+        try {
+            await api.request(`${API_BASE_URL}/rating/submit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ dramaId, score: score * 2 })
+            });
+            this.highlightStars(score);
+            this.loadRating(dramaId);
+            errorHandler.showMessage('评分成功', 'success');
+        } catch (e) {
+            errorHandler.handle(e, 'rateDrama');
+        }
     },
 
     goBack() {

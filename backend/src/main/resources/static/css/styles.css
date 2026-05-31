@@ -254,6 +254,41 @@ body {
     margin-bottom: 12px;
 }
 
+.detail-rating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.rating-score {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--star-yellow);
+}
+
+.rating-stars {
+    display: flex;
+    gap: 4px;
+}
+
+.star {
+    font-size: 20px;
+    color: var(--medium-gray);
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.star:hover,
+.star.active {
+    color: var(--star-yellow);
+}
+
+.rating-count {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
 .share-btn {
     background: rgba(255,255,255,0.1);
     border: 1px solid rgba(255,255,255,0.2);
