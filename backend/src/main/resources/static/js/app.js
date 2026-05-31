@@ -140,7 +140,7 @@ const app = {
     async loadHomePage() {
         loadingManager.show();
         try {
-            const tasks = [this.loadRecommendDramas(), this.loadHotDramas()];
+            const tasks = [this.loadRecommendDramas(), this.loadHotDramas(), this.loadCategories()];
             if (state.isLoggedIn()) {
                 tasks.push(this.loadContinueWatching());
             } else {
@@ -150,6 +150,46 @@ const app = {
             await Promise.all(tasks);
         } finally {
             loadingManager.hide();
+        }
+    },
+
+    async loadCategories() {
+        try {
+            const res = await api.request(`${API_BASE_URL}/drama/categories`);
+            const categories = res.data || res;
+            const container = document.getElementById('category-tabs');
+            if (!container || !categories || categories.length === 0) return;
+            container.innerHTML = `
+                <span class="category-tab active" data-category="">全部</span>
+                ${categories.map(cat => `<span class="category-tab" data-category="${interaction.escapeHtml(cat)}">${interaction.escapeHtml(cat)}</span>`).join('')}
+            `;
+            container.querySelectorAll('.category-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    container.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    this.filterByCategory(tab.dataset.category);
+                });
+            });
+        } catch (e) {}
+    },
+
+    async filterByCategory(category) {
+        const container = document.getElementById('recommend-list');
+        utils.showLoading(container);
+        try {
+            if (!category) {
+                await this.loadRecommendDramas();
+                return;
+            }
+            const res = await api.request(`${API_BASE_URL}/drama/category/${encodeURIComponent(category)}?page=0&size=20`);
+            const dramas = (res.data || res).content;
+            if (dramas && dramas.length > 0) {
+                this.renderDramaList(container, dramas);
+            } else {
+                container.innerHTML = '<div class="search-empty">该分类暂无短剧</div>';
+            }
+        } catch (e) {
+            utils.showError(container, '加载失败');
         }
     },
 

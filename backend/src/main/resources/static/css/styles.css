@@ -1071,6 +1071,47 @@ body {
     margin-top: 4px;
 }
 
+/* 分类标签 */
+.category-section {
+    padding: 0 16px;
+    margin-bottom: 16px;
+}
+
+.category-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.category-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.category-tab {
+    padding: 6px 16px;
+    background: var(--card-bg);
+    border: 1px solid var(--medium-gray);
+    border-radius: 20px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.category-tab:hover {
+    border-color: var(--electric-purple);
+    color: var(--electric-purple);
+}
+
+.category-tab.active {
+    background: var(--electric-purple);
+    border-color: var(--electric-purple);
+    color: #fff;
+}
+
 /* 底部导航栏 */
 .bottom-nav {
     position: fixed;
