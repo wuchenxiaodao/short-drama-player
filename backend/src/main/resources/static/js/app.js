@@ -224,18 +224,27 @@ const app = {
     },
 
     renderDramaList(container, dramas) {
-        container.innerHTML = dramas.map(drama => `
+        container.innerHTML = dramas.map(drama => {
+            const tags = [];
+            if (drama.isHot) tags.push('<span class="drama-card-tag hot">🔥 热播</span>');
+            if (drama.isNew) tags.push('<span class="drama-card-tag new">✨ 新剧</span>');
+            const rating = drama.rating > 0 ? `<span class="drama-card-rating">★ ${drama.rating.toFixed(1)}</span>` : '';
+            return `
             <div class="drama-card" onclick="app.showDramaDetail(${drama.id})">
                 <div class="drama-card-cover">
                     ${drama.coverUrl ? `<img src="${drama.coverUrl}" alt="${drama.title}" onerror="this.style.display='none'">` : ''}
                     <span class="cover-emoji">🎬</span>
+                    ${tags.length > 0 ? `<div class="drama-card-tags">${tags.join('')}</div>` : ''}
                 </div>
                 <div class="drama-card-info">
                     <div class="drama-card-title">${drama.title}</div>
-                    <div class="drama-card-meta">${drama.category || ''} · ${drama.totalEpisodes}集</div>
+                    <div class="drama-card-meta">
+                        <span>${drama.category || ''} · ${drama.totalEpisodes}集</span>
+                        ${rating}
+                    </div>
                 </div>
-            </div>
-        `).join('');
+            </div>`;
+        }).join('');
     },
 
     async showDramaDetail(dramaId) {
