@@ -57,7 +57,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/video/**").permitAll()
                 .requestMatchers("/api/online/episode/*/count").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/h2-console/**").permitAll()
-                .requestMatchers("/", "/preview.html", "/index.html", "/css/**", "/js/**", "/assets/**").permitAll()
+                .requestMatchers("/", "/preview.html", "/index.html", "/css/**", "/js/**", "/assets/**", "/covers/**").permitAll()
                 .requestMatchers("/videos/**").permitAll()
                 .requestMatchers("/video").permitAll()
                 .anyRequest().authenticated()

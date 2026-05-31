@@ -52,7 +52,7 @@ public class DataInitializer implements CommandLineRunner {
         Drama d = new Drama();
         d.setTitle("北派寻宝笔记");
         d.setDescription("一本神秘的寻宝笔记，引出了一段跨越百年的传奇故事。主人公循着祖辈留下的线索，踏上了惊险刺激的寻宝之旅。");
-        d.setCoverUrl("https://picsum.photos/seed/beipai/400/225");
+        d.setCoverUrl("/covers/clean_beipai.webp");
         d.setCategory("悬疑");
         d.setTotalEpisodes(19);
         d.setRating(0.0);
@@ -151,7 +151,7 @@ public class DataInitializer implements CommandLineRunner {
         Drama d = new Drama();
         d.setTitle("天下第一纨绔");
         d.setDescription("一个被所有人看不起的纨绔子弟，却有着不为人知的惊人才华。当他不再隐藏自己，整个天下都为之震动。");
-        d.setCoverUrl("https://picsum.photos/seed/tianxia/400/225");
+        d.setCoverUrl("/covers/clean_wanku.webp");
         d.setCategory("古装");
         d.setTotalEpisodes(24);
         d.setRating(0.0);
@@ -226,7 +226,7 @@ public class DataInitializer implements CommandLineRunner {
         Drama d = new Drama();
         d.setTitle("十八岁太奶奶驾到，重整家族荣耀第三部");
         d.setDescription("太奶奶穿越回现代，凭借过人的智慧和胆识，带领家族走向新的辉煌。这一部，更大的挑战等着她...");
-        d.setCoverUrl("https://picsum.photos/seed/shibasui/400/225");
+        d.setCoverUrl("/covers/clean_grandma.webp");
         d.setCategory("都市");
         d.setTotalEpisodes(20);
         d.setRating(0.0);
@@ -292,7 +292,7 @@ public class DataInitializer implements CommandLineRunner {
         Drama d = new Drama();
         d.setTitle("幸得相遇离婚时");
         d.setDescription("一场离婚，让两个人重新认识了彼此。当爱情褪去激情，真正的生活才刚刚开始。他们能否在分开后找到真正的幸福？");
-        d.setCoverUrl("https://picsum.photos/seed/xingde/400/225");
+        d.setCoverUrl("/covers/clean_xingde.webp");
         d.setCategory("甜宠");
         d.setTotalEpisodes(20);
         d.setRating(0.0);
@@ -327,7 +327,7 @@ public class DataInitializer implements CommandLineRunner {
         Drama d = new Drama();
         d.setTitle("荒年全村啃树皮，我有系统满仓肉");
         d.setDescription("穿越到饥荒年代，获得囤货系统的她，凭借一己之力带领全村人度过荒年。从被嘲笑到被仰望，她的逆袭之路开始了。");
-        d.setCoverUrl("https://picsum.photos/seed/huangnian/400/225");
+        d.setCoverUrl("/covers/clean_huangnian_v2.webp");
         d.setCategory("古装");
         d.setTotalEpisodes(20);
         d.setRating(0.0);
@@ -382,7 +382,7 @@ public class DataInitializer implements CommandLineRunner {
         Drama d = new Drama();
         d.setTitle("家里家外");
         d.setDescription("一个普通家庭的喜怒哀乐，婆媳关系、夫妻相处、子女教育，每个话题都能引起你的共鸣。");
-        d.setCoverUrl("https://picsum.photos/seed/jiali/400/225");
+        d.setCoverUrl("/covers/clean_jiali.webp");
         d.setCategory("都市");
         d.setTotalEpisodes(20);
         d.setRating(0.0);
