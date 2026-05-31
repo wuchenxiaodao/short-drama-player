@@ -375,12 +375,15 @@ const app = {
             return;
         }
 
-        container.innerHTML = episodes.map(ep => `
-            <div class="episode-item" onclick="app.playEpisode(${ep.id})">
+        container.innerHTML = episodes.map(ep => {
+            const watched = ep.watchPositionMs && ep.watchPositionMs > 0;
+            return `
+            <div class="episode-item ${watched ? 'episode-watched' : ''}" onclick="app.playEpisode(${ep.id})">
                 <span class="episode-number">${ep.episodeNumber}</span>
                 <span class="episode-title">${ep.title || '第' + ep.episodeNumber + '集'}</span>
-            </div>
-        `).join('');
+                ${watched ? '<span class="episode-progress-dot"></span>' : ''}
+            </div>`;
+        }).join('');
     },
 
     async playEpisode(episodeId) {

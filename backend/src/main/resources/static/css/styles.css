@@ -680,6 +680,20 @@ body {
     color: var(--text-primary);
 }
 
+.episode-watched {
+    border-color: var(--electric-purple);
+    background: rgba(139, 92, 246, 0.08);
+}
+
+.episode-progress-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--electric-purple);
+    border-radius: 50%;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
 /* 封面图 */
 .drama-card-cover {
     position: relative;
