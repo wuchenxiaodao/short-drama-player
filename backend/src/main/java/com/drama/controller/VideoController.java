@@ -46,7 +46,9 @@ public class VideoController {
     @GetMapping("/videos/**")
     public void streamVideo(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String fullPath = request.getRequestURI();
-        String videoPath = fullPath.substring("/videos/".length());
+        log.info("Video request: {}", fullPath);
+        String videoPath = java.net.URLDecoder.decode(fullPath.substring("/videos/".length()), "UTF-8");
+        log.info("Video path: {}", videoPath);
 
         Path basePath = Paths.get(videoBasePath).toAbsolutePath().normalize();
         Path filePath = basePath.resolve(videoPath).normalize();
