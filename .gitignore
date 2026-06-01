@@ -1,5 +1,6 @@
 # Video files - too large for git
-videos/
+videos/**/*.mp4
+!videos/**/.gitkeep
 
 # Backend
 backend/target/
