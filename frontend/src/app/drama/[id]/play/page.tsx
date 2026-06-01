@@ -9,6 +9,7 @@ import {
   ThumbsUp,
   Send,
   ChevronRight,
+  Users,
 } from 'lucide-react';
 import type { Drama, Episode, InteractionPoint, Danmaku, Comment } from '@/lib/types';
 import {
@@ -23,6 +24,7 @@ import {
   reportProgress,
   resolveUrl,
   getEpisodeInteractions,
+  getOnlineCount,
 } from '@/lib/api-client';
 import { formatTimeAgo, formatDuration, cn } from '@/lib/utils';
 import { useAuthStore } from '@/lib/auth';
@@ -48,6 +50,7 @@ export default function PlayPage() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentText, setCommentText] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [onlineCount, setOnlineCount] = useState<number>(0);
 
   const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
@@ -100,6 +103,18 @@ export default function PlayPage() {
       if (progressTimerRef.current) clearInterval(progressTimerRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (!episode) return;
+    const fetchOnline = () => {
+      getOnlineCount(episode.id)
+        .then((count) => setOnlineCount(typeof count === 'number' ? count : 0))
+        .catch(() => {});
+    };
+    fetchOnline();
+    const timer = setInterval(fetchOnline, 30000);
+    return () => clearInterval(timer);
+  }, [episode]);
 
   const handleTimeUpdate = useCallback((timeMs: number) => {
     setCurrentTimeMs(timeMs);
@@ -233,6 +248,12 @@ export default function PlayPage() {
             </h1>
             <p className="text-xs text-drama-muted">
               第{episodeNumber}集{episodeTitle ? ` · ${episodeTitle}` : ''}{episode ? ` · ${formatDuration(episode.durationSeconds)}` : ''}
+              {onlineCount > 0 && (
+                <span className="ml-2 inline-flex items-center gap-0.5">
+                  <Users className="w-3 h-3" />
+                  {onlineCount}人在线
+                </span>
+              )}
             </p>
           </div>
         </div>

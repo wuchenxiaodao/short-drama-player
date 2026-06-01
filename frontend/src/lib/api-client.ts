@@ -244,3 +244,7 @@ export async function getDramasByCategory(category: string, page = 0, size = 10)
 export async function getContinueWatching() {
   return apiGet<any>('/api/progress/continue-watching');
 }
+
+export async function getOnlineCount(episodeId: number) {
+  return apiGet<number>(`/api/online/episode/${episodeId}/count`);
+}
