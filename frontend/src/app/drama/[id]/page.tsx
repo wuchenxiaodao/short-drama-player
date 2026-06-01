@@ -29,6 +29,7 @@ import {
 import { formatNumber, formatTimeAgo, cn } from '@/lib/utils';
 import { useAuthStore } from '@/lib/auth';
 import DramaCard from '@/components/DramaCard';
+import RatingInput from '@/components/RatingInput';
 
 export default function DramaDetailPage() {
   const params = useParams();
@@ -44,6 +45,7 @@ export default function DramaDetailPage() {
   const [commentPage, setCommentPage] = useState(1);
   const [commentText, setCommentText] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [commentSort, setCommentSort] = useState<'hot' | 'newest'>('hot');
 
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
 
@@ -68,10 +70,10 @@ export default function DramaDetailPage() {
 
   useEffect(() => {
     if (!dramaId) return;
-    getComments(dramaId, 0, 20)
+    getComments(dramaId, 0, 20, commentSort)
       .then((res: any) => setComments(res.content || []))
       .catch(() => {});
-  }, [dramaId, commentPage]);
+  }, [dramaId, commentPage, commentSort]);
 
   const handleFavorite = useCallback(async () => {
     if (!isLoggedIn) {
@@ -228,6 +230,8 @@ export default function DramaDetailPage() {
           </p>
         </div>
 
+        <RatingInput dramaId={drama.id} />
+
         <div className="bg-drama-card rounded-xl p-4">
           <h3 className="text-sm font-medium text-drama-text mb-3">选集</h3>
           <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
@@ -256,6 +260,8 @@ export default function DramaDetailPage() {
           onLike={handleCommentLike}
           submitting={submitting}
           isLoggedIn={isLoggedIn}
+          sort={commentSort}
+          onSortChange={setCommentSort}
         />
 
         {relatedDramas.length > 0 && (
@@ -284,6 +290,8 @@ interface CommentSectionProps {
   onLike: (commentId: number) => void;
   submitting: boolean;
   isLoggedIn: boolean;
+  sort: 'hot' | 'newest';
+  onSortChange: (sort: 'hot' | 'newest') => void;
 }
 
 function CommentSection({
@@ -294,13 +302,37 @@ function CommentSection({
   onLike,
   submitting,
   isLoggedIn: isLoggedInProp,
+  sort,
+  onSortChange,
 }: CommentSectionProps) {
   return (
     <div className="bg-drama-card rounded-xl p-4">
-      <h3 className="text-sm font-medium text-drama-text mb-3 flex items-center gap-1.5">
-        <MessageCircle className="w-4 h-4" />
-        评论 ({comments.length})
-      </h3>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-medium text-drama-text flex items-center gap-1.5">
+          <MessageCircle className="w-4 h-4" />
+          评论 ({comments.length})
+        </h3>
+        <div className="flex items-center gap-1 bg-drama-surface rounded-lg p-0.5">
+          <button
+            onClick={() => onSortChange('hot')}
+            className={cn(
+              'px-2.5 py-1 text-xs rounded transition-colors',
+              sort === 'hot' ? 'bg-drama-card text-primary-400' : 'text-drama-muted hover:text-drama-text'
+            )}
+          >
+            最热
+          </button>
+          <button
+            onClick={() => onSortChange('newest')}
+            className={cn(
+              'px-2.5 py-1 text-xs rounded transition-colors',
+              sort === 'newest' ? 'bg-drama-card text-primary-400' : 'text-drama-muted hover:text-drama-text'
+            )}
+          >
+            最新
+          </button>
+        </div>
+      </div>
 
       <div className="flex gap-2 mb-4">
         <input

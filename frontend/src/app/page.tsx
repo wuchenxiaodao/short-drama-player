@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Flame, Clock } from 'lucide-react';
-import { getRecommendDramas, getHotDramas, getNewDramas, getDramasByCategory } from '@/lib/api-client';
+import Link from 'next/link';
+import { Flame, Clock, Play } from 'lucide-react';
+import { getRecommendDramas, getHotDramas, getNewDramas, getDramasByCategory, getContinueWatching, resolveUrl } from '@/lib/api-client';
 import type { Drama } from '@/lib/types';
+import { useAuthStore } from '@/lib/auth';
 import Banner from '@/components/Banner';
 import DramaGrid from '@/components/DramaGrid';
 
@@ -21,11 +23,24 @@ export default function HomePage() {
   const [initialLoading, setInitialLoading] = useState(true);
   const observerRef = useRef<HTMLDivElement>(null);
 
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
+  const [continueWatching, setContinueWatching] = useState<any[]>([]);
+
   useEffect(() => {
     getRecommendDramas(0, 5)
       .then((res: any) => setRecommendDramas(res.content || []))
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setContinueWatching([]);
+      return;
+    }
+    getContinueWatching()
+      .then((res: any) => setContinueWatching(Array.isArray(res) ? res : res?.content || []))
+      .catch(() => {});
+  }, [isLoggedIn]);
 
   const fetchDramas = useCallback(
     async (cat: string, pageNum: number, sortType: SortType, append: boolean) => {
@@ -92,6 +107,41 @@ export default function HomePage() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
       <Banner dramas={recommendDramas.slice(0, 5)} />
+
+      {isLoggedIn && continueWatching.length > 0 && (
+        <div>
+          <h2 className="text-sm font-medium text-drama-text mb-3">继续观看</h2>
+          <div className="flex gap-3 overflow-x-auto scrollbar-hidden pb-2">
+            {continueWatching.map((item) => (
+              <Link
+                key={item.dramaId}
+                href={`/drama/${item.dramaId}/play?ep=${item.lastEpisode ?? 1}`}
+                className="flex-shrink-0 w-36 group"
+              >
+                <div className="relative aspect-video rounded-lg overflow-hidden bg-drama-card">
+                  <img
+                    src={resolveUrl(item.coverUrl)}
+                    alt={item.title}
+                    className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="w-8 h-8 rounded-full bg-primary-500/90 flex items-center justify-center">
+                      <Play className="w-4 h-4 text-white fill-white" />
+                    </div>
+                  </div>
+                  <div className="absolute bottom-1.5 left-1.5 right-1.5">
+                    <p className="text-xs text-white truncate">{item.title}</p>
+                    <p className="text-[10px] text-white/70">
+                      看到第{item.lastEpisode ?? 1}集
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-hidden">

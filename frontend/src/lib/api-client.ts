@@ -240,3 +240,7 @@ export async function getCategories() {
 export async function getDramasByCategory(category: string, page = 0, size = 10) {
   return apiGet<any>(`/api/drama/category/${encodeURIComponent(category)}?page=${page}&size=${size}`);
 }
+
+export async function getContinueWatching() {
+  return apiGet<any>('/api/progress/continue-watching');
+}
