@@ -10,4 +10,5 @@ public interface WatchProgressRepository extends JpaRepository<WatchProgress, Wa
     Optional<WatchProgress> findByUserIdAndEpisodeId(Long userId, Long episodeId);
     List<WatchProgress> findByUserIdAndEpisodeIdIn(Long userId, List<Long> episodeIds);
     List<WatchProgress> findTop10ByUserIdAndCompletedFalseOrderByUpdatedAtDesc(Long userId);
+    List<WatchProgress> findByUserIdOrderByUpdatedAtDesc(Long userId);
 }
