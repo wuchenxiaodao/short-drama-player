@@ -76,6 +76,16 @@ export default function PlayPage() {
       const ep = await getEpisodePlayInfo(episodeId);
       setEpisode(ep);
 
+      // 设置互动点数据
+      if (ep?.interactions) {
+        setInteractions(ep.interactions);
+      }
+
+      // 设置断点续播位置
+      if (ep?.lastPositionMs) {
+        setResumePositionMs(ep.lastPositionMs);
+      }
+
       const [danmakus, comms] = await Promise.all([
         getDanmaku(episodeId).catch(() => []),
         getComments(dramaId, 0, 5).catch(() => ({ content: [] })),
