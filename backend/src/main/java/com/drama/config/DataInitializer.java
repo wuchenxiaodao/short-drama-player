@@ -14,6 +14,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -418,7 +419,40 @@ public class DataInitializer implements CommandLineRunner {
         ep.setDrama(drama);
         ep.setEpisodeNumber(number);
         ep.setTitle(title);
+
+        // 检查视频文件是否存在，如果不存在则使用第一个可用的视频文件
         String videoPath = "/videos/" + drama.getTitle() + "/第" + number + "集.mp4";
+        String userDir = System.getProperty("user.dir");
+        String[] candidates = {
+            userDir + File.separator + "videos",
+            userDir + File.separator + ".." + File.separator + "videos",
+            userDir + File.separator + "short-drama-player" + File.separator + "videos"
+        };
+
+        File videoFile = null;
+        for (String basePath : candidates) {
+            File file = new File(basePath, drama.getTitle() + "/第" + number + "集.mp4");
+            if (file.exists()) {
+                videoFile = file;
+                break;
+            }
+        }
+
+        // 如果指定集数的视频不存在，使用第一个可用的视频文件
+        if (videoFile == null) {
+            for (String basePath : candidates) {
+                File dramaDir = new File(basePath, drama.getTitle());
+                if (dramaDir.isDirectory()) {
+                    File[] files = dramaDir.listFiles((dir, name) -> name.endsWith(".mp4"));
+                    if (files != null && files.length > 0) {
+                        videoFile = files[0];
+                        videoPath = "/videos/" + drama.getTitle() + "/" + videoFile.getName();
+                        break;
+                    }
+                }
+            }
+        }
+
         ep.setVideoUrl(videoPath);
         ep.setDurationSeconds(duration);
         ep.setStreams("[{\"quality\":\"720p\",\"url\":\"" + videoPath + "\"},{\"quality\":\"1080p\",\"url\":\"" + videoPath + "\"}]");
