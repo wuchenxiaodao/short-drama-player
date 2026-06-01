@@ -1,19 +1,47 @@
 package com.drama.controller;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.*;
 import java.nio.file.*;
 import java.util.regex.*;
 
+@Slf4j
 @RestController
 public class VideoController {
 
-    @Value("${app.video.base-path:videos}")
     private String videoBasePath;
+
+    @PostConstruct
+    public void init() {
+        String userDir = System.getProperty("user.dir");
+        String[] candidates = {
+            userDir + File.separator + "videos",
+            userDir + File.separator + ".." + File.separator + "videos",
+            userDir + File.separator + "short-drama-player" + File.separator + "videos",
+            userDir + File.separator + ".." + File.separator + "short-drama",
+            userDir + File.separator + "short-drama"
+        };
+        for (String path : candidates) {
+            File dir = new File(path);
+            if (dir.isDirectory() && new File(dir, "北派寻宝笔记").isDirectory()) {
+                try {
+                    videoBasePath = dir.getCanonicalPath();
+                } catch (Exception e) {
+                    videoBasePath = path;
+                }
+                break;
+            }
+        }
+        if (videoBasePath == null) {
+            videoBasePath = userDir + File.separator + "videos";
+        }
+        log.info("VideoController base path: {}", videoBasePath);
+    }
 
     @GetMapping("/videos/**")
     public void streamVideo(HttpServletRequest request, HttpServletResponse response) throws IOException {
