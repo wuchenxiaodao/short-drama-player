@@ -42,6 +42,7 @@ public class EpisodeService {
         playInfo.setEpisodeId(episode.getId());
         playInfo.setVideoUrl(episode.getVideoUrl());
         playInfo.setDurationSeconds(episode.getDurationSeconds());
+        playInfo.setStreams(episode.getStreams());
         return playInfo;
     }
 

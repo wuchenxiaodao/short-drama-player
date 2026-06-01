@@ -22,6 +22,23 @@ public class EggController {
     private final UserEggRepository userEggRepository;
     private final InteractionPointRepository interactionPointRepository;
 
+    @GetMapping("/catalog")
+    public ApiResponse<List<EggCatalogEntry>> getCatalog() {
+        List<InteractionPoint> allEggs = interactionPointRepository.findByInteractionTypeWithEpisodeAndDrama(InteractionPoint.InteractionType.EGG);
+
+        List<EggCatalogEntry> catalog = allEggs.stream().map(egg -> {
+            EggCatalogEntry entry = new EggCatalogEntry();
+            entry.setId(egg.getId());
+            entry.setDramaId(egg.getEpisode().getDrama().getId());
+            entry.setDramaTitle(egg.getEpisode().getDrama().getTitle());
+            entry.setEggContent(egg.getQuestionText());
+            entry.setInteractionId(egg.getId());
+            return entry;
+        }).collect(Collectors.toList());
+
+        return ApiResponse.success(catalog);
+    }
+
     @GetMapping("/collection")
     public ApiResponse<EggCollectionResponse> getCollection() {
         Long userId = AuthUtils.requireUserId();
@@ -64,6 +81,15 @@ public class EggController {
         response.setCollectedEggs(collectedIds.size());
         response.setByDrama(byDrama);
         return ApiResponse.success(response);
+    }
+
+    @Data
+    public static class EggCatalogEntry {
+        private Long id;
+        private Long dramaId;
+        private String dramaTitle;
+        private String eggContent;
+        private Long interactionId;
     }
 
     @Data

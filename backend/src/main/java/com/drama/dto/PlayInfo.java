@@ -9,6 +9,7 @@ public class PlayInfo {
     private String videoUrl;
     private Integer durationSeconds;
     private Long lastPositionMs;
+    private String streams;
     private List<InteractionInfo> interactions;
 
     @Data

@@ -57,6 +57,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/online/episode/*/count").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/h2-console/**").permitAll()
                 .requestMatchers("/", "/index.html", "/css/**", "/js/**", "/assets/**", "/covers/**").permitAll()
+                .requestMatchers("/videos/**").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
@@ -73,6 +74,7 @@ public class SecurityConfig {
         config.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", config);
+        source.registerCorsConfiguration("/videos/**", config);
         return source;
     }
 }
