@@ -24,6 +24,7 @@ import {
   toggleCommentLike,
   toggleFavorite,
   checkFavorite,
+  resolveUrl,
 } from '@/lib/api-client';
 import { formatNumber, formatTimeAgo, cn } from '@/lib/utils';
 import { useAuthStore } from '@/lib/auth';
@@ -55,7 +56,7 @@ export default function DramaDetailPage() {
     ])
       .then(([d, fav]) => {
         setDrama(d);
-        setIsFavorited(!!fav);
+        setIsFavorited(!!fav?.favorited);
         if (d) {
           getDramasByCategory(d.category, 0, 8)
             .then((res: any) => setRelatedDramas(res.content || []))
@@ -149,7 +150,7 @@ export default function DramaDetailPage() {
     <div className="min-h-screen pb-12">
       <div className="relative h-[50vh] min-h-[300px]">
         <img
-          src={drama.coverUrl}
+          src={resolveUrl(drama.coverUrl)}
           alt={drama.title}
           className="w-full h-full object-cover"
         />

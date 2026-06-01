@@ -50,7 +50,7 @@ export default function SearchPage() {
     setSearched(true);
     try {
       const data = await searchDramas(kw.trim());
-      setResults(data);
+      setResults(data.content || []);
     } catch {
       setResults([]);
     } finally {

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { LayoutGrid, List, Flame } from 'lucide-react';
 import type { Drama } from '@/lib/types';
 import { cn, formatNumber, truncateText } from '@/lib/utils';
+import { resolveUrl } from '@/lib/api-client';
 import DramaCard from './DramaCard';
 
 interface DramaGridProps {
@@ -26,7 +27,7 @@ function DramaListItem({ drama }: { drama: Drama }) {
       <div className="flex gap-4 p-3 rounded-xl bg-drama-card hover:bg-drama-surface transition-colors">
         <div className="relative w-32 md:w-40 flex-shrink-0 aspect-video rounded-lg overflow-hidden">
           <img
-            src={drama.coverUrl}
+            src={resolveUrl(drama.coverUrl)}
             alt={drama.title}
             className="w-full h-full object-cover"
           />

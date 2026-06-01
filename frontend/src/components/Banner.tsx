@@ -1,14 +1,17 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Drama } from '@/lib/types';
+import { resolveUrl } from '@/lib/api-client';
 
 interface BannerProps {
   dramas: Drama[];
 }
 
 export default function Banner({ dramas }: BannerProps) {
+  const router = useRouter();
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
@@ -38,12 +41,13 @@ export default function Banner({ dramas }: BannerProps) {
 
   return (
     <div
-      className="relative w-full h-[200px] md:h-[300px] rounded-xl overflow-hidden group"
+      className="relative w-full h-[200px] md:h-[300px] rounded-xl overflow-hidden group cursor-pointer"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
+      onClick={() => router.push(`/drama/${drama.id}`)}
     >
       <img
-        src={drama.coverUrl}
+        src={resolveUrl(drama.coverUrl)}
         alt={drama.title}
         className="w-full h-full object-cover transition-all duration-700"
         key={drama.id}

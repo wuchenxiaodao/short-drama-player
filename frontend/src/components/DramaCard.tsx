@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Flame } from 'lucide-react';
 import type { Drama } from '@/lib/types';
 import { formatNumber, truncateText } from '@/lib/utils';
+import { resolveUrl } from '@/lib/api-client';
 
 interface DramaCardProps {
   drama: Drama;
@@ -23,7 +24,7 @@ export default function DramaCard({ drama }: DramaCardProps) {
       <div className="relative rounded-xl overflow-hidden bg-drama-card transition-transform duration-200 group-hover:scale-105 group-hover:shadow-lg group-hover:shadow-primary-500/10">
         <div className="relative aspect-video">
           <img
-            src={drama.coverUrl}
+            src={resolveUrl(drama.coverUrl)}
             alt={drama.title}
             className="w-full h-full object-cover"
           />

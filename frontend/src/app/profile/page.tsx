@@ -39,7 +39,7 @@ export default function ProfilePage() {
           setUser(me);
         }
         const balance = await getPointsBalance();
-        setPoints(balance);
+        setPoints(balance?.points ?? 0);
       } catch {
       } finally {
         setLoading(false);
