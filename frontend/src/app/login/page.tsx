@@ -28,8 +28,8 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const { token, userId } = await login(username.trim(), password);
-      setAuth(token, userId);
+      const data = await login(username.trim(), password);
+      setAuth(data.token, data.userId || data.user?.id);
       const user = await getMe();
       setUser(user);
       router.push('/');

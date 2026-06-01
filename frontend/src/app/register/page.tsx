@@ -41,8 +41,8 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      const { token, userId } = await register(username.trim(), password, nickname.trim());
-      setAuth(token, userId);
+      const data = await register(username.trim(), password, nickname.trim());
+      setAuth(data.token, data.userId || data.user?.id);
       const user = await getMe();
       setUser(user);
       router.push('/');
