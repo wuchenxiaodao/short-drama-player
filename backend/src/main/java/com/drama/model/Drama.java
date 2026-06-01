@@ -33,6 +33,8 @@ public class Drama {
 
     private Boolean isHot;
 
+    private String status;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;

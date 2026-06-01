@@ -60,6 +60,7 @@ public class DataInitializer implements CommandLineRunner {
         d.setViewCount(0L);
         d.setIsHot(true);
         d.setIsNew(false);
+        d.setStatus("ongoing");
         d = dramaRepository.save(d);
 
         Episode first = null;
@@ -159,6 +160,7 @@ public class DataInitializer implements CommandLineRunner {
         d.setViewCount(0L);
         d.setIsHot(true);
         d.setIsNew(true);
+        d.setStatus("completed");
         d = dramaRepository.save(d);
 
         for (int i = 1; i <= 24; i++) {
@@ -234,6 +236,7 @@ public class DataInitializer implements CommandLineRunner {
         d.setViewCount(0L);
         d.setIsHot(true);
         d.setIsNew(true);
+        d.setStatus("ongoing");
         d = dramaRepository.save(d);
 
         for (int i = 1; i <= 20; i++) {
@@ -300,6 +303,7 @@ public class DataInitializer implements CommandLineRunner {
         d.setViewCount(0L);
         d.setIsHot(false);
         d.setIsNew(true);
+        d.setStatus("completed");
         d = dramaRepository.save(d);
 
         for (int i = 1; i <= 20; i++) {
@@ -335,6 +339,7 @@ public class DataInitializer implements CommandLineRunner {
         d.setViewCount(0L);
         d.setIsHot(true);
         d.setIsNew(false);
+        d.setStatus("ongoing");
         d = dramaRepository.save(d);
 
         for (int i = 1; i <= 20; i++) {
@@ -390,6 +395,7 @@ public class DataInitializer implements CommandLineRunner {
         d.setViewCount(0L);
         d.setIsHot(false);
         d.setIsNew(true);
+        d.setStatus("completed");
         d = dramaRepository.save(d);
 
         for (int i = 1; i <= 20; i++) {
