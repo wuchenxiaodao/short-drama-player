@@ -10,13 +10,17 @@ import com.drama.repository.EpisodeRepository;
 import com.drama.repository.InteractionAnswerRepository;
 import com.drama.repository.InteractionPointRepository;
 import com.drama.repository.WatchProgressRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class EpisodeService {
@@ -25,6 +29,7 @@ public class EpisodeService {
     private final InteractionPointRepository interactionPointRepository;
     private final WatchProgressRepository watchProgressRepository;
     private final InteractionAnswerRepository answerRepository;
+    private final ObjectMapper objectMapper;
 
     public PlayInfo getPlayInfo(Long episodeId, Long userId) {
         Episode episode = episodeRepository.findById(episodeId)
@@ -42,8 +47,20 @@ public class EpisodeService {
         playInfo.setEpisodeId(episode.getId());
         playInfo.setVideoUrl(episode.getVideoUrl());
         playInfo.setDurationSeconds(episode.getDurationSeconds());
-        playInfo.setStreams(episode.getStreams());
+        playInfo.setStreams(parseStreams(episode.getStreams()));
         return playInfo;
+    }
+
+    private List<PlayInfo.StreamInfo> parseStreams(String streamsJson) {
+        if (streamsJson == null || streamsJson.isEmpty()) {
+            return List.of();
+        }
+        try {
+            return objectMapper.readValue(streamsJson, new TypeReference<List<PlayInfo.StreamInfo>>() {});
+        } catch (Exception e) {
+            log.warn("Failed to parse streams JSON: {}", e.getMessage());
+            return List.of();
+        }
     }
 
     private Long getLastPosition(Long userId, Long episodeId) {
