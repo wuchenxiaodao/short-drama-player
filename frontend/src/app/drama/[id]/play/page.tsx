@@ -22,6 +22,7 @@ import {
   submitAnswer,
   reportProgress,
   resolveUrl,
+  getEpisodeInteractions,
 } from '@/lib/api-client';
 import { formatTimeAgo, formatDuration, cn } from '@/lib/utils';
 import { useAuthStore } from '@/lib/auth';
@@ -76,23 +77,19 @@ export default function PlayPage() {
       const ep = await getEpisodePlayInfo(episodeId);
       setEpisode(ep);
 
-      // 设置互动点数据
-      if (ep?.interactions) {
-        setInteractions(ep.interactions);
-      }
-
-      // 设置断点续播位置
       if (ep?.lastPositionMs) {
         setResumePositionMs(ep.lastPositionMs);
       }
 
-      const [danmakus, comms] = await Promise.all([
+      const [danmakus, comms, interactionPoints] = await Promise.all([
         getDanmaku(episodeId).catch(() => []),
         getComments(dramaId, 0, 5).catch(() => ({ content: [] })),
+        getEpisodeInteractions(episodeId).catch(() => []),
       ]);
       setDanmakuList(Array.isArray(danmakus) ? danmakus : []);
       const commentData = comms as any;
       setComments(Array.isArray(commentData) ? commentData : (commentData?.content || []));
+      setInteractions(Array.isArray(interactionPoints) ? interactionPoints : []);
     } catch (err) {
       console.error('Failed to load episode data:', err);
     }

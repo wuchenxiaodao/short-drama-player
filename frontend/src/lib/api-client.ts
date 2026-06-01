@@ -137,6 +137,10 @@ export async function getEpisodeStreams(episodeId: number) {
   return apiGet<any>(`/api/episode/${episodeId}/streams`);
 }
 
+export async function getEpisodeInteractions(episodeId: number) {
+  return apiGet<any>(`/api/interaction/episode/${episodeId}`);
+}
+
 export async function submitAnswer(interactionId: number, choiceId: number) {
   return apiPost<any>('/api/interaction/answer', { interactionId, choiceId });
 }

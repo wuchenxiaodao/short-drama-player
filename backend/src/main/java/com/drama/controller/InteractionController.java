@@ -4,11 +4,14 @@ import com.drama.common.ApiResponse;
 import com.drama.common.AuthUtils;
 import com.drama.dto.AnswerRequest;
 import com.drama.dto.InteractionStats;
+import com.drama.model.InteractionPoint;
+import com.drama.repository.InteractionPointRepository;
 import com.drama.service.InteractionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -17,6 +20,7 @@ import java.util.Map;
 public class InteractionController {
 
     private final InteractionService interactionService;
+    private final InteractionPointRepository interactionPointRepository;
 
     @PostMapping("/answer")
     public ApiResponse<Object> answer(@Valid @RequestBody AnswerRequest request) {
@@ -32,6 +36,12 @@ public class InteractionController {
     @GetMapping("/{id}/stats")
     public ApiResponse<InteractionStats> stats(@PathVariable Long id) {
         return ApiResponse.success(interactionService.getStats(id));
+    }
+
+    @GetMapping("/episode/{episodeId}")
+    public ApiResponse<List<InteractionPoint>> getByEpisode(@PathVariable Long episodeId) {
+        List<InteractionPoint> points = interactionPointRepository.findWithOptionsByEpisodeId(episodeId);
+        return ApiResponse.success(points);
     }
 
     @GetMapping("/stats/overview")
