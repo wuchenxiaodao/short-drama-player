@@ -248,3 +248,15 @@ export async function getContinueWatching() {
 export async function getOnlineCount(episodeId: number) {
   return apiGet<number>(`/api/online/episode/${episodeId}/count`);
 }
+
+export async function generateBranch(episodeId: number, prompt: string) {
+  return apiPost<any>('/api/ai-story/branch', { episodeId, prompt });
+}
+
+export async function generateContinue(episodeId: number, prompt: string) {
+  return apiPost<any>('/api/ai-story/continue', { episodeId, prompt });
+}
+
+export async function getMyStories() {
+  return apiGet<any>('/api/ai-story/my');
+}

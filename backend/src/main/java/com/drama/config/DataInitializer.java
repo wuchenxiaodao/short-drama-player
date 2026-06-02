@@ -536,9 +536,13 @@ public class DataInitializer implements CommandLineRunner {
                 bOpt.setOptionIndex(j + 1);
                 bOpt.setOptionText(bo.branchOptionDefs.get(j).text);
                 bOpt.setIsCorrect(bo.branchOptionDefs.get(j).isCorrect);
+                bOpt.setFeedbackText(bo.branchOptionDefs.get(j).feedbackText);
                 branchOpts.add(bOpt);
             }
             branch.setOptions(branchOpts);
+            branch = interactionPointRepository.save(branch);
+
+            branch.setBranchGroupId(branch.getId());
             interactionPointRepository.save(branch);
 
             savedOpt.setNextInteraction(branch);

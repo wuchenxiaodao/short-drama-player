@@ -1,5 +1,7 @@
 package com.drama.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
@@ -32,11 +34,15 @@ public class InteractionPoint {
     @OrderBy("optionIndex ASC")
     private List<InteractionOption> options = new ArrayList<>();
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "prerequisite_id")
     private InteractionPoint prerequisite;
 
     private Long prerequisiteChoiceOptionId;
+
+    @Column(name = "branch_group_id")
+    private Long branchGroupId;
 
     @Column(length = 200)
     private String hint;
@@ -53,5 +59,10 @@ public class InteractionPoint {
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+    }
+
+    @JsonProperty("prerequisiteId")
+    public Long getPrerequisiteId() {
+        return prerequisite != null ? prerequisite.getId() : null;
     }
 }

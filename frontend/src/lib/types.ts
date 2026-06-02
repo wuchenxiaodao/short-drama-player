@@ -47,6 +47,9 @@ export interface InteractionPoint {
   infoContent?: InfoContent;
   linkContent?: LinkContent;
   emojiList?: string[];
+  branchGroupId?: number | null;
+  prerequisiteId?: number | null;
+  prerequisiteChoiceOptionId?: number | null;
 }
 
 export interface InteractionOption {
