@@ -752,6 +752,96 @@ const app = {
         }
     },
 
+    showAIStoryPanel() {
+        if (!state.isLoggedIn()) {
+            this.showLoginPage();
+            return;
+        }
+
+        const currentEpisode = state.currentEpisode;
+        if (!currentEpisode) {
+            errorHandler.showMessage('请先播放剧集', 'error');
+            return;
+        }
+
+        const overlay = document.getElementById('interaction-overlay');
+        overlay.classList.remove('hidden');
+        overlay.innerHTML = `
+            <div class="interaction-popup ai-story-popup">
+                <h3 class="ai-story-title">🤖 AI 剧情生成</h3>
+                <p class="ai-story-desc">选择一个方向，AI 将为你生成独特的剧情</p>
+                <div class="ai-story-options">
+                    <button class="ai-option-btn" onclick="app.generateAIStory('branch', '主角发现了隐藏的秘密')">
+                        🔮 发现秘密
+                    </button>
+                    <button class="ai-option-btn" onclick="app.generateAIStory('branch', '突然出现了新的敌人')">
+                        ⚔️ 新的敌人
+                    </button>
+                    <button class="ai-option-btn" onclick="app.generateAIStory('continue', '故事向意想不到的方向发展')">
+                        🌀 意外转折
+                    </button>
+                    <button class="ai-option-btn" onclick="app.generateAIStory('continue', '主角获得了强大的力量')">
+                        💪 获得力量
+                    </button>
+                </div>
+                <div class="ai-story-custom">
+                    <input type="text" id="ai-prompt-input" placeholder="或者输入你的想法..." maxlength="100">
+                    <button onclick="app.generateAIStory('branch', document.getElementById('ai-prompt-input').value)">生成</button>
+                </div>
+                <button class="continue-btn" onclick="document.getElementById('interaction-overlay').classList.add('hidden')">关闭</button>
+            </div>
+        `;
+    },
+
+    async generateAIStory(type, prompt) {
+        if (!prompt.trim()) {
+            errorHandler.showMessage('请输入剧情方向', 'error');
+            return;
+        }
+
+        const currentEpisode = state.currentEpisode;
+        if (!currentEpisode) return;
+
+        const overlay = document.getElementById('interaction-overlay');
+        overlay.innerHTML = `
+            <div class="interaction-popup ai-story-popup">
+                <div class="ai-loading">
+                    <div class="loader-spinner"></div>
+                    <p>AI 正在创作中...</p>
+                </div>
+            </div>
+        `;
+
+        try {
+            const endpoint = type === 'branch' ? '/api/ai-story/branch' : '/api/ai-story/continue';
+            const res = await api.request(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    episodeId: currentEpisode.episodeId || currentEpisode.id,
+                    prompt: prompt
+                })
+            });
+
+            const story = res.data || res;
+            overlay.innerHTML = `
+                <div class="interaction-popup ai-story-popup">
+                    <h3 class="ai-story-title">🤖 AI 生成结果</h3>
+                    <div class="ai-story-content">
+                        ${story.content.replace(/\n/g, '<br>')}
+                    </div>
+                    <div class="ai-story-actions">
+                        <button class="continue-btn" onclick="document.getElementById('interaction-overlay').classList.add('hidden')">继续观看</button>
+                        <button class="ai-retry-btn" onclick="app.showAIStoryPanel()">重新生成</button>
+                    </div>
+                </div>
+            `;
+        } catch (e) {
+            errorHandler.handle(e, 'generateAIStory');
+            overlay.classList.add('hidden');
+        }
+    },
+
     goBack() {
         const prevPage = state.goBack();
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));

@@ -117,10 +117,18 @@ public class DataInitializer implements CommandLineRunner {
             createInteraction(ep3, 25000L, InteractionPoint.InteractionType.VOTE,
                     "你觉得内鬼是谁？",
                     List.of(opt("老张"), opt("小李"), opt("王教授")));
-            createInteraction(ep3, 50000L, InteractionPoint.InteractionType.CHOICE,
-                    "分头行动还是一起走？",
-                    List.of(optWithFeedback("分头行动", "🏃 你选择了分头行动，效率翻倍但风险也翻倍..."),
-                            optWithFeedback("一起走", "👥 你选择了团队协作，安全第一...")));
+
+            // 3级分支链路：分头行动 → 遇到危险 → 最终选择
+            buildChoiceWithBranches(ep3, "分头行动还是一起走？", 50000L,
+                    new BranchOption("分头行动", "🏃 你选择了分头行动，效率翻倍但风险也翻倍...",
+                            "CHOICE", 65000L, "你独自行动时遇到了危险！",
+                            List.of(optWithFeedback("战斗", "⚔️ 你选择了战斗！虽然危险但可能获得宝藏..."),
+                                    optWithFeedback("逃跑", "🏃 你选择了逃跑！安全第一，下次再来..."))),
+                    new BranchOption("一起走", "👥 你选择了团队协作，安全第一...",
+                            "VOTE", 65000L, "团队发现了两条路，走哪条？",
+                            List.of(opt("左边的密道"), opt("右边的暗门"), opt("原路返回")))
+            );
+
             createInteraction(ep3, 70000L, InteractionPoint.InteractionType.EGG,
                     "隐藏地图碎片2",
                     List.of(opt("领取")));
