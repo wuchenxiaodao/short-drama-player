@@ -27,6 +27,11 @@ public interface DramaRepository extends JpaRepository<Drama, Long> {
     @Query("SELECT DISTINCT d FROM Drama d LEFT JOIN d.episodes e WHERE d.title LIKE %:keyword% OR d.category LIKE %:keyword% OR d.description LIKE %:keyword% OR e.title LIKE %:keyword%")
     Page<Drama> search(@org.springframework.data.repository.query.Param("keyword") String keyword, Pageable pageable);
 
+    @Query("SELECT DISTINCT d FROM Drama d LEFT JOIN d.episodes e WHERE d.category = :category AND (d.title LIKE %:keyword% OR d.description LIKE %:keyword% OR e.title LIKE %:keyword%)")
+    Page<Drama> searchByKeywordAndCategory(@org.springframework.data.repository.query.Param("keyword") String keyword,
+                                           @org.springframework.data.repository.query.Param("category") String category,
+                                           Pageable pageable);
+
     Page<Drama> findByIsNewTrueOrderByCreatedAtDesc(Pageable pageable);
 
     @Modifying

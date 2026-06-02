@@ -47,9 +47,10 @@ public class DramaController {
     @GetMapping("/search")
     public ApiResponse<Page<DramaSummary>> search(
             @RequestParam String keyword,
+            @RequestParam(required = false) String category,
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
-        return ApiResponse.success(dramaService.search(keyword, page, size));
+        return ApiResponse.success(dramaService.search(keyword, category, page, size));
     }
 
     @GetMapping("/new")

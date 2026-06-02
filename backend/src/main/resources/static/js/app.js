@@ -492,8 +492,16 @@ const app = {
         container.className = 'search-results';
         utils.showLoading(container);
         this.saveSearchHistory(keyword);
+
+        // 获取当前选中的分类
+        const activeCategory = document.querySelector('.category-tab.active')?.dataset.category;
+
         try {
-            const response = await api.searchDramas(keyword);
+            let url = `${API_BASE_URL}/drama/search?keyword=${encodeURIComponent(keyword)}`;
+            if (activeCategory) {
+                url += `&category=${encodeURIComponent(activeCategory)}`;
+            }
+            const response = await api.request(url);
             const dramas = (response.data || response).content;
             if (!dramas || dramas.length === 0) {
                 container.innerHTML = '<div class="search-empty">未找到相关短剧</div>';
