@@ -713,6 +713,37 @@ const app = {
         }
     },
 
+    async showWatchHistory() {
+        if (!state.isLoggedIn()) {
+            this.showLoginPage();
+            return;
+        }
+        try {
+            const res = await api.request(`${API_BASE_URL}/progress/history`);
+            const history = res.data || res;
+            const container = document.createElement('div');
+            container.className = 'drama-grid';
+            if (!history || history.length === 0) {
+                container.innerHTML = '<div class="search-empty">暂无观看记录</div>';
+            } else {
+                this.renderDramaList(container, history);
+            }
+
+            const pageEl = document.getElementById('mine-page');
+            const existing = pageEl.querySelector('.watch-history-section');
+            if (existing) existing.remove();
+
+            const section = document.createElement('div');
+            section.className = 'watch-history-section';
+            section.style.padding = '0 16px';
+            section.innerHTML = '<h3 style="margin-bottom:12px;color:var(--text-primary)">观看历史</h3>';
+            section.appendChild(container);
+            pageEl.appendChild(section);
+        } catch (e) {
+            errorHandler.handle(e, 'showWatchHistory');
+        }
+    },
+
     goBack() {
         const prevPage = state.goBack();
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
