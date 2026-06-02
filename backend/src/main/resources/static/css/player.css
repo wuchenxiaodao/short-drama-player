@@ -103,3 +103,60 @@
     font-size: 13px;
     cursor: pointer;
 }
+
+.next-episode-card {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 15;
+    animation: fadeIn 0.3s ease;
+}
+
+.next-info {
+    text-align: center;
+    color: #fff;
+    margin-bottom: 16px;
+}
+
+.next-info h3 {
+    font-size: 20px;
+    margin: 8px 0;
+}
+
+.next-countdown {
+    font-size: 13px;
+    color: #aaa;
+}
+
+.next-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.next-actions button {
+    padding: 10px 24px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.next-actions button:first-child {
+    background: transparent;
+    border: 1px solid #666;
+    color: #ccc;
+}
+
+.next-actions button:last-child {
+    background: var(--electric-purple, #8B5CF6);
+    border: none;
+    color: #fff;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}

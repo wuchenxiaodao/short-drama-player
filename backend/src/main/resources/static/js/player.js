@@ -154,11 +154,62 @@ const player = {
         const episodes = drama.episodes || [];
         const currentId = currentEp.episodeId || currentEp.id;
         const currentIndex = episodes.findIndex(ep => ep.id === currentId);
+
         if (currentIndex >= 0 && currentIndex < episodes.length - 1) {
-            app.playEpisode(episodes[currentIndex + 1].id);
+            this.showNextEpisodeCard(episodes[currentIndex + 1], currentIndex + 2);
         } else {
-            errorHandler.showMessage('已是最后一集', 'info');
+            this.showLastEpisodeCard(drama);
         }
+    },
+
+    showNextEpisodeCard(nextEp, epNum) {
+        const card = document.createElement('div');
+        card.className = 'next-episode-card';
+        card.innerHTML = `
+            <div class="next-info">
+                <span>下一集</span>
+                <h3>第${epNum}集</h3>
+                <span class="next-countdown" id="next-countdown">3秒后自动播放</span>
+            </div>
+            <div class="next-actions">
+                <button onclick="this.closest('.next-episode-card').remove();">取消</button>
+                <button onclick="app.playEpisode(${nextEp.id}); this.closest('.next-episode-card').remove();">立即播放</button>
+            </div>
+        `;
+        const container = document.getElementById('player-container');
+        container.style.position = 'relative';
+        container.appendChild(card);
+
+        let count = 3;
+        this._nextEpTimer = setInterval(() => {
+            count--;
+            const countdownEl = document.getElementById('next-countdown');
+            if (countdownEl) countdownEl.textContent = `${count}秒后自动播放`;
+            if (count <= 0) {
+                clearInterval(this._nextEpTimer);
+                card.remove();
+                app.playEpisode(nextEp.id);
+            }
+        }, 1000);
+    },
+
+    showLastEpisodeCard(drama) {
+        const card = document.createElement('div');
+        card.className = 'next-episode-card';
+        card.innerHTML = `
+            <div class="next-info">
+                <span>已看完</span>
+                <h3>《${drama.title}》已完结</h3>
+                <p>查看更多推荐短剧</p>
+            </div>
+            <div class="next-actions">
+                <button onclick="app.goBack(); this.closest('.next-episode-card').remove();">返回</button>
+                <button onclick="app.navigateTo('home'); this.closest('.next-episode-card').remove();">看更多</button>
+            </div>
+        `;
+        const container = document.getElementById('player-container');
+        container.style.position = 'relative';
+        container.appendChild(card);
     },
 
     play() {
