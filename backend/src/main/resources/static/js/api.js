@@ -29,10 +29,32 @@ const api = {
                 throw new Error('Unauthorized');
             }
             if (!response.ok) throw { status: response.status, message: response.statusText };
+
+            // 写操作后清除相关缓存
+            if (options.method && options.method !== 'GET') {
+                this.invalidateCache(url);
+            }
+
             return await response.json();
         } catch (error) {
             console.error('API Error:', error);
             throw error;
+        }
+    },
+
+    invalidateCache(url) {
+        const path = new URL(url, 'http://x').pathname;
+        // 清除相关缓存键
+        for (const key of apiCache.cache.keys()) {
+            if (path.includes('/favorite/') && (key.includes('detail') || key.includes('recommend') || key.includes('hot'))) {
+                apiCache.cache.delete(key);
+            }
+            if (path.includes('/rating/') && key.includes('detail')) {
+                apiCache.cache.delete(key);
+            }
+            if (path.includes('/comment/') && key.includes('detail')) {
+                apiCache.cache.delete(key);
+            }
         }
     },
 
