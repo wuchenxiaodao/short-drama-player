@@ -94,6 +94,29 @@ const player = {
             point.shown = true;
             this.showInteraction(point);
         }
+
+        // 已回答的互动点显示小标记
+        this.interactionPoints.forEach(p => {
+            if (p.shown && !p.markerShown) {
+                p.markerShown = true;
+                this.showInteractionMarker(p);
+            }
+        });
+    },
+
+    showInteractionMarker(point) {
+        const marker = document.createElement('div');
+        marker.className = 'interaction-marker';
+        marker.textContent = '💬';
+        marker.style.cssText = `position:absolute;right:8px;top:${30 + Math.random()*30}%;
+            font-size:18px;cursor:pointer;z-index:5;opacity:0.7;transition:opacity 0.2s;`;
+        marker.onclick = () => {
+            interaction.currentPoint = point;
+            interaction.show(point);
+        };
+        const container = document.getElementById('player-container');
+        container.style.position = 'relative';
+        container.appendChild(marker);
     },
 
     showInteraction(point) {
