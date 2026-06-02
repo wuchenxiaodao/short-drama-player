@@ -104,6 +104,29 @@
     cursor: pointer;
 }
 
+.danmaku-colors {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.danmaku-color-btn {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.danmaku-color-btn:hover {
+    transform: scale(1.2);
+}
+
+.danmaku-color-btn.active {
+    border-color: var(--electric-purple);
+}
+
 .next-episode-card {
     position: absolute;
     inset: 0;

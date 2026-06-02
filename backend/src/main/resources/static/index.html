@@ -114,6 +114,11 @@
             <div class="danmaku-input-bar">
                 <input type="text" id="danmaku-input" placeholder="发一条弹幕..." maxlength="100"
                        onkeydown="if(event.key==='Enter')player.sendCurrentDanmaku()">
+                <div class="danmaku-colors">
+                    <button class="danmaku-color-btn active" data-color="#fff" style="background:#fff" onclick="player.sendCurrentDanmaku('#fff')"></button>
+                    <button class="danmaku-color-btn" data-color="#FF2E6E" style="background:#FF2E6E" onclick="player.sendCurrentDanmaku('#FF2E6E')"></button>
+                    <button class="danmaku-color-btn" data-color="#FFD700" style="background:#FFD700" onclick="player.sendCurrentDanmaku('#FFD700')"></button>
+                </div>
                 <button class="danmaku-send-btn" onclick="player.sendCurrentDanmaku()">发送</button>
                 <button class="danmaku-toggle-btn" id="danmaku-toggle" onclick="player.toggleDanmaku()">弹幕🔊</button>
             </div>

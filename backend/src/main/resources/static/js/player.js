@@ -225,12 +225,12 @@ const player = {
         localStorage.setItem('playbackSpeed', speed.toString());
     },
 
-    sendCurrentDanmaku() {
+    sendCurrentDanmaku(color) {
         const input = document.getElementById('danmaku-input');
         const content = input?.value?.trim();
         if (!content || !this.currentEpisode) return;
         const positionMs = Math.floor(this.currentTime * 1000);
-        this.danmaku.sendDanmaku(this.currentEpisode.episodeId || this.currentEpisode.id, content, positionMs);
+        this.danmaku.sendDanmaku(this.currentEpisode.episodeId || this.currentEpisode.id, content, positionMs, color);
         input.value = '';
     },
 
@@ -279,17 +279,17 @@ class DanmakuSystem {
         }
     }
 
-    showDanmaku(text) {
+    showDanmaku(text, color = '#fff') {
         const el = document.createElement('div');
         el.className = 'danmaku-item';
         el.textContent = text;
         const duration = 6 + Math.random() * 4;
-        el.style.cssText = `position:absolute;right:-${text.length * 16}px;top:${5 + Math.random() * 75}%;color:#fff;font-size:14px;white-space:nowrap;text-shadow:1px 1px 2px rgba(0,0,0,0.8);animation:danmaku-scroll ${duration}s linear forwards;pointer-events:none;z-index:5;`;
+        el.style.cssText = `position:absolute;right:-${text.length * 16}px;top:${5 + Math.random() * 75}%;color:${color};font-size:14px;white-space:nowrap;text-shadow:1px 1px 2px rgba(0,0,0,0.8);animation:danmaku-scroll ${duration}s linear forwards;pointer-events:none;z-index:5;`;
         this.container.appendChild(el);
         setTimeout(() => el.remove(), (duration + 1) * 1000);
     }
 
-    async sendDanmaku(episodeId, content, positionMs) {
+    async sendDanmaku(episodeId, content, positionMs, color = '#fff') {
         if (!state.isLoggedIn()) {
             app.showLoginPage();
             return;
@@ -300,7 +300,7 @@ class DanmakuSystem {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ episodeId, content, positionMs })
             });
-            this.showDanmaku(content);
+            this.showDanmaku(content, color);
             this.danmakuList.push({ positionMs, content, shown: true });
         } catch (e) {
             errorHandler.handle(e, 'sendDanmaku');
