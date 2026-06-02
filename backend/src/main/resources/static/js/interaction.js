@@ -161,6 +161,16 @@ const interaction = {
             });
         }
 
+        // 互动评论输入框
+        if (type === 'VOTE' || type === 'CHOICE') {
+            resultHtml += `
+                <div class="interaction-comment">
+                    <input type="text" id="interaction-comment-input" placeholder="说说你的看法..." maxlength="200">
+                    <button onclick="interaction.postComment()">发送</button>
+                </div>
+            `;
+        }
+
         resultHtml += '<button class="continue-btn" onclick="interaction.close()">继续观看</button>';
         document.getElementById('interaction-result').innerHTML = resultHtml;
     },
@@ -223,6 +233,33 @@ const interaction = {
             if (hintBtn) hintBtn.style.display = 'none';
         } catch (e) {
             errorHandler.handle(e, 'buyHint');
+        }
+    },
+
+    async postComment() {
+        const input = document.getElementById('interaction-comment-input');
+        const content = input?.value?.trim();
+        if (!content) return;
+
+        if (!state.isLoggedIn()) {
+            app.showLoginPage();
+            return;
+        }
+
+        try {
+            const dramaId = state.currentDrama?.id;
+            if (!dramaId) return;
+
+            await api.request(`${API_BASE_URL}/comment`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ dramaId, content })
+            });
+
+            input.value = '';
+            errorHandler.showMessage('评论成功', 'success');
+        } catch (e) {
+            errorHandler.handle(e, 'postComment');
         }
     },
 

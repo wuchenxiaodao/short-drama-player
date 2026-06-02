@@ -218,3 +218,34 @@
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.1); }
 }
+
+.interaction-comment {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.interaction-comment input {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--medium-gray);
+    background: var(--card-bg);
+    color: var(--text-primary);
+    font-size: 14px;
+    outline: none;
+}
+
+.interaction-comment input:focus {
+    border-color: var(--electric-purple);
+}
+
+.interaction-comment button {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    background: var(--electric-purple);
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+}
