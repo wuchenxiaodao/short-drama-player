@@ -204,3 +204,17 @@
     font-size: 13px;
     line-height: 1.4;
 }
+
+.interaction-countdown {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--electric-purple, #8B5CF6);
+    margin-bottom: 12px;
+    animation: countdownPulse 1s ease infinite;
+}
+
+@keyframes countdownPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}

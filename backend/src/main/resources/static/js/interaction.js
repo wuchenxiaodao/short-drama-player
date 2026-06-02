@@ -1,5 +1,8 @@
 const interaction = {
     currentPoint: null,
+    countdown: 0,
+    countdownTimer: null,
+    pendingBranchId: null,
 
     escapeHtml(text) {
         const div = document.createElement('div');
@@ -13,11 +16,43 @@ const interaction = {
         overlay.classList.remove('hidden');
         overlay.innerHTML = this.createInteractionHTML(point);
         this.bindOptionEvents();
+        this.startCountdown(10);
+    },
+
+    startCountdown(seconds) {
+        this.countdown = seconds;
+        const countdownEl = document.getElementById('interaction-countdown');
+        if (countdownEl) {
+            countdownEl.textContent = `${this.countdown}s`;
+            countdownEl.style.display = 'block';
+        }
+
+        this.countdownTimer = setInterval(() => {
+            this.countdown--;
+            if (countdownEl) {
+                countdownEl.textContent = `${this.countdown}s`;
+                if (this.countdown <= 3) countdownEl.style.color = '#EF4444';
+            }
+            if (this.countdown <= 0) {
+                clearInterval(this.countdownTimer);
+                this.autoSelect();
+            }
+        }, 1000);
+    },
+
+    autoSelect() {
+        const firstBtn = document.querySelector('.interaction-option');
+        if (firstBtn) {
+            firstBtn.click();
+        } else {
+            this.close();
+        }
     },
 
     createInteractionHTML(point) {
         let html = `
             <div class="interaction-popup">
+                <div id="interaction-countdown" class="interaction-countdown">10s</div>
                 <div class="interaction-question">${this.escapeHtml(point.questionText || point.question)}</div>
                 <div class="interaction-options">
         `;
@@ -192,6 +227,7 @@ const interaction = {
     },
 
     close() {
+        if (this.countdownTimer) clearInterval(this.countdownTimer);
         const overlay = document.getElementById('interaction-overlay');
         overlay.classList.add('hidden');
         player.play();
