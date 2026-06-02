@@ -25,8 +25,14 @@ const api = {
             if (response.status === 401) {
                 localStorage.removeItem('drama_token');
                 localStorage.removeItem('userId');
-                window.location.reload();
+                // 跳转登录页而非刷新
+                if (typeof app !== 'undefined') {
+                    app.showLoginPage();
+                }
                 throw new Error('Unauthorized');
+            }
+            if (response.status === 404) {
+                throw { status: 404, message: '内容不存在' };
             }
             if (!response.ok) throw { status: response.status, message: response.statusText };
 
