@@ -716,6 +716,29 @@ body {
     background: rgba(139, 92, 246, 0.08);
 }
 
+.episode-watching {
+    border-color: var(--electric-purple);
+    background: rgba(139, 92, 246, 0.08);
+}
+
+.episode-completed {
+    opacity: 0.7;
+}
+
+.episode-status {
+    margin-left: auto;
+    flex-shrink: 0;
+    font-size: 12px;
+}
+
+.episode-status.completed {
+    color: #10B981;
+}
+
+.episode-status.watching {
+    color: #F59E0B;
+}
+
 .episode-progress-dot {
     width: 8px;
     height: 8px;

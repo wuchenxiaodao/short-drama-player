@@ -429,12 +429,17 @@ const app = {
         }
 
         container.innerHTML = episodes.map(ep => {
-            const watched = ep.watchPositionMs && ep.watchPositionMs > 0;
+            const hasProgress = ep.watchPositionMs && ep.watchPositionMs > 0;
+            // 判断是否看完：进度>90%或后端返回completed标记
+            const isCompleted = ep.completed || (hasProgress && ep.durationSeconds
+                && ep.watchPositionMs / (ep.durationSeconds * 1000) > 0.9);
             return `
-            <div class="episode-item ${watched ? 'episode-watched' : ''}" onclick="app.playEpisode(${ep.id})">
+            <div class="episode-item ${isCompleted ? 'episode-completed' : (hasProgress ? 'episode-watching' : '')}"
+                 onclick="app.playEpisode(${ep.id})">
                 <span class="episode-number">${ep.episodeNumber}</span>
                 <span class="episode-title">${ep.title || '第' + ep.episodeNumber + '集'}</span>
-                ${watched ? '<span class="episode-progress-dot"></span>' : ''}
+                ${isCompleted ? '<span class="episode-status completed">✓</span>' : ''}
+                ${hasProgress && !isCompleted ? '<span class="episode-status watching">▸</span>' : ''}
             </div>`;
         }).join('');
     },
