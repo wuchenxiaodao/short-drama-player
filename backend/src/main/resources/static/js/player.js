@@ -125,10 +125,7 @@ const player = {
     },
 
     restoreSpeed() {
-        if (this._originalSpeed != null) {
-            this.videoElement.playbackRate = this._originalSpeed;
-            this._originalSpeed = null;
-        }
+        this.videoElement.playbackRate = parseFloat(localStorage.getItem('playbackSpeed') || '1');
     },
 
     reportProgress() {

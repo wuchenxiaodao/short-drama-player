@@ -226,7 +226,7 @@ const interaction = {
         if (!overlay) {
             overlay = document.createElement('div');
             overlay.id = 'interaction-bottom-overlay';
-            overlay.className = 'interaction-bottom-overlay';
+            overlay.className = 'interaction-bottom-panel';
             const container = document.getElementById('player-container') || document.body;
             container.appendChild(overlay);
         }
@@ -235,8 +235,7 @@ const interaction = {
 
     _buildBottomPanel(point, panelType) {
         const options = point.options || [];
-        let html = `<div class="interaction-bottom-panel">
-            <div class="panel-header">
+        let html = `<div class="panel-header">
                 <span class="panel-question">${this.escapeHtml(point.questionText || point.question || '')}</span>
                 <button class="panel-close-btn" onclick="interaction._closePanel()">✕</button>
             </div>
@@ -256,8 +255,7 @@ const interaction = {
 
         html += `<div id="interaction-hint" class="interaction-hint" style="display:none"></div>
             <div id="interaction-result" class="interaction-result"></div>
-            <div id="panel-countdown" class="panel-countdown"></div>
-        </div>`;
+            <div id="panel-countdown" class="panel-countdown"></div>`;
         return html;
     },
 
@@ -290,10 +288,9 @@ const interaction = {
     _closePanel() {
         if (this.countdownTimer) clearInterval(this.countdownTimer);
         if (this._autoCloseTimer) clearTimeout(this._autoCloseTimer);
-        const overlay = document.getElementById('interaction-bottom-overlay');
-        if (overlay) overlay.remove();
-        const type = this.currentPoint?.type;
-        if (type === 'QUIZ') player.restoreSpeed();
+        const panel = document.getElementById('interaction-bottom-overlay');
+        if (panel) panel.remove();
+        if (this.currentPoint?.type === 'QUIZ') player.restoreSpeed();
     },
 
     // ========== 核心逻辑保留 ==========
