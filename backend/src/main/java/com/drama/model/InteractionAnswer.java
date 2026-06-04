@@ -23,6 +23,12 @@ public class InteractionAnswer {
     @Column(nullable = false)
     private Long selectedOptionId;
 
+    @Column(name = "emoji_reaction")
+    private String emojiReaction;  // The emoji the user sent/liked
+
+    @Column(name = "is_send")
+    private Boolean isSend;  // true=actively sent, false=liked a floating one
+
     private LocalDateTime createdAt;
 
     @PrePersist

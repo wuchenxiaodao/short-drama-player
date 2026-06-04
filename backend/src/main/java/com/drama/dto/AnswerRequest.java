@@ -9,4 +9,6 @@ public class AnswerRequest {
     private Long interactionId;
     @NotNull(message = "选项不能为空")
     private Long choiceId;
+    private String emojiReaction;
+    private Boolean isSend;
 }

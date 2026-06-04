@@ -95,7 +95,7 @@ class DramaServiceTest {
         countResult.add(new Object[]{1L, 10L});
         when(ratingRepository.countByDramaIds(anyList())).thenReturn(countResult);
 
-        Page<DramaSummary> result = dramaService.search("测试", 0, 10);
+        Page<DramaSummary> result = dramaService.search("测试", null, 0, 10);
 
         assertNotNull(result);
         assertEquals(1, result.getContent().size());

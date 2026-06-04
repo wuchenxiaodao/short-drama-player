@@ -19,11 +19,8 @@ function getApiBaseUrl(): string {
   if (typeof window !== 'undefined') {
     const envUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
     if (envUrl) return envUrl;
-    const host = window.location.hostname;
-    if (host === 'localhost' || host === '127.0.0.1') {
-      return 'http://localhost:8080';
-    }
-    return `http://${host}:8080`;
+    // Use same-origin API proxy via Next.js rewrites — works in any network (emulator, LAN, etc.)
+    return '';
   }
   return 'http://localhost:8080';
 }
@@ -141,8 +138,8 @@ export async function getEpisodeInteractions(episodeId: number) {
   return apiGet<any>(`/api/interaction/episode/${episodeId}`);
 }
 
-export async function submitAnswer(interactionId: number, choiceId: number) {
-  return apiPost<any>('/api/interaction/answer', { interactionId, choiceId });
+export async function submitAnswer(interactionId: number, choiceId: number, emojiReaction?: string, isSend?: boolean) {
+  return apiPost<any>('/api/interaction/answer', { interactionId, choiceId, emojiReaction, isSend });
 }
 
 export async function getInteractionStats(interactionId: number) {

@@ -1,6 +1,7 @@
 package com.drama.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
@@ -8,6 +9,7 @@ import java.time.LocalDateTime;
 @Data
 @Entity
 @Table(name = "generated_stories")
+@JsonIgnoreProperties({"episode", "user", "hibernateLazyInitializer", "handler"})
 public class GeneratedStory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,19 +36,23 @@ public class GeneratedStory {
 
     private LocalDateTime createdAt;
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
-
     @Transient
     private Long episodeId;
 
     @Transient
     private Long userId;
 
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
+
     @PostLoad
     protected void onLoad() {
+        fillTransientIds();
+    }
+
+    public void fillTransientIds() {
         this.episodeId = episode != null ? episode.getId() : null;
         this.userId = user != null ? user.getId() : null;
     }

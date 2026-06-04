@@ -18,7 +18,7 @@ interface ActiveDanmaku extends Danmaku {
 }
 
 const TRACK_COUNT = 5;
-const DANMAKU_DURATION = 8000;
+const DANMAKU_DURATION = 3500;
 const WINDOW_MS = 3000;
 
 export default function DanmakuLayer({ danmakuList, currentTimeMs, onSend, enabled }: DanmakuLayerProps) {

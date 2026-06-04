@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface GeneratedStoryRepository extends JpaRepository<GeneratedStory, Long> {
-    List<GeneratedStory> findByUserIdOrderByCreatedAtDesc(Long userId);
-    List<GeneratedStory> findByEpisodeIdOrderByCreatedAtDesc(Long episodeId);
+    List<GeneratedStory> findByUser_IdOrderByCreatedAtDesc(Long userId);
+    List<GeneratedStory> findByEpisode_IdOrderByCreatedAtDesc(Long episodeId);
 }

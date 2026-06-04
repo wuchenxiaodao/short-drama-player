@@ -109,19 +109,26 @@ const player = {
         marker.className = 'interaction-marker';
         marker.textContent = '💬';
         marker.style.cssText = `position:absolute;right:8px;top:${30 + Math.random()*30}%;
-            font-size:18px;cursor:pointer;z-index:5;opacity:0.7;transition:opacity 0.2s;`;
-        marker.onclick = () => {
-            interaction.currentPoint = point;
-            interaction.show(point);
-        };
+            font-size:18px;z-index:5;opacity:0.7;pointer-events:none;`;
         const container = document.getElementById('player-container');
         container.style.position = 'relative';
         container.appendChild(marker);
     },
 
     showInteraction(point) {
-        this.videoElement.pause();
-        interaction.show(point);
+        interaction.showByType(point);
+    },
+
+    slowDown() {
+        this._originalSpeed = this.videoElement.playbackRate;
+        this.videoElement.playbackRate = 0.3;
+    },
+
+    restoreSpeed() {
+        if (this._originalSpeed != null) {
+            this.videoElement.playbackRate = this._originalSpeed;
+            this._originalSpeed = null;
+        }
     },
 
     reportProgress() {
@@ -287,6 +294,7 @@ class DanmakuSystem {
         el.style.cssText = `position:absolute;right:-${text.length * 16}px;top:${5 + Math.random() * 75}%;color:${color};font-size:14px;white-space:nowrap;text-shadow:1px 1px 2px rgba(0,0,0,0.8);animation:danmaku-scroll ${duration}s linear forwards;pointer-events:none;z-index:5;`;
         this.container.appendChild(el);
         setTimeout(() => el.remove(), (duration + 1) * 1000);
+        if (typeof interaction !== 'undefined') interaction.onDanmakuShow(text);
     }
 
     async sendDanmaku(episodeId, content, positionMs, color = '#fff') {

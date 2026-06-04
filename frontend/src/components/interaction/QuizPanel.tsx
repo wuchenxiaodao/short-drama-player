@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { X, CheckCircle, XCircle, Lightbulb } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { CheckCircle, XCircle, Lightbulb } from 'lucide-react';
 import type { InteractionPoint } from '@/lib/types';
-import { buyHint } from '@/lib/api-client';
+import { buyHint, getInteractionStats } from '@/lib/api-client';
 
 interface QuizPanelProps {
   interaction: InteractionPoint;
@@ -11,24 +11,29 @@ interface QuizPanelProps {
   userId?: number;
 }
 
+interface StatsData {
+  totalParticipants: number;
+  optionStats: Record<string, { count: number; percentage: number }>;
+}
+
 export default function QuizPanel({ interaction, onAnswer, userId }: QuizPanelProps) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [hintText, setHintText] = useState<string | null>(null);
   const [emojiRain, setEmojiRain] = useState(false);
-  const [closed, setClosed] = useState(false);
+  const [stats, setStats] = useState<StatsData | null>(null);
 
   const options = interaction.options || [];
 
-  const handleClose = useCallback(() => {
-    setClosed(true);
-  }, []);
-
   useEffect(() => {
     if (!showResult) return;
-    const timer = setTimeout(handleClose, 3000);
-    return () => clearTimeout(timer);
-  }, [showResult, handleClose]);
+    getInteractionStats(interaction.id)
+      .then((res: any) => {
+        const data = res?.data || res;
+        if (data) setStats(data as StatsData);
+      })
+      .catch(() => {});
+  }, [showResult, interaction.id]);
 
   function handleSelect(optionId: number) {
     if (selectedId !== null) return;
@@ -52,76 +57,80 @@ export default function QuizPanel({ interaction, onAnswer, userId }: QuizPanelPr
     }
   }
 
-  if (closed) return null;
-
   const selectedOption = options.find((o) => o.id === selectedId);
   const correctOption = options.find((o) => o.isCorrect);
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 z-20">
+    <div className="bg-drama-card/95 backdrop-blur-md border-t border-drama-border p-4 mx-2 mb-2 rounded-xl animate-in slide-in-from-bottom duration-300">
       {emojiRain && <EmojiRainEffect />}
-      <div className="bg-drama-card/95 backdrop-blur-md border-t border-drama-border p-4 mx-2 mb-2 rounded-xl animate-in slide-in-from-bottom duration-300">
-        <div className="flex items-start justify-between mb-3">
-          <h4 className="text-sm font-medium text-drama-text flex-1">{interaction.questionText}</h4>
-          <button onClick={handleClose} className="text-drama-muted hover:text-drama-text ml-2 flex-shrink-0">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        <div className="space-y-2 mb-3">
-          {options.map((option) => {
-            let btnClass = 'bg-drama-surface border border-drama-border text-drama-text hover:border-primary-400/50';
-            if (showResult) {
-              if (option.isCorrect) {
-                btnClass = 'bg-green-500/20 border border-green-500/50 text-green-400';
-              } else if (option.id === selectedId) {
-                btnClass = 'bg-red-500/20 border border-red-500/50 text-red-400';
-              } else {
-                btnClass = 'bg-drama-surface/50 border border-drama-border/50 text-drama-muted';
-              }
-            }
-            return (
-              <button
-                key={option.id}
-                onClick={() => handleSelect(option.id)}
-                disabled={showResult}
-                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${btnClass}`}
-              >
-                {showResult && option.isCorrect && <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />}
-                {showResult && !option.isCorrect && option.id === selectedId && <XCircle className="w-4 h-4 text-red-400 flex-shrink-0" />}
-                <span>{option.optionText}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {showResult && selectedOption && (
-          <p className={`text-xs mb-2 ${selectedOption.isCorrect ? 'text-green-400' : 'text-red-400'}`}>
-            {selectedOption.isCorrect ? '✓ ' : '✗ '}
-            {selectedOption.feedbackText}
-          </p>
-        )}
-
-        {showResult && !selectedOption?.isCorrect && correctOption && (
-          <p className="text-xs text-green-400 mb-2">
-            正确答案：{correctOption.optionText}
-          </p>
-        )}
-
-        {!showResult && interaction.hint && (
-          <button
-            onClick={handleBuyHint}
-            className="flex items-center gap-1 text-xs text-primary-400 hover:text-primary-300"
-          >
-            <Lightbulb className="w-3 h-3" />
-            购买提示（{interaction.hintCost}积分）
-          </button>
-        )}
-
-        {hintText && (
-          <p className="text-xs text-yellow-400 mt-1">💡 {hintText}</p>
-        )}
+      <div className="flex items-start justify-between mb-3">
+        <h4 className="text-sm font-medium text-drama-text flex-1">{interaction.questionText}</h4>
       </div>
+
+      <div className="space-y-2 mb-3">
+        {options.map((option) => {
+          let btnClass = 'bg-drama-surface border border-drama-border text-drama-text hover:border-primary-400/50';
+          if (showResult) {
+            if (option.isCorrect) {
+              btnClass = 'bg-green-500/20 border border-green-500/50 text-green-400';
+            } else if (option.id === selectedId) {
+              btnClass = 'bg-red-500/20 border border-red-500/50 text-red-400';
+            } else {
+              btnClass = 'bg-drama-surface/50 border border-drama-border/50 text-drama-muted';
+            }
+          }
+          return (
+            <button
+              key={option.id}
+              onClick={() => handleSelect(option.id)}
+              disabled={showResult}
+              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${btnClass}`}
+            >
+              {showResult && option.isCorrect && <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />}
+              {showResult && !option.isCorrect && option.id === selectedId && <XCircle className="w-4 h-4 text-red-400 flex-shrink-0" />}
+              <span>{option.optionText}</span>
+              {showResult && stats?.optionStats?.[String(option.id)] && (
+                <span className="ml-auto text-xs text-drama-muted">
+                  {stats.optionStats[String(option.id)].percentage}%
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {showResult && selectedOption && (
+        <p className={`text-xs mb-2 ${selectedOption.isCorrect ? 'text-green-400' : 'text-red-400'}`}>
+          {selectedOption.isCorrect ? '✓ ' : '✗ '}
+          {selectedOption.feedbackText}
+        </p>
+      )}
+
+      {showResult && !selectedOption?.isCorrect && correctOption && (
+        <p className="text-xs text-green-400 mb-2">
+          正确答案：{correctOption.optionText}
+        </p>
+      )}
+
+      {showResult && stats?.totalParticipants != null && (
+        <p className="text-xs text-drama-muted mb-2">
+          {stats.totalParticipants}人参与答题
+        </p>
+      )}
+
+      {!showResult && interaction.hint && (
+        <button
+          onClick={handleBuyHint}
+          className="flex items-center gap-1 text-xs text-primary-400 hover:text-primary-300"
+        >
+          <Lightbulb className="w-3 h-3" />
+          购买提示（{interaction.hintCost}积分）
+        </button>
+      )}
+
+      {hintText && (
+        <p className="text-xs text-yellow-400 mt-1">💡 {hintText}</p>
+      )}
     </div>
   );
 }

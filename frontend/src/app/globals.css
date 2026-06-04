@@ -160,3 +160,72 @@
 iframe[src*="__nextjs"] {
   display: none !important;
 }
+
+/* ===== Emoji Rain Animations ===== */
+@keyframes emojiRainFloatUp {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 1;
+  }
+  25% {
+    transform: translateY(-25vh) translateX(var(--sway, 20px));
+  }
+  50% {
+    transform: translateY(-50vh) translateX(calc(var(--sway, 20px) * -0.5));
+  }
+  75% {
+    transform: translateY(-75vh) translateX(calc(var(--sway, 20px) * 0.3));
+  }
+  100% {
+    transform: translateY(-100vh) translateX(0);
+    opacity: 0;
+  }
+}
+
+@keyframes emojiRainParticleBurst {
+  0% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx, 0px), var(--dy, 0px));
+    opacity: 0;
+  }
+}
+
+@keyframes emojiRainSlideUp {
+  from {
+    transform: translateX(-50%) translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes emojiRainSlideDown {
+  from {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-50%) translateY(20px);
+    opacity: 0;
+  }
+}
+
+@keyframes emojiRainLikeFlash {
+  0% {
+    transform: scale(1);
+    filter: none;
+  }
+  50% {
+    transform: scale(1.8);
+    filter: drop-shadow(0 0 8px #FFD700);
+  }
+  100% {
+    transform: scale(1);
+    filter: none;
+  }
+}

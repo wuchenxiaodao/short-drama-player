@@ -1,6 +1,7 @@
 package com.drama.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -11,6 +12,7 @@ import java.util.List;
 @Data
 @Entity
 @Table(name = "interaction_points")
+@JsonIgnoreProperties({"prerequisite", "episode", "hibernateLazyInitializer", "handler"})
 public class InteractionPoint {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -49,6 +51,9 @@ public class InteractionPoint {
 
     @Column
     private Integer hintCost = 50;
+
+    @Column(name = "emoji_reactions", columnDefinition = "TEXT")
+    private String emojiReactions;  // JSON: {"🔥": 12, "😂": 8, "❤️": 15}
 
     private LocalDateTime createdAt;
 

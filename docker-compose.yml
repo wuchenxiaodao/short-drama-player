@@ -61,6 +61,19 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: drama-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://backend:8080}
+    depends_on:
+      - backend
+    restart: unless-stopped
+
   nginx:
     image: nginx:alpine
     container_name: drama-nginx
@@ -72,6 +85,7 @@ services:
       - ./nginx/certs:/etc/nginx/certs:ro
     depends_on:
       - backend
+      - frontend
     restart: unless-stopped
 
 volumes:

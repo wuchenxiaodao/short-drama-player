@@ -1,10 +1,12 @@
 package com.drama.config;
 
+import com.drama.model.Danmaku;
 import com.drama.model.Drama;
 import com.drama.model.Episode;
 import com.drama.model.InteractionOption;
 import com.drama.model.InteractionPoint;
 import com.drama.model.User;
+import com.drama.repository.DanmakuRepository;
 import com.drama.repository.DramaRepository;
 import com.drama.repository.EpisodeRepository;
 import com.drama.repository.InteractionPointRepository;
@@ -25,6 +27,7 @@ public class DataInitializer implements CommandLineRunner {
     private final DramaRepository dramaRepository;
     private final EpisodeRepository episodeRepository;
     private final InteractionPointRepository interactionPointRepository;
+    private final DanmakuRepository danmakuRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -47,6 +50,7 @@ public class DataInitializer implements CommandLineRunner {
         initXingdeXiangyu();
         initHuangnian();
         initJialijiaWai();
+        initDanmakuData();
     }
 
     private void initBeipaiXunbao() {
@@ -87,7 +91,7 @@ public class DataInitializer implements CommandLineRunner {
                     "了解更多古墓知识",
                     List.of(),
                     "{\"title\":\"古墓探秘\",\"url\":\"https://example.com/tomb\",\"description\":\"点击了解古墓探秘的精彩内容\"}", null);
-            createInteraction(first, 50000L, InteractionPoint.InteractionType.EMOJI,
+            createInteraction(first, 5000L, InteractionPoint.InteractionType.EMOJI,
                     "🔥,😂,❤️,😱,👏",
                     List.of());
         }
@@ -111,6 +115,9 @@ public class DataInitializer implements CommandLineRunner {
             createInteraction(ep2, 45000L, InteractionPoint.InteractionType.EGG,
                     "隐藏地图碎片1",
                     List.of(opt("领取")));
+            createInteraction(ep2, 10000L, InteractionPoint.InteractionType.EMOJI,
+                    "🔥,😱,👀,💀,🤔",
+                    List.of());
         }
         if (episodes.size() > 2) {
             Episode ep3 = episodes.get(2);
@@ -132,6 +139,9 @@ public class DataInitializer implements CommandLineRunner {
             createInteraction(ep3, 70000L, InteractionPoint.InteractionType.EGG,
                     "隐藏地图碎片2",
                     List.of(opt("领取")));
+            createInteraction(ep3, 10000L, InteractionPoint.InteractionType.EMOJI,
+                    "🔥,😱,👀,💀,🤔",
+                    List.of());
         }
         if (episodes.size() > 3) {
             Episode ep4 = episodes.get(3);
@@ -145,6 +155,9 @@ public class DataInitializer implements CommandLineRunner {
             createInteraction(ep4, 45000L, InteractionPoint.InteractionType.EGG,
                     "隐藏地图碎片3",
                     List.of(opt("领取")));
+            createInteraction(ep4, 10000L, InteractionPoint.InteractionType.EMOJI,
+                    "🔥,😱,👀,💀,🤔",
+                    List.of());
         }
         if (episodes.size() > 4) {
             Episode ep5 = episodes.get(4);
@@ -154,6 +167,9 @@ public class DataInitializer implements CommandLineRunner {
             createInteraction(ep5, 60000L, InteractionPoint.InteractionType.EGG,
                     "完整地图解锁",
                     List.of(opt("领取")));
+            createInteraction(ep5, 10000L, InteractionPoint.InteractionType.EMOJI,
+                    "🔥,😱,👀,💀,🤔",
+                    List.of());
         }
     }
 
@@ -200,7 +216,7 @@ public class DataInitializer implements CommandLineRunner {
                 "推荐：同类型古装剧",
                 List.of(),
                 "{\"title\":\"更多古装剧\",\"url\":\"https://example.com/ancient\",\"description\":\"喜欢纨绔题材？点击发现更多精彩古装剧\"}", null);
-        createInteraction(first, 40000L, InteractionPoint.InteractionType.EMOJI,
+        createInteraction(first, 5000L, InteractionPoint.InteractionType.EMOJI,
                 "🔥,😂,❤️,😱,👏",
                 List.of());
         List<Episode> episodes = episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(d.getId());
@@ -217,6 +233,9 @@ public class DataInitializer implements CommandLineRunner {
             createInteraction(ep2, 45000L, InteractionPoint.InteractionType.EGG,
                     "纨绔少爷的隐藏技能",
                     List.of(opt("领取")));
+            createInteraction(ep2, 10000L, InteractionPoint.InteractionType.EMOJI,
+                    "🔥,😂,❤️,👏,🤣",
+                    List.of());
         }
         if (episodes.size() > 2) {
             Episode ep3 = episodes.get(2);
@@ -230,12 +249,15 @@ public class DataInitializer implements CommandLineRunner {
             createInteraction(ep3, 45000L, InteractionPoint.InteractionType.EGG,
                     "纨绔语录收藏",
                     List.of(opt("领取")));
+            createInteraction(ep3, 10000L, InteractionPoint.InteractionType.EMOJI,
+                    "🔥,😂,❤️,👏,🤣",
+                    List.of());
         }
     }
 
     private void initShibasuiGrandma() {
         Drama d = new Drama();
-        d.setTitle("十八岁太奶奶驾到，重整家族荣耀第三部");
+        d.setTitle("十八岁太奶奶驾到重整家族荣耀第三部");
         d.setDescription("太奶奶穿越回现代，凭借过人的智慧和胆识，带领家族走向新的辉煌。这一部，更大的挑战等着她...");
         d.setCoverUrl("/covers/clean_grandma.webp");
         d.setCategory("都市");
@@ -265,7 +287,7 @@ public class DataInitializer implements CommandLineRunner {
                 "推荐：同类型都市剧",
                 List.of(),
                 "{\"title\":\"更多都市剧\",\"url\":\"https://example.com/urban\",\"description\":\"喜欢太奶奶题材？点击发现更多精彩都市剧\"}", null);
-        createInteraction(first, 35000L, InteractionPoint.InteractionType.EMOJI,
+        createInteraction(first, 5000L, InteractionPoint.InteractionType.EMOJI,
                 "🔥,😂,❤️,😱,👏",
                 List.of());
         List<Episode> episodes = episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(d.getId());
@@ -280,6 +302,9 @@ public class DataInitializer implements CommandLineRunner {
             createInteraction(ep2, 40000L, InteractionPoint.InteractionType.EGG,
                     "太奶奶的暗器收藏",
                     List.of(opt("领取")));
+            createInteraction(ep2, 10000L, InteractionPoint.InteractionType.EMOJI,
+                    "❤️,😂,😍,🥺,😭",
+                    List.of());
         }
         if (episodes.size() > 2) {
             Episode ep3 = episodes.get(2);
@@ -297,6 +322,9 @@ public class DataInitializer implements CommandLineRunner {
             createInteraction(ep3, 60000L, InteractionPoint.InteractionType.EGG,
                     "家族秘史揭秘",
                     List.of(opt("查看")));
+            createInteraction(ep3, 10000L, InteractionPoint.InteractionType.EMOJI,
+                    "❤️,😂,😍,🥺,😭",
+                    List.of());
         }
     }
 
@@ -324,6 +352,9 @@ public class DataInitializer implements CommandLineRunner {
         createInteraction(first, 55000L, InteractionPoint.InteractionType.EGG,
                 "隐藏彩蛋：离婚协议书背面的秘密",
                 List.of(opt("查看")));
+        createInteraction(first, 10000L, InteractionPoint.InteractionType.EMOJI,
+                "❤️,😍,🥰,💕,😭",
+                List.of());
         List<Episode> episodes = episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(d.getId());
         if (episodes.size() > 1) {
             Episode ep2 = episodes.get(1);
@@ -333,12 +364,15 @@ public class DataInitializer implements CommandLineRunner {
             createInteraction(ep2, 60000L, InteractionPoint.InteractionType.EGG,
                     "男主的秘密日记",
                     List.of(opt("查看")));
+            createInteraction(ep2, 10000L, InteractionPoint.InteractionType.EMOJI,
+                    "❤️,😍,🥰,💕,😭",
+                    List.of());
         }
     }
 
     private void initHuangnian() {
         Drama d = new Drama();
-        d.setTitle("荒年全村啃树皮，我有系统满仓肉");
+        d.setTitle("荒年全村啃树皮我有系统满仓肉");
         d.setDescription("穿越到饥荒年代，获得囤货系统的她，凭借一己之力带领全村人度过荒年。从被嘲笑到被仰望，她的逆袭之路开始了。");
         d.setCoverUrl("/covers/clean_huangnian_v2.webp");
         d.setCategory("古装");
@@ -363,6 +397,9 @@ public class DataInitializer implements CommandLineRunner {
         createInteraction(first, 45000L, InteractionPoint.InteractionType.EGG,
                 "隐藏彩蛋：系统空间里的神秘礼物",
                 List.of(opt("领取")));
+        createInteraction(first, 10000L, InteractionPoint.InteractionType.EMOJI,
+                "🔥,😂,❤️,👏,🤣",
+                List.of());
         List<Episode> episodes = episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(d.getId());
         if (episodes.size() > 1) {
             Episode ep2 = episodes.get(1);
@@ -380,6 +417,9 @@ public class DataInitializer implements CommandLineRunner {
             createInteraction(ep2, 60000L, InteractionPoint.InteractionType.EGG,
                     "系统升级奖励",
                     List.of(opt("领取")));
+            createInteraction(ep2, 10000L, InteractionPoint.InteractionType.EMOJI,
+                    "🔥,😂,❤️,👏,🤣",
+                    List.of());
         }
         if (episodes.size() > 2) {
             Episode ep3 = episodes.get(2);
@@ -389,6 +429,9 @@ public class DataInitializer implements CommandLineRunner {
             createInteraction(ep3, 55000L, InteractionPoint.InteractionType.EGG,
                     "隐藏食谱",
                     List.of(opt("领取")));
+            createInteraction(ep3, 10000L, InteractionPoint.InteractionType.EMOJI,
+                    "🔥,😂,❤️,👏,🤣",
+                    List.of());
         }
     }
 
@@ -416,6 +459,9 @@ public class DataInitializer implements CommandLineRunner {
         createInteraction(first, 50000L, InteractionPoint.InteractionType.EGG,
                 "隐藏彩蛋：奶奶传下来的金手镯",
                 List.of(opt("领取")));
+        createInteraction(first, 10000L, InteractionPoint.InteractionType.EMOJI,
+                "❤️,😂,😍,🥺,😭",
+                List.of());
         List<Episode> episodes = episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(d.getId());
         if (episodes.size() > 1) {
             Episode ep2 = episodes.get(1);
@@ -425,6 +471,9 @@ public class DataInitializer implements CommandLineRunner {
             createInteraction(ep2, 55000L, InteractionPoint.InteractionType.EGG,
                     "家庭和睦秘籍",
                     List.of(opt("领取")));
+            createInteraction(ep2, 10000L, InteractionPoint.InteractionType.EMOJI,
+                    "❤️,😂,😍,🥺,😭",
+                    List.of());
         }
     }
 
@@ -434,7 +483,7 @@ public class DataInitializer implements CommandLineRunner {
         ep.setEpisodeNumber(number);
         ep.setTitle(title);
 
-        // 检查视频文件是否存在，如果不存在则使用第一个可用的视频文件
+        // Check for actual video file: videos/{dramaTitle}/第N集.mp4
         String videoPath = "/videos/" + drama.getTitle() + "/第" + number + "集.mp4";
         String userDir = System.getProperty("user.dir");
         String[] candidates = {
@@ -443,28 +492,38 @@ public class DataInitializer implements CommandLineRunner {
             userDir + File.separator + "short-drama-player" + File.separator + "videos"
         };
 
-        File videoFile = null;
+        boolean videoExists = false;
         for (String basePath : candidates) {
             File file = new File(basePath, drama.getTitle() + "/第" + number + "集.mp4");
             if (file.exists()) {
-                videoFile = file;
+                videoExists = true;
                 break;
             }
         }
 
-        // 如果指定集数的视频不存在，使用第一个可用的视频文件
-        if (videoFile == null) {
+        // If exact episode file not found, try to find the Nth mp4 file sorted by name
+        if (!videoExists) {
             for (String basePath : candidates) {
                 File dramaDir = new File(basePath, drama.getTitle());
                 if (dramaDir.isDirectory()) {
                     File[] files = dramaDir.listFiles((dir, name) -> name.endsWith(".mp4"));
                     if (files != null && files.length > 0) {
-                        videoFile = files[0];
-                        videoPath = "/videos/" + drama.getTitle() + "/" + videoFile.getName();
+                        java.util.Arrays.sort(files);
+                        // Use the Nth file (1-indexed), or the last file if N exceeds count
+                        int idx = Math.min(number - 1, files.length - 1);
+                        if (idx >= 0) {
+                            videoPath = "/videos/" + drama.getTitle() + "/" + files[idx].getName();
+                            videoExists = true;
+                        }
                         break;
                     }
                 }
             }
+        }
+
+        // If still no video found, use episode-specific placeholder
+        if (!videoExists) {
+            videoPath = "/api/video/placeholder/" + number;
         }
 
         ep.setVideoUrl(videoPath);
@@ -590,5 +649,102 @@ public class DataInitializer implements CommandLineRunner {
             this.branchQuestion = branchQuestion;
             this.branchOptionDefs = branchOptionDefs;
         }
+    }
+
+    private void initDanmakuData() {
+        if (danmakuRepository.count() > 0) return;
+
+        // Get demo user id
+        Long userId = userRepository.findByUsername("demo")
+                .map(User::getId)
+                .orElse(1L);
+
+        // Danmaku for 北派寻宝笔记 (drama 1) — episodes 1-5
+        // Each danmaku has content that maps to sentiment emojis
+        List<Danmaku> danmakus = new ArrayList<>();
+
+        // Episode 1 — 悬疑/惊险
+        danmakus.add(createDanmaku(1L, userId, 3000L, "卧槽太刺激了"));
+        danmakus.add(createDanmaku(1L, userId, 8000L, "这剧情绝了"));
+        danmakus.add(createDanmaku(1L, userId, 12000L, "吓死我了"));
+        danmakus.add(createDanmaku(1L, userId, 18000L, "厉害啊主角"));
+        danmakus.add(createDanmaku(1L, userId, 25000L, "不敢相信"));
+        danmakus.add(createDanmaku(1L, userId, 32000L, "666太强了"));
+        danmakus.add(createDanmaku(1L, userId, 40000L, "笑死这个配角"));
+        danmakus.add(createDanmaku(1L, userId, 48000L, "好紧张啊"));
+        danmakus.add(createDanmaku(1L, userId, 55000L, "太离谱了"));
+        danmakus.add(createDanmaku(1L, userId, 62000L, "心疼主角"));
+
+        // Episode 2 — 分支选择
+        danmakus.add(createDanmaku(2L, userId, 5000L, "选古墓！"));
+        danmakus.add(createDanmaku(2L, userId, 10000L, "哈哈笑死"));
+        danmakus.add(createDanmaku(2L, userId, 15000L, "太棒了这剧情"));
+        danmakus.add(createDanmaku(2L, userId, 22000L, "害怕不敢看"));
+        danmakus.add(createDanmaku(2L, userId, 30000L, "牛啊牛啊"));
+        danmakus.add(createDanmaku(2L, userId, 38000L, "爱了爱了"));
+        danmakus.add(createDanmaku(2L, userId, 45000L, "惊了没想到"));
+        danmakus.add(createDanmaku(2L, userId, 55000L, "哭了好感动"));
+
+        // Episode 3 — 投票
+        danmakus.add(createDanmaku(3L, userId, 5000L, "老张是内鬼"));
+        danmakus.add(createDanmaku(3L, userId, 12000L, "搞笑哈哈哈"));
+        danmakus.add(createDanmaku(3L, userId, 20000L, "好帅啊"));
+        danmakus.add(createDanmaku(3L, userId, 28000L, "太突然了"));
+        danmakus.add(createDanmaku(3L, userId, 35000L, "佩服佩服"));
+        danmakus.add(createDanmaku(3L, userId, 42000L, "细思极恐"));
+        danmakus.add(createDanmaku(3L, userId, 50000L, "绝美画面"));
+
+        // Episode 4
+        danmakus.add(createDanmaku(4L, userId, 5000L, "好看好看"));
+        danmakus.add(createDanmaku(4L, userId, 15000L, "太逗了"));
+        danmakus.add(createDanmaku(4L, userId, 25000L, "紧张紧张"));
+        danmakus.add(createDanmaku(4L, userId, 35000L, "破防了哭了"));
+        danmakus.add(createDanmaku(4L, userId, 45000L, "精彩！"));
+
+        // Episode 5
+        danmakus.add(createDanmaku(5L, userId, 5000L, "宝藏剧！"));
+        danmakus.add(createDanmaku(5L, userId, 15000L, "哈哈哈笑喷"));
+        danmakus.add(createDanmaku(5L, userId, 25000L, "太甜了"));
+        danmakus.add(createDanmaku(5L, userId, 35000L, "意难平啊"));
+        danmakus.add(createDanmaku(5L, userId, 45000L, "瑞思拜"));
+
+        // 天下第一纨绔 (drama 2) — episodes 1-3
+        danmakus.add(createDanmaku(6L, userId, 5000L, "好帅啊男主"));
+        danmakus.add(createDanmaku(6L, userId, 12000L, "笑死我了"));
+        danmakus.add(createDanmaku(6L, userId, 20000L, "太甜了吧"));
+        danmakus.add(createDanmaku(6L, userId, 30000L, "666牛逼"));
+        danmakus.add(createDanmaku(6L, userId, 40000L, "爱了爱了"));
+        danmakus.add(createDanmaku(7L, userId, 5000L, "哈哈哈太逗了"));
+        danmakus.add(createDanmaku(7L, userId, 15000L, "好美啊"));
+        danmakus.add(createDanmaku(7L, userId, 25000L, "神仙剧情"));
+        danmakus.add(createDanmaku(7L, userId, 35000L, "哭了太感动"));
+        danmakus.add(createDanmaku(8L, userId, 5000L, "绝了绝了"));
+        danmakus.add(createDanmaku(8L, userId, 15000L, "太棒了"));
+        danmakus.add(createDanmaku(8L, userId, 25000L, "可爱死了"));
+        danmakus.add(createDanmaku(8L, userId, 35000L, "佩服佩服"));
+
+        // 十八岁太奶奶 (drama 3) — 都市/甜宠
+        danmakus.add(createDanmaku(9L, userId, 5000L, "太甜了！"));
+        danmakus.add(createDanmaku(9L, userId, 12000L, "嗑到了嗑到了"));
+        danmakus.add(createDanmaku(9L, userId, 20000L, "好甜好甜"));
+        danmakus.add(createDanmaku(9L, userId, 30000L, "哈哈笑死"));
+        danmakus.add(createDanmaku(9L, userId, 40000L, "心疼女主"));
+        danmakus.add(createDanmaku(10L, userId, 5000L, "好看！"));
+        danmakus.add(createDanmaku(10L, userId, 15000L, "太好了终于"));
+        danmakus.add(createDanmaku(10L, userId, 25000L, "爱了"));
+        danmakus.add(createDanmaku(11L, userId, 5000L, "甜到我了"));
+        danmakus.add(createDanmaku(11L, userId, 15000L, "绝美！"));
+        danmakus.add(createDanmaku(11L, userId, 25000L, "感动哭了"));
+
+        danmakuRepository.saveAll(danmakus);
+    }
+
+    private Danmaku createDanmaku(Long episodeId, Long userId, Long positionMs, String content) {
+        Danmaku dm = new Danmaku();
+        dm.setEpisodeId(episodeId);
+        dm.setUserId(userId);
+        dm.setPositionMs(positionMs);
+        dm.setContent(content);
+        return dm;
     }
 }

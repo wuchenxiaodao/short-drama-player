@@ -7,8 +7,22 @@ const nextConfig = {
     buildActivity: false,
     appIsrStatus: false,
   },
-  env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
+  async rewrites() {
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8080';
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${backendUrl}/api/:path*`,
+      },
+      {
+        source: '/videos/:path*',
+        destination: `${backendUrl}/videos/:path*`,
+      },
+      {
+        source: '/covers/:path*',
+        destination: `${backendUrl}/covers/:path*`,
+      },
+    ];
   },
 }
 

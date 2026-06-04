@@ -45,7 +45,9 @@ public class AIStoryService {
         story.setPrompt(prompt);
         story.setContent(content);
         story.setType("branch");
-        return generatedStoryRepository.save(story);
+        story = generatedStoryRepository.save(story);
+        story.fillTransientIds();
+        return story;
     }
 
     public GeneratedStory generateContinue(Long episodeId, String prompt, Long userId) {
@@ -65,11 +67,13 @@ public class AIStoryService {
         story.setPrompt(prompt);
         story.setContent(content);
         story.setType("continue");
-        return generatedStoryRepository.save(story);
+        story = generatedStoryRepository.save(story);
+        story.fillTransientIds();
+        return story;
     }
 
     public List<GeneratedStory> getUserStories(Long userId) {
-        return generatedStoryRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        return generatedStoryRepository.findByUser_IdOrderByCreatedAtDesc(userId);
     }
 
     private String callAI(String prompt, Episode episode) {

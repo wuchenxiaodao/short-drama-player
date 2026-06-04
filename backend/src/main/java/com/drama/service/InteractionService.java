@@ -10,6 +10,8 @@ import com.drama.repository.InteractionAnswerRepository;
 import com.drama.repository.InteractionPointRepository;
 import com.drama.repository.UserEggRepository;
 import com.drama.repository.UserRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -45,6 +47,12 @@ public class InteractionService {
         saveAnswer(request, point, userId);
         updateRedisStats(request);
         processRewards(point, request, user);
+
+        // Emoji processing
+        if (point.getInteractionType() == InteractionPoint.InteractionType.EMOJI
+            && request.getEmojiReaction() != null) {
+            updateEmojiStats(point, request.getEmojiReaction(), request.getIsSend());
+        }
 
         return true;
     }
@@ -107,6 +115,21 @@ public class InteractionService {
         egg.setInteractionId(interactionId);
         egg.setEggContent(eggContent);
         userEggRepository.save(egg);
+    }
+
+    private void updateEmojiStats(InteractionPoint point, String emojiReaction, Boolean isSend) {
+        try {
+            Map<String, Integer> reactions = new HashMap<>();
+            if (point.getEmojiReactions() != null && !point.getEmojiReactions().isEmpty()) {
+                ObjectMapper mapper = new ObjectMapper();
+                reactions = mapper.readValue(point.getEmojiReactions(), new TypeReference<Map<String, Integer>>() {});
+            }
+            reactions.merge(emojiReaction, 1, Integer::sum);
+            point.setEmojiReactions(new ObjectMapper().writeValueAsString(reactions));
+            interactionPointRepository.save(point);
+        } catch (Exception e) {
+            // Don't fail the answer submission if emoji stats update fails
+        }
     }
 
     public InteractionStats getStats(Long interactionId) {

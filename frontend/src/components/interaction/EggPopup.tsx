@@ -11,48 +11,30 @@ interface EggPopupProps {
 }
 
 export default function EggPopup({ interaction }: EggPopupProps) {
-  const [closed, setClosed] = useState(false);
   const [showPoints, setShowPoints] = useState(false);
 
   useEffect(() => {
     const pointsTimer = setTimeout(() => setShowPoints(true), 400);
-    const closeTimer = setTimeout(() => setClosed(true), 2000);
-    return () => {
-      clearTimeout(pointsTimer);
-      clearTimeout(closeTimer);
-    };
+    return () => clearTimeout(pointsTimer);
   }, []);
 
-  if (closed) return null;
-
   return (
-    <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+    <div className="bg-drama-card/95 backdrop-blur-md border border-primary-400/30 rounded-2xl p-6 text-center mx-2 mb-2 animate-in slide-in-from-bottom duration-300">
       <EmojiRainEffect />
-      <div
-        className="bg-drama-card/95 backdrop-blur-md border border-primary-400/30 rounded-2xl p-6 text-center pointer-events-auto"
-        style={{
-          animation: 'eggPopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
-        }}
-      >
-        <div className="text-5xl mb-3">🥚</div>
-        <h4 className="text-base font-bold text-drama-text mb-1">发现彩蛋！</h4>
-        <p className="text-sm text-drama-muted mb-2">{interaction.questionText || interaction.hint}</p>
-        {showPoints && (
-          <div
-            className="text-lg font-bold text-primary-400"
-            style={{
-              animation: 'pointsFloat 1s ease-out forwards',
-            }}
-          >
-            +5积分
-          </div>
-        )}
-      </div>
+      <div className="text-5xl mb-3">🥚</div>
+      <h4 className="text-base font-bold text-drama-text mb-1">发现彩蛋！</h4>
+      <p className="text-sm text-drama-muted mb-2">{interaction.questionText || interaction.hint}</p>
+      {showPoints && (
+        <div
+          className="text-lg font-bold text-primary-400"
+          style={{
+            animation: 'pointsFloat 1s ease-out forwards',
+          }}
+        >
+          +5积分
+        </div>
+      )}
       <style jsx>{`
-        @keyframes eggPopIn {
-          0% { transform: scale(0.3); opacity: 0; }
-          100% { transform: scale(1); opacity: 1; }
-        }
         @keyframes pointsFloat {
           0% { transform: translateY(0); opacity: 1; }
           100% { transform: translateY(-30px); opacity: 0; }

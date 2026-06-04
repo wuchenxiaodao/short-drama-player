@@ -1,6 +1,7 @@
 package com.drama.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -8,6 +9,7 @@ import lombok.Data;
 @Data
 @Entity
 @Table(name = "interaction_options")
+@JsonIgnoreProperties({"nextInteraction", "interactionPoint", "hibernateLazyInitializer", "handler"})
 public class InteractionOption {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

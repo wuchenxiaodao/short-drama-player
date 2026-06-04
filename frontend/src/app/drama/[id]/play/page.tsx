@@ -10,6 +10,8 @@ import {
   Send,
   ChevronRight,
   Users,
+  Sparkles,
+  Wand2,
 } from 'lucide-react';
 import type { Drama, Episode, InteractionPoint, Danmaku, Comment } from '@/lib/types';
 import {
@@ -25,12 +27,15 @@ import {
   resolveUrl,
   getEpisodeInteractions,
   getOnlineCount,
+  generateBranch,
+  generateContinue,
 } from '@/lib/api-client';
 import { formatTimeAgo, formatDuration, cn } from '@/lib/utils';
 import { useAuthStore } from '@/lib/auth';
 import VideoPlayer from '@/components/VideoPlayer';
 import InteractionOverlay from '@/components/InteractionOverlay';
 import DanmakuLayer from '@/components/danmaku/DanmakuLayer';
+import { sentimentAnalyzer } from '@/lib/danmaku-sentiment';
 
 export default function PlayPage() {
   const params = useParams();
@@ -51,6 +56,10 @@ export default function PlayPage() {
   const [commentText, setCommentText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [onlineCount, setOnlineCount] = useState<number>(0);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiResult, setAiResult] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [showAiPanel, setShowAiPanel] = useState(false);
 
   const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
@@ -144,8 +153,8 @@ export default function PlayPage() {
   }, [episode, drama, episodeNumber, dramaId, currentTimeMs, router]);
 
   const handleInteractionAnswer = useCallback(
-    (interactionId: number, optionId: number) => {
-      submitAnswer(interactionId, optionId).catch(() => {});
+    (interactionId: number, optionId: number, emojiReaction?: string, isSend?: boolean) => {
+      submitAnswer(interactionId, optionId, emojiReaction, isSend).catch(() => {});
     },
     []
   );
@@ -191,6 +200,21 @@ export default function PlayPage() {
     [isLoggedIn]
   );
 
+  const handleAIGenerate = useCallback(async (type: 'branch' | 'continue') => {
+    if (!episode || !isLoggedIn || aiLoading) return;
+    setAiLoading(true);
+    setAiResult(null);
+    try {
+      const fn = type === 'branch' ? generateBranch : generateContinue;
+      const res = await fn(episode.id, aiPrompt || (type === 'branch' ? '生成剧情分支' : '续写剧情'));
+      setAiResult(res?.data?.content || res?.content || res?.data || '生成成功');
+    } catch {
+      setAiResult('生成失败，请稍后重试');
+    } finally {
+      setAiLoading(false);
+    }
+  }, [episode, isLoggedIn, aiLoading, aiPrompt]);
+
   if (loading) {
     return <PlayPageSkeleton />;
   }
@@ -228,6 +252,9 @@ export default function PlayPage() {
                 interactions={interactions}
                 currentTimeMs={currentTimeMs}
                 onAnswer={handleInteractionAnswer}
+                userId={useAuthStore.getState().user?.id}
+                episodeId={episode?.id}
+                danmakuList={danmakuList}
               />
             </>
           )}
@@ -292,7 +319,8 @@ export default function PlayPage() {
               onKeyDown={(e) => e.key === 'Enter' && handleCommentSubmit()}
               placeholder={isLoggedIn ? '说点什么...' : '登录后评论'}
               disabled={!isLoggedIn}
-              className="flex-1 bg-drama-surface border border-drama-border rounded-lg px-3 py-2 text-sm text-drama-text placeholder:text-drama-muted outline-none focus:border-primary-400/50 transition-colors disabled:opacity-50"
+              onClick={() => { if (!isLoggedIn) router.push('/login'); }}
+              className="flex-1 bg-drama-surface border border-drama-border rounded-lg px-3 py-2 text-sm text-drama-text placeholder:text-drama-muted outline-none focus:border-primary-400/50 transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-pointer"
             />
             <button
               onClick={handleCommentSubmit}
@@ -340,6 +368,57 @@ export default function PlayPage() {
             查看全部评论
             <ChevronRight className="w-3 h-3" />
           </Link>
+        </div>
+
+        <div className="bg-drama-card rounded-xl p-4">
+          <button
+            onClick={() => setShowAiPanel(!showAiPanel)}
+            className="w-full flex items-center justify-between"
+          >
+            <h3 className="text-sm font-medium text-drama-text flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-primary-400" />
+              AI剧情生成
+            </h3>
+            <ChevronRight className={cn('w-4 h-4 text-drama-muted transition-transform', showAiPanel && 'rotate-90')} />
+          </button>
+
+          {showAiPanel && (
+            <div className="mt-3 space-y-3">
+              <input
+                type="text"
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder="输入你想要的剧情方向..."
+                className="w-full bg-drama-surface border border-drama-border rounded-lg px-3 py-2 text-sm text-drama-text placeholder:text-drama-muted outline-none focus:border-primary-400/50 transition-colors"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleAIGenerate('branch')}
+                  disabled={aiLoading || !isLoggedIn}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-primary-500 hover:bg-primary-600 disabled:bg-drama-surface disabled:text-drama-muted text-white text-sm rounded-lg transition-colors"
+                >
+                  <Wand2 className="w-3.5 h-3.5" />
+                  {aiLoading ? '生成中...' : '生成分支'}
+                </button>
+                <button
+                  onClick={() => handleAIGenerate('continue')}
+                  disabled={aiLoading || !isLoggedIn}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-drama-surface hover:bg-drama-border text-drama-text text-sm rounded-lg transition-colors disabled:opacity-50"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  {aiLoading ? '生成中...' : '续写剧情'}
+                </button>
+              </div>
+              {!isLoggedIn && (
+                <p className="text-xs text-drama-muted text-center">登录后可使用AI剧情生成</p>
+              )}
+              {aiResult && (
+                <div className="bg-drama-surface rounded-lg p-3 text-sm text-drama-text/90 whitespace-pre-wrap leading-relaxed">
+                  {aiResult}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

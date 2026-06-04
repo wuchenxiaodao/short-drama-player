@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   Play,
@@ -34,7 +34,9 @@ import RatingInput from '@/components/RatingInput';
 export default function DramaDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const dramaId = Number(params.id);
+  const currentEp = Number(searchParams.get('ep')) || 1;
 
   const [drama, setDrama] = useState<Drama | null>(null);
   const [loading, setLoading] = useState(true);
@@ -241,7 +243,7 @@ export default function DramaDetailPage() {
                 href={`/drama/${drama.id}/play?ep=${ep}`}
                 className={cn(
                   'flex items-center justify-center py-2 rounded-lg text-sm transition-colors',
-                  ep === 1
+                  ep === currentEp
                     ? 'bg-primary-500 text-white font-medium'
                     : 'bg-drama-surface text-drama-muted hover:text-drama-text hover:bg-drama-surface/80'
                 )}
