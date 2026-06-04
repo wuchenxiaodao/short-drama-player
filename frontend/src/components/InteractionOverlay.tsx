@@ -26,6 +26,8 @@ interface InteractionOverlayProps {
   userId?: number;
   episodeId?: number;
   danmakuList?: { id: number; content: string; positionMs: number }[];
+  onSlowDown?: () => void;
+  onRestoreSpeed?: () => void;
 }
 
 interface BranchChoice {
@@ -68,6 +70,8 @@ export default function InteractionOverlay({
   userId,
   episodeId,
   danmakuList,
+  onSlowDown,
+  onRestoreSpeed,
 }: InteractionOverlayProps) {
   // overlay 类型（INFO/LINK/EGG）- 带自动消失的小弹窗
   const [activeInteraction, setActiveInteraction] = useState<InteractionPoint | null>(null);
@@ -179,9 +183,12 @@ export default function InteractionOverlay({
   }, [clearAllTimers]);
 
   const closePanel = useCallback(() => {
+    if (activePanelRef.current?.interactionType === 'QUIZ') {
+      onRestoreSpeed?.();
+    }
     setActivePanel(null);
     activePanelRef.current = null;
-  }, []);
+  }, [onRestoreSpeed]);
 
   // Auto-close for INFO/LINK/EGG
   useEffect(() => {
@@ -321,7 +328,7 @@ export default function InteractionOverlay({
                 processAnswer(current.id, optionId, opt);
               }
             }}
-            {...(activePanel.interactionType === 'QUIZ' ? { userId } : {})}
+            {...(activePanel.interactionType === 'QUIZ' ? { userId, onSlowDown, onRestoreSpeed } : {})}
           />
         </div>
       )}

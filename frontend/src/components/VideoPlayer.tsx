@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import {
   Play,
   Pause,
@@ -23,6 +23,11 @@ interface VideoPlayerProps {
   initialPosition?: number;
 }
 
+export interface VideoPlayerHandle {
+  slowDown: () => void;
+  restoreSpeed: () => void;
+}
+
 const SPEED_OPTIONS = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
 const QUALITY_OPTIONS: Stream['quality'][] = ['720p', '1080p'];
 const HIDE_DELAY = 3000;
@@ -35,17 +40,25 @@ function formatTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-export default function VideoPlayer({
-  src,
-  streams,
-  onTimeUpdate,
-  onEnded,
-  initialPosition,
-}: VideoPlayerProps) {
+const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function VideoPlayer(
+  { src, streams, onTimeUpdate, onEnded, initialPosition },
+  ref
+) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastClickRef = useRef<number>(0);
+
+  useImperativeHandle(ref, () => ({
+    slowDown: () => {
+      const video = videoRef.current;
+      if (video) video.playbackRate = 0.3;
+    },
+    restoreSpeed: () => {
+      const video = videoRef.current;
+      if (video) video.playbackRate = parseFloat(localStorage.getItem('video-speed') || '1');
+    },
+  }));
 
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -507,4 +520,6 @@ export default function VideoPlayer({
       )}
     </div>
   );
-}
+});
+
+export default VideoPlayer;

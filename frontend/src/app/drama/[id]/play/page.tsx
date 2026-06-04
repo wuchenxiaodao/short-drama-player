@@ -33,6 +33,7 @@ import {
 import { formatTimeAgo, formatDuration, cn } from '@/lib/utils';
 import { useAuthStore } from '@/lib/auth';
 import VideoPlayer from '@/components/VideoPlayer';
+import type { VideoPlayerHandle } from '@/components/VideoPlayer';
 import InteractionOverlay from '@/components/InteractionOverlay';
 import DanmakuLayer from '@/components/danmaku/DanmakuLayer';
 import { sentimentAnalyzer } from '@/lib/danmaku-sentiment';
@@ -62,6 +63,7 @@ export default function PlayPage() {
   const [showAiPanel, setShowAiPanel] = useState(false);
 
   const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const videoPlayerRef = useRef<VideoPlayerHandle>(null);
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
 
   const [episodeTitle, setEpisodeTitle] = useState('');
@@ -236,6 +238,7 @@ export default function PlayPage() {
           {episode && (
             <>
               <VideoPlayer
+                ref={videoPlayerRef}
                 src={resolveUrl(episode.videoUrl)}
                 streams={episode.streams?.map(s => ({ ...s, url: resolveUrl(s.url) }))}
                 onTimeUpdate={handleTimeUpdate}
@@ -255,6 +258,8 @@ export default function PlayPage() {
                 userId={useAuthStore.getState().user?.id}
                 episodeId={episode?.id}
                 danmakuList={danmakuList}
+                onSlowDown={() => videoPlayerRef.current?.slowDown()}
+                onRestoreSpeed={() => videoPlayerRef.current?.restoreSpeed()}
               />
             </>
           )}

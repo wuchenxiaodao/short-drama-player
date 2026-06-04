@@ -9,6 +9,8 @@ interface QuizPanelProps {
   interaction: InteractionPoint;
   onAnswer: (optionId: number) => void;
   userId?: number;
+  onSlowDown?: () => void;
+  onRestoreSpeed?: () => void;
 }
 
 interface StatsData {
@@ -16,7 +18,7 @@ interface StatsData {
   optionStats: Record<string, { count: number; percentage: number }>;
 }
 
-export default function QuizPanel({ interaction, onAnswer, userId }: QuizPanelProps) {
+export default function QuizPanel({ interaction, onAnswer, userId, onSlowDown, onRestoreSpeed }: QuizPanelProps) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [hintText, setHintText] = useState<string | null>(null);
@@ -24,6 +26,11 @@ export default function QuizPanel({ interaction, onAnswer, userId }: QuizPanelPr
   const [stats, setStats] = useState<StatsData | null>(null);
 
   const options = interaction.options || [];
+
+  useEffect(() => {
+    onSlowDown?.();
+    return () => onRestoreSpeed?.();
+  }, [onSlowDown, onRestoreSpeed]);
 
   useEffect(() => {
     if (!showResult) return;
@@ -65,6 +72,9 @@ export default function QuizPanel({ interaction, onAnswer, userId }: QuizPanelPr
       {emojiRain && <EmojiRainEffect />}
       <div className="flex items-start justify-between mb-3">
         <h4 className="text-sm font-medium text-drama-text flex-1">{interaction.questionText}</h4>
+        <span className="text-[10px] text-primary-400/80 bg-primary-500/10 px-1.5 py-0.5 rounded-full flex-shrink-0 ml-2">
+          🐢 0.3x
+        </span>
       </div>
 
       <div className="space-y-2 mb-3">
