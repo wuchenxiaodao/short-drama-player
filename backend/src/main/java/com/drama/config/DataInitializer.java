@@ -1,14 +1,17 @@
 package com.drama.config;
 
+import com.drama.enums.ClipTag;
 import com.drama.model.Danmaku;
 import com.drama.model.Drama;
 import com.drama.model.Episode;
+import com.drama.model.HighlightClip;
 import com.drama.model.InteractionOption;
 import com.drama.model.InteractionPoint;
 import com.drama.model.User;
 import com.drama.repository.DanmakuRepository;
 import com.drama.repository.DramaRepository;
 import com.drama.repository.EpisodeRepository;
+import com.drama.repository.HighlightClipRepository;
 import com.drama.repository.InteractionPointRepository;
 import com.drama.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +31,7 @@ public class DataInitializer implements CommandLineRunner {
     private final EpisodeRepository episodeRepository;
     private final InteractionPointRepository interactionPointRepository;
     private final DanmakuRepository danmakuRepository;
+    private final HighlightClipRepository highlightClipRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -51,6 +55,7 @@ public class DataInitializer implements CommandLineRunner {
         initHuangnian();
         initJialijiaWai();
         initDanmakuData();
+        initHighlightClips();
     }
 
     private void initBeipaiXunbao() {
@@ -746,5 +751,96 @@ public class DataInitializer implements CommandLineRunner {
         dm.setPositionMs(positionMs);
         dm.setContent(content);
         return dm;
+    }
+
+    private void initHighlightClips() {
+        if (highlightClipRepository.count() > 0) return;
+
+        List<Drama> dramas = dramaRepository.findAll();
+        if (dramas.isEmpty()) return;
+
+        List<Episode> episodes1 = episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(dramas.get(0).getId());
+        List<Episode> episodes2 = dramas.size() > 1 ? episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(dramas.get(1).getId()) : List.of();
+        List<Episode> episodes3 = dramas.size() > 2 ? episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(dramas.get(2).getId()) : List.of();
+
+        List<HighlightClip> clips = new ArrayList<>();
+
+        // 北派寻宝笔记 - 悬疑刺激片段
+        if (!episodes1.isEmpty()) {
+            clips.add(createClip(dramas.get(0), episodes1.get(0), "古墓惊现神秘机关", 120, 150, ClipTag.THRILL, 1500, 800));
+            clips.add(createClip(dramas.get(0), episodes1.get(0), "寻宝笔记首次揭秘", 30, 60, ClipTag.SHOCK, 1200, 600));
+            clips.add(createClip(dramas.get(0), episodes1.get(1), "密室逃脱惊险一刻", 200, 230, ClipTag.THRILL, 1800, 950));
+        }
+        if (episodes1.size() > 2) {
+            clips.add(createClip(dramas.get(0), episodes1.get(2), "内鬼身份大揭秘", 180, 210, ClipTag.SHOCK, 2000, 1100));
+        }
+
+        // 天下第一纨绔 - 爽感/搞笑片段
+        if (!episodes2.isEmpty()) {
+            clips.add(createClip(dramas.get(1), episodes2.get(0), "纨绔少爷霸气反击", 45, 75, ClipTag.ANGRY, 2200, 1200));
+            clips.add(createClip(dramas.get(1), episodes2.get(0), "装逼打脸名场面", 100, 130, ClipTag.FUNNY, 1900, 1000));
+        }
+        if (episodes2.size() > 1) {
+            clips.add(createClip(dramas.get(1), episodes2.get(1), "隐藏高手真实身份暴露", 150, 180, ClipTag.SHOCK, 2500, 1400));
+        }
+        if (episodes2.size() > 2) {
+            clips.add(createClip(dramas.get(1), episodes2.get(2), "打脸反派超爽瞬间", 80, 110, ClipTag.FUNNY, 2100, 1150));
+        }
+
+        // 十八岁太奶奶 - 甜/虐片段
+        if (!episodes3.isEmpty()) {
+            clips.add(createClip(dramas.get(2), episodes3.get(0), "太奶奶驾到名场面", 30, 60, ClipTag.FUNNY, 1700, 900));
+            clips.add(createClip(dramas.get(2), episodes3.get(0), "家族荣耀初现", 120, 150, ClipTag.SWEET, 1400, 750));
+        }
+        if (episodes3.size() > 1) {
+            clips.add(createClip(dramas.get(2), episodes3.get(1), "太奶奶的反间计", 200, 230, ClipTag.THRILL, 1600, 850));
+        }
+        if (episodes3.size() > 2) {
+            clips.add(createClip(dramas.get(2), episodes3.get(2), "原谅还是不原谅？催泪名场面", 150, 180, ClipTag.SAD, 2300, 1300));
+        }
+
+        // 幸得相遇离婚时 - 甜宠片段
+        if (dramas.size() > 3) {
+            List<Episode> episodes4 = episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(dramas.get(3).getId());
+            if (!episodes4.isEmpty()) {
+                clips.add(createClip(dramas.get(3), episodes4.get(0), "离婚时的意外重逢", 60, 90, ClipTag.SAD, 1300, 700));
+                clips.add(createClip(dramas.get(3), episodes4.get(0), "假装冷漠的真相", 150, 180, ClipTag.SWEET, 1500, 800));
+            }
+            if (episodes4.size() > 1) {
+                clips.add(createClip(dramas.get(3), episodes4.get(1), "男主的秘密日记曝光", 100, 130, ClipTag.SWEET, 1800, 950));
+            }
+        }
+
+        // 荒年 - 爽感片段
+        if (dramas.size() > 4) {
+            List<Episode> episodes5 = episodeRepository.findByDramaIdOrderByEpisodeNumberAsc(dramas.get(4).getId());
+            if (!episodes5.isEmpty()) {
+                clips.add(createClip(dramas.get(4), episodes5.get(0), "系统满仓肉初登场", 30, 60, ClipTag.SHOCK, 2400, 1300));
+                clips.add(createClip(dramas.get(4), episodes5.get(0), "全村震惊名场面", 120, 150, ClipTag.FUNNY, 1600, 850));
+            }
+            if (episodes5.size() > 1) {
+                clips.add(createClip(dramas.get(4), episodes5.get(1), "粮食危机大反转", 180, 210, ClipTag.THRILL, 1900, 1050));
+            }
+        }
+
+        highlightClipRepository.saveAll(clips);
+    }
+
+    private HighlightClip createClip(Drama drama, Episode episode, String title,
+                                      int startTime, int endTime, ClipTag tag,
+                                      int heatScore, int playCount) {
+        HighlightClip clip = new HighlightClip();
+        clip.setDramaId(drama.getId());
+        clip.setEpisodeId(episode.getId());
+        clip.setTitle(title);
+        clip.setStartTime(startTime);
+        clip.setEndTime(endTime);
+        clip.setTag(tag);
+        clip.setHeatScore(heatScore);
+        clip.setPlayCount(playCount);
+        clip.setClickCount((int) (playCount * 0.4));
+        clip.setClipUrl(episode.getVideoUrl());
+        clip.setCoverUrl(drama.getCoverUrl());
+        return clip;
     }
 }
