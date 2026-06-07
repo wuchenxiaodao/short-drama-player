@@ -152,3 +152,22 @@ export interface InteractionStats {
   typeDistribution: Record<InteractionType, number>;
   hourlyDistribution: { hour: number; count: number }[];
 }
+
+export interface HighlightClip {
+  id: number;
+  dramaId: number;
+  episodeId: number;
+  title: string;
+  startTime: number;
+  endTime: number;
+  clipUrl: string;
+  coverUrl: string;
+  tag: string;
+  tagLabel: string;
+  heatScore: number;
+  playCount: number;
+  clickCount: number;
+  dramaTitle: string;
+  dramaCoverUrl: string;
+  createdAt: string;
+}

@@ -257,3 +257,25 @@ export async function generateContinue(episodeId: number, prompt: string) {
 export async function getMyStories() {
   return apiGet<any>('/api/ai-story/my');
 }
+
+export async function getClipFlow(tag?: string, page = 0, size = 10) {
+  const params = new URLSearchParams({ page: String(page), size: String(size) });
+  if (tag) params.set('tag', tag);
+  return apiGet<any>(`/api/clips/flow?${params}`);
+}
+
+export async function recordClipPlay(clipId: number) {
+  return apiPost<any>(`/api/clips/${clipId}/play`);
+}
+
+export async function recordClipClick(clipId: number) {
+  return apiPost<any>(`/api/clips/${clipId}/click`);
+}
+
+export async function recordClipLike(clipId: number) {
+  return apiPost<any>(`/api/clips/${clipId}/like`);
+}
+
+export async function getDramaClips(dramaId: number, page = 0, size = 10) {
+  return apiGet<any>(`/api/clips/drama/${dramaId}?page=${page}&size=${size}`);
+}
