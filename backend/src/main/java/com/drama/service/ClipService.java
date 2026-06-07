@@ -8,7 +8,7 @@ import com.drama.enums.ClipTag;
 import com.drama.repository.HighlightClipRepository;
 import com.drama.repository.ClipInteractionRepository;
 import com.drama.repository.DramaRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -19,16 +19,12 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class ClipService {
 
-    @Autowired
-    private HighlightClipRepository clipRepo;
-
-    @Autowired
-    private ClipInteractionRepository interactionRepo;
-
-    @Autowired
-    private DramaRepository dramaRepo;
+    private final HighlightClipRepository clipRepo;
+    private final ClipInteractionRepository interactionRepo;
+    private final DramaRepository dramaRepo;
 
     public Page<HighlightClipVO> getRecommendClips(Pageable pageable) {
         Page<HighlightClip> clips = clipRepo.findAll(pageable);
@@ -40,6 +36,16 @@ public class ClipService {
 
     public Page<HighlightClipVO> getClipsByTag(ClipTag tag, Pageable pageable) {
         List<HighlightClip> all = clipRepo.findByTagOrderByHeatScoreDesc(tag);
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), all.size());
+        List<HighlightClipVO> voList = all.subList(start, end).stream()
+                .map(this::toVO)
+                .collect(Collectors.toList());
+        return new PageImpl<>(voList, pageable, all.size());
+    }
+
+    public Page<HighlightClipVO> getClipsByDrama(Long dramaId, Pageable pageable) {
+        List<HighlightClip> all = clipRepo.findByDramaIdOrderByHeatScoreDesc(dramaId);
         int start = (int) pageable.getOffset();
         int end = Math.min(start + pageable.getPageSize(), all.size());
         List<HighlightClipVO> voList = all.subList(start, end).stream()
