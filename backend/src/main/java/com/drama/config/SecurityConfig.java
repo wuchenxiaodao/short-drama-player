@@ -65,6 +65,7 @@ public class SecurityConfig {
                     .requestMatchers("/api/rating/stats").permitAll()
                     .requestMatchers("/api/eggs/catalog").permitAll()
                     .requestMatchers("/api/online/episode/*/count").permitAll()
+                    .requestMatchers("/api/clips/flow", "/api/clips/drama/**").permitAll()
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll();
                 if (h2Enabled) {
                     auth.requestMatchers("/h2-console/**").permitAll();
