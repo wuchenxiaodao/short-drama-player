@@ -4,14 +4,14 @@
 
 @layer base {
   body {
-    @apply bg-[#0f0f1a] text-gray-100 antialiased;
+    @apply bg-[#18191C] text-gray-100 antialiased;
   }
 }
 
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+    scrollbar-color: rgba(148, 153, 160, 0.3) transparent;
   }
 
   .scrollbar-thin::-webkit-scrollbar {
@@ -24,12 +24,12 @@
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(148, 153, 160, 0.3);
     border-radius: 3px;
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.25);
+    background: rgba(148, 153, 160, 0.5);
   }
 
   .scrollbar-hidden {
@@ -84,7 +84,7 @@
 
 .video-progress-fill {
   height: 100%;
-  background: #e50914;
+  background: #00A1D6;
   border-radius: 2px;
   position: relative;
 }
@@ -97,7 +97,7 @@
   transform: translateY(-50%);
   width: 12px;
   height: 12px;
-  background: #e50914;
+  background: #00A1D6;
   border-radius: 50%;
   opacity: 0;
   transition: opacity 0.2s;
@@ -234,7 +234,7 @@ iframe[src*="__nextjs"] {
 .clip-flow {
   position: fixed;
   inset: 0;
-  background: #000;
+  background: #18191C;
   z-index: 50;
 }
 
@@ -284,8 +284,8 @@ iframe[src*="__nextjs"] {
 }
 
 .tag-btn.active {
-  background: #ff4757;
-  border-color: #ff4757;
+  background: #FB7299;
+  border-color: #FB7299;
   color: #fff;
 }
 
@@ -307,7 +307,7 @@ iframe[src*="__nextjs"] {
   scroll-snap-align: start;
   position: relative;
   overflow: hidden;
-  background: #000;
+  background: #18191C;
   cursor: pointer;
 }
 
@@ -352,7 +352,7 @@ iframe[src*="__nextjs"] {
 
 .clip-progress-fill {
   height: 100%;
-  background: #ff4757;
+  background: #00A1D6;
   transition: width 0.25s linear;
   border-radius: 0 2px 2px 0;
 }
@@ -424,13 +424,13 @@ iframe[src*="__nextjs"] {
   gap: 6px;
   padding: 13px 20px;
   border-radius: 24px;
-  background: linear-gradient(135deg, #ff4757, #ff6b81);
+  background: linear-gradient(135deg, #00A1D6, #0091c0);
   border: none;
   color: #fff;
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(255,71,87,0.4);
+  box-shadow: 0 4px 15px rgba(0,161,214,0.4);
   outline: none;
 }
 
@@ -455,8 +455,8 @@ iframe[src*="__nextjs"] {
 }
 
 .btn-action.liked {
-  background: rgba(255,71,87,0.3);
-  color: #ff4757;
+  background: rgba(251,114,153,0.3);
+  color: #FB7299;
 }
 
 .clip-empty {
@@ -466,7 +466,7 @@ iframe[src*="__nextjs"] {
   align-items: center;
   justify-content: center;
   gap: 16px;
-  background: #000;
+  background: #18191C;
   color: #fff;
 }
 

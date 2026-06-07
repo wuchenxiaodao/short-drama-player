@@ -5,8 +5,9 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: { 50: '#fdf2f8', 100: '#fce7f3', 200: '#fbcfe8', 300: '#f9a8d4', 400: '#f472b6', 500: '#ec4899', 600: '#db2777', 700: '#be185d', 800: '#9d174d', 900: '#831843' },
-        drama: { bg: '#0f0f1a', card: '#1a1a2e', surface: '#252540', border: '#333355', text: '#e0e0f0', muted: '#8888aa' }
+        primary: { 50: '#e6f7fb', 100: '#b3e8f2', 200: '#80d9e9', 300: '#4dcae0', 400: '#1abbd7', 500: '#00A1D6', 600: '#0091c0', 700: '#0081aa', 800: '#007194', 900: '#005168' },
+        drama: { bg: '#18191C', card: '#212224', surface: '#2C2E31', border: '#2E3034', text: '#E3E5E7', muted: '#9499A0' },
+        accent: { 400: '#FB7299', 500: '#FB7299', 600: '#e5627f' }
       }
     },
   },
