@@ -47,9 +47,9 @@ export default function LoginPage() {
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        <div className="bg-drama-card rounded-2xl p-8 shadow-xl border border-drama-border/50">
+        <div className="bg-drama-card rounded-lg p-8 shadow-xl border border-drama-border/50">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold text-primary-500">
               短剧TV
             </h1>
             <p className="text-drama-muted text-sm mt-2">登录你的账号</p>
@@ -69,7 +69,7 @@ export default function LoginPage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="请输入用户名"
-                className="w-full px-4 py-3 bg-drama-surface border border-drama-border rounded-xl text-drama-text placeholder:text-drama-muted focus:outline-none focus:border-primary-500 transition-colors"
+                className="w-full px-4 py-3 bg-drama-surface border border-drama-border rounded-lg text-drama-text placeholder:text-drama-muted focus:outline-none focus:border-primary-500 transition-colors"
               />
             </div>
 
@@ -81,7 +81,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="请输入密码"
-                  className="w-full px-4 py-3 pr-12 bg-drama-surface border border-drama-border rounded-xl text-drama-text placeholder:text-drama-muted focus:outline-none focus:border-primary-500 transition-colors"
+                  className="w-full px-4 py-3 pr-12 bg-drama-surface border border-drama-border rounded-lg text-drama-text placeholder:text-drama-muted focus:outline-none focus:border-primary-500 transition-colors"
                 />
                 <button
                   type="button"
@@ -96,7 +96,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl font-medium hover:from-primary-600 hover:to-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+              className="w-full py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -113,7 +113,7 @@ export default function LoginPage() {
             <span className="text-drama-muted text-sm">还没有账号？</span>
             <Link
               href="/register"
-              className="text-primary-400 text-sm hover:text-primary-300 ml-1 transition-colors"
+              className="text-primary-500 text-sm hover:text-primary-400 ml-1 transition-colors"
             >
               去注册
             </Link>

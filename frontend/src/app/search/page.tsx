@@ -105,7 +105,7 @@ export default function SearchPage() {
             onChange={(e) => setKeyword(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch(keyword)}
             placeholder="搜索短剧名称..."
-            className="w-full pl-10 pr-4 py-3 bg-drama-card border border-drama-border rounded-xl text-drama-text placeholder:text-drama-muted focus:outline-none focus:border-primary-500 transition-colors"
+            className="w-full pl-10 pr-4 py-3 bg-drama-surface border border-drama-border rounded-full text-drama-text placeholder:text-drama-muted focus:outline-none focus:border-primary-500 transition-colors"
           />
           {keyword && (
             <button
@@ -118,7 +118,7 @@ export default function SearchPage() {
         </div>
         <button
           onClick={() => handleSearch(keyword)}
-          className="px-6 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl font-medium hover:from-primary-600 hover:to-primary-700 transition-all"
+          className="px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-full font-medium transition-colors"
         >
           搜索
         </button>
@@ -132,7 +132,7 @@ export default function SearchPage() {
                 <h3 className="text-sm font-medium text-drama-text">搜索历史</h3>
                 <button
                   onClick={handleClearHistory}
-                  className="text-xs text-drama-muted hover:text-primary-400 transition-colors"
+                  className="text-xs text-drama-muted hover:text-primary-500 transition-colors"
                 >
                   清除
                 </button>
@@ -141,7 +141,7 @@ export default function SearchPage() {
                 {history.map((item) => (
                   <span
                     key={item}
-                    className="group inline-flex items-center gap-1 px-3 py-1.5 bg-drama-card rounded-full text-sm text-drama-muted hover:text-drama-text hover:bg-drama-surface cursor-pointer transition-colors"
+                    className="group inline-flex items-center gap-1 px-3 py-1.5 bg-drama-surface rounded-full text-sm text-drama-muted hover:text-drama-text hover:bg-drama-surface cursor-pointer transition-colors"
                     onClick={() => handleSearch(item)}
                   >
                     {item}
@@ -162,7 +162,7 @@ export default function SearchPage() {
 
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <TrendingUp className="w-4 h-4 text-primary-400" />
+              <TrendingUp className="w-4 h-4 text-primary-500" />
               <h3 className="text-sm font-medium text-drama-text">热门搜索</h3>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -170,7 +170,7 @@ export default function SearchPage() {
                 <span
                   key={item}
                   onClick={() => handleSearch(item)}
-                  className="px-3 py-1.5 bg-primary-500/10 border border-primary-500/20 rounded-full text-sm text-primary-400 hover:bg-primary-500/20 cursor-pointer transition-colors"
+                  className="px-3 py-1.5 bg-primary-500/10 rounded-full text-sm text-primary-500 hover:bg-primary-500/20 cursor-pointer transition-colors"
                 >
                   {item}
                 </span>

@@ -31,7 +31,7 @@ interface EggItem {
 }
 
 const EGG_COLORS = [
-  'from-pink-500 to-rose-500',
+  'from-accent-400 to-rose-500',
   'from-purple-500 to-indigo-500',
   'from-cyan-500 to-blue-500',
   'from-emerald-500 to-teal-500',
@@ -102,7 +102,7 @@ export default function EggsPage() {
         <p className="text-drama-muted mb-6">登录账号后即可查看你收集的所有彩蛋</p>
         <Link
           href="/login"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl font-medium hover:from-primary-600 hover:to-primary-700 transition-all"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-full font-medium transition-colors"
         >
           <LogIn className="w-4 h-4" />
           去登录
@@ -121,11 +121,11 @@ export default function EggsPage() {
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Egg className="w-6 h-6 text-primary-400" />
+          <Egg className="w-6 h-6 text-accent-400" />
           <h1 className="text-2xl font-bold text-drama-text">彩蛋图鉴</h1>
         </div>
-        <div className="px-4 py-2 bg-drama-card rounded-xl border border-drama-border">
-          <span className="text-primary-400 font-bold text-lg">{collectedEggs}</span>
+        <div className="px-4 py-2 bg-drama-card rounded-lg border border-drama-border">
+          <span className="text-accent-400 font-bold text-lg">{collectedEggs}</span>
           <span className="text-drama-muted">/{totalEggs}</span>
         </div>
       </div>
@@ -137,7 +137,7 @@ export default function EggsPage() {
               <div className="h-6 bg-drama-surface rounded w-32 mb-4" />
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {Array.from({ length: 4 }).map((_, j) => (
-                  <div key={j} className="h-32 bg-drama-card rounded-xl" />
+                  <div key={j} className="h-32 bg-drama-card rounded-lg" />
                 ))}
               </div>
             </div>
@@ -157,7 +157,7 @@ export default function EggsPage() {
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-medium text-drama-text">{group.dramaTitle}</h2>
                   <span className="text-sm text-drama-muted">
-                    <span className="text-primary-400 font-medium">{groupCollected}</span>
+                    <span className="text-accent-400 font-medium">{groupCollected}</span>
                     /{group.eggs.length}
                   </span>
                 </div>
@@ -166,7 +166,7 @@ export default function EggsPage() {
                     egg.collected ? (
                       <div
                         key={egg.id}
-                        className={`relative rounded-xl p-4 bg-gradient-to-br ${getEggColor(groupIndex + eggIndex)} bg-opacity-20 border border-white/10 overflow-hidden`}
+                        className={`relative rounded-lg p-4 bg-gradient-to-br ${getEggColor(groupIndex + eggIndex)} bg-opacity-20 border border-white/10 overflow-hidden`}
                       >
                         <div className="absolute inset-0 bg-black/20" />
                         <div className="relative">
@@ -184,7 +184,7 @@ export default function EggsPage() {
                     ) : (
                       <div
                         key={egg.id}
-                        className="rounded-xl p-4 bg-drama-card border border-drama-border/50 flex flex-col items-center justify-center min-h-[120px]"
+                        className="rounded-lg p-4 bg-drama-card border border-drama-border/50 flex flex-col items-center justify-center min-h-[120px]"
                       >
                         <Lock className="w-6 h-6 text-drama-muted mb-2" />
                         <p className="text-drama-muted text-sm font-medium">???</p>

@@ -158,7 +158,7 @@ export default function DramaDetailPage() {
           alt={drama.title}
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-drama-bg via-drama-bg/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-drama-card via-drama-card/50 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8">
           <span className="inline-block px-2 py-0.5 text-xs bg-primary-500/80 text-white rounded mb-2">
             {drama.category}
@@ -185,7 +185,7 @@ export default function DramaDetailPage() {
         <div className="flex items-center gap-3">
           <Link
             href={`/drama/${drama.id}/play`}
-            className="flex-1 flex items-center justify-center gap-2 py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-xl font-medium transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-full font-medium transition-colors"
           >
             <Play className="w-5 h-5 fill-white" />
             立即播放
@@ -193,30 +193,30 @@ export default function DramaDetailPage() {
           <button
             onClick={handleFavorite}
             className={cn(
-              'flex items-center justify-center gap-1.5 px-5 py-3 rounded-xl border transition-colors',
+              'flex items-center justify-center gap-1.5 px-5 py-3 rounded-full border transition-colors',
               isFavorited
-                ? 'border-primary-400/50 text-primary-400 bg-primary-500/10'
-                : 'border-drama-border text-drama-muted hover:text-primary-400 hover:border-primary-400/50'
+                ? 'border-accent-400/50 text-accent-400 bg-accent-500/10'
+                : 'border-drama-border text-drama-muted hover:text-accent-400 hover:border-accent-400/50'
             )}
           >
-            <Heart className={cn('w-5 h-5', isFavorited && 'fill-primary-400')} />
+            <Heart className={cn('w-5 h-5', isFavorited && 'fill-accent-400')} />
             <span className="text-sm">{isFavorited ? '已追' : '追剧'}</span>
           </button>
           <button
             onClick={handleShare}
-            className="flex items-center justify-center gap-1.5 px-5 py-3 rounded-xl border border-drama-border text-drama-muted hover:text-drama-text hover:border-drama-text/30 transition-colors"
+            className="flex items-center justify-center gap-1.5 px-5 py-3 rounded-full border border-drama-border text-drama-muted hover:text-drama-text hover:border-drama-text/30 transition-colors"
           >
             <Share2 className="w-5 h-5" />
             <span className="text-sm">分享</span>
           </button>
         </div>
 
-        <div className="bg-drama-card rounded-xl p-4">
+        <div className="bg-drama-card rounded-lg p-4">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-drama-text">简介</h3>
             <button
               onClick={() => setDescExpanded(!descExpanded)}
-              className="text-xs text-primary-400 flex items-center gap-0.5"
+              className="text-xs text-primary-500 flex items-center gap-0.5"
             >
               {descExpanded ? '收起' : '展开'}
               {descExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
@@ -234,7 +234,7 @@ export default function DramaDetailPage() {
 
         <RatingInput dramaId={drama.id} />
 
-        <div className="bg-drama-card rounded-xl p-4">
+        <div className="bg-drama-card rounded-lg p-4">
           <h3 className="text-sm font-medium text-drama-text mb-3">选集</h3>
           <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
             {episodes.map((ep) => (
@@ -242,7 +242,7 @@ export default function DramaDetailPage() {
                 key={ep}
                 href={`/drama/${drama.id}/play?ep=${ep}`}
                 className={cn(
-                  'flex items-center justify-center py-2 rounded-lg text-sm transition-colors',
+                  'flex items-center justify-center py-2 rounded text-sm transition-colors',
                   ep === currentEp
                     ? 'bg-primary-500 text-white font-medium'
                     : 'bg-drama-surface text-drama-muted hover:text-drama-text hover:bg-drama-surface/80'
@@ -308,7 +308,7 @@ function CommentSection({
   onSortChange,
 }: CommentSectionProps) {
   return (
-    <div className="bg-drama-card rounded-xl p-4">
+    <div className="bg-drama-card rounded-lg p-4">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-medium text-drama-text flex items-center gap-1.5">
           <MessageCircle className="w-4 h-4" />
@@ -319,7 +319,7 @@ function CommentSection({
             onClick={() => onSortChange('hot')}
             className={cn(
               'px-2.5 py-1 text-xs rounded transition-colors',
-              sort === 'hot' ? 'bg-drama-card text-primary-400' : 'text-drama-muted hover:text-drama-text'
+              sort === 'hot' ? 'bg-drama-card text-primary-500' : 'text-drama-muted hover:text-drama-text'
             )}
           >
             最热
@@ -328,7 +328,7 @@ function CommentSection({
             onClick={() => onSortChange('newest')}
             className={cn(
               'px-2.5 py-1 text-xs rounded transition-colors',
-              sort === 'newest' ? 'bg-drama-card text-primary-400' : 'text-drama-muted hover:text-drama-text'
+              sort === 'newest' ? 'bg-drama-card text-primary-500' : 'text-drama-muted hover:text-drama-text'
             )}
           >
             最新
@@ -344,7 +344,7 @@ function CommentSection({
           onKeyDown={(e) => e.key === 'Enter' && onSubmit()}
           placeholder={isLoggedInProp ? '说点什么...' : '登录后评论'}
           disabled={!isLoggedInProp}
-          className="flex-1 bg-drama-surface border border-drama-border rounded-lg px-3 py-2 text-sm text-drama-text placeholder:text-drama-muted outline-none focus:border-primary-400/50 transition-colors disabled:opacity-50"
+          className="flex-1 bg-drama-surface border border-drama-border rounded-lg px-3 py-2 text-sm text-drama-text placeholder:text-drama-muted outline-none focus:border-primary-500 transition-colors disabled:opacity-50"
         />
         <button
           onClick={() => {
@@ -354,7 +354,7 @@ function CommentSection({
             onSubmit();
           }}
           disabled={submitting || !commentText.trim()}
-          className="px-4 py-2 bg-primary-500 hover:bg-primary-600 disabled:bg-drama-surface disabled:text-drama-muted text-white text-sm rounded-lg transition-colors flex items-center gap-1"
+          className="px-4 py-2 bg-primary-500 hover:bg-primary-600 disabled:bg-drama-surface disabled:text-drama-muted text-white text-sm rounded-full transition-colors flex items-center gap-1"
         >
           <Send className="w-3.5 h-3.5" />
           发送
@@ -381,7 +381,7 @@ function CommentSection({
                   onClick={() => onLike(comment.id)}
                   className={cn(
                     'flex items-center gap-1 text-xs transition-colors',
-                    comment.isLiked ? 'text-primary-400' : 'text-drama-muted hover:text-primary-400'
+                    comment.isLiked ? 'text-accent-400' : 'text-drama-muted hover:text-accent-400'
                   )}
                 >
                   <ThumbsUp className="w-3 h-3" />
@@ -405,9 +405,9 @@ function DramaDetailSkeleton() {
       <div className="h-[50vh] bg-drama-card" />
       <div className="max-w-4xl mx-auto px-4 -mt-4 relative z-10 space-y-6">
         <div className="flex gap-3">
-          <div className="flex-1 h-12 bg-drama-card rounded-xl" />
-          <div className="w-20 h-12 bg-drama-card rounded-xl" />
-          <div className="w-20 h-12 bg-drama-card rounded-xl" />
+          <div className="flex-1 h-12 bg-drama-card rounded-lg" />
+          <div className="w-20 h-12 bg-drama-card rounded-lg" />
+          <div className="w-20 h-12 bg-drama-card rounded-lg" />
         </div>
         <div className="bg-drama-card rounded-xl p-4 space-y-2">
           <div className="h-4 w-12 bg-drama-surface rounded" />

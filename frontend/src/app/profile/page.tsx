@@ -57,7 +57,7 @@ export default function ProfilePage() {
   if (!mounted) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-6">
-        <div className="animate-pulse bg-drama-card rounded-2xl h-48 mb-6" />
+        <div className="animate-pulse bg-drama-card rounded-lg h-48 mb-6" />
       </div>
     );
   }
@@ -90,7 +90,7 @@ export default function ProfilePage() {
       icon: Egg,
       label: '彩蛋图鉴',
       href: '/eggs',
-      color: 'text-primary-400',
+      color: 'text-accent-400',
     },
     {
       icon: Clock,
@@ -103,19 +103,19 @@ export default function ProfilePage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
       {loading ? (
-        <div className="animate-pulse bg-drama-card rounded-2xl h-48" />
+        <div className="animate-pulse bg-drama-card rounded-lg h-48" />
       ) : (
-        <div className="bg-drama-card rounded-2xl p-6 border border-drama-border/50">
+        <div className="bg-drama-card rounded-lg p-6 border border-drama-border/50">
           <div className="flex items-center gap-4">
             {user?.avatarUrl ? (
               <img
                 src={user.avatarUrl}
                 alt={user.nickname}
-                className="w-16 h-16 rounded-full object-cover border-2 border-primary-500/30"
+                className="w-16 h-16 rounded-full object-cover border-2 border-primary-500/20"
               />
             ) : (
-              <div className="w-16 h-16 rounded-full bg-primary-500/20 flex items-center justify-center border-2 border-primary-500/30">
-                <User className="w-8 h-8 text-primary-400" />
+              <div className="w-16 h-16 rounded-full bg-primary-500/10 flex items-center justify-center border-2 border-primary-500/20">
+                <User className="w-8 h-8 text-primary-500" />
               </div>
             )}
             <div className="flex-1 min-w-0">
@@ -138,7 +138,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      <div className="bg-drama-card rounded-2xl border border-drama-border/50 overflow-hidden">
+      <div className="bg-drama-card rounded-lg border border-drama-border/50 overflow-hidden">
         {menuItems.map((item, index) => (
           <Link
             key={item.href}
@@ -163,7 +163,7 @@ export default function ProfilePage() {
 
       <button
         onClick={handleLogout}
-        className="w-full py-3 bg-drama-card border border-drama-border/50 rounded-2xl text-red-400 font-medium hover:bg-red-500/10 hover:border-red-500/20 transition-all flex items-center justify-center gap-2"
+        className="w-full py-3 bg-drama-card border border-drama-border/50 rounded-lg text-red-400 font-medium hover:bg-red-500/10 hover:border-red-500/20 transition-all flex items-center justify-center gap-2"
       >
         <LogOut className="w-4 h-4" />
         退出登录

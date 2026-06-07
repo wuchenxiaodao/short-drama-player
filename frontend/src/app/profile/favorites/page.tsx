@@ -42,15 +42,15 @@ export default function FavoritesPage() {
         <h1 className="text-xl font-bold text-drama-text">我的追剧</h1>
       </div>
       {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-xl bg-drama-card animate-pulse aspect-video" />
+            <div key={i} className="rounded-lg bg-drama-card animate-pulse aspect-video" />
           ))}
         </div>
       ) : dramas.length === 0 ? (
         <div className="text-center py-20 text-drama-muted">还没有追剧记录</div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {dramas.map((d) => <DramaCard key={d.id} drama={d} />)}
         </div>
       )}

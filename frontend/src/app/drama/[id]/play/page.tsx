@@ -298,10 +298,10 @@ export default function PlayPage() {
                 key={ep}
                 href={`/drama/${dramaId}/play?ep=${ep}`}
                 className={cn(
-                  'flex-shrink-0 px-4 py-2 rounded-lg text-sm transition-colors',
+                  'flex-shrink-0 px-4 py-2 rounded text-sm transition-colors',
                   ep === episodeNumber
                     ? 'bg-primary-500 text-white font-medium'
-                    : 'bg-drama-card text-drama-muted hover:text-drama-text hover:bg-drama-surface'
+                    : 'bg-drama-surface text-drama-muted hover:text-drama-text hover:bg-drama-surface/80'
                 )}
               >
                 {ep}
@@ -310,7 +310,7 @@ export default function PlayPage() {
           </div>
         </div>
 
-        <div className="bg-drama-card rounded-xl p-4">
+        <div className="bg-drama-card rounded-lg p-4">
           <h3 className="text-sm font-medium text-drama-text mb-3 flex items-center gap-1.5">
             <MessageCircle className="w-4 h-4" />
             热门评论
@@ -325,12 +325,12 @@ export default function PlayPage() {
               placeholder={isLoggedIn ? '说点什么...' : '登录后评论'}
               disabled={!isLoggedIn}
               onClick={() => { if (!isLoggedIn) router.push('/login'); }}
-              className="flex-1 bg-drama-surface border border-drama-border rounded-lg px-3 py-2 text-sm text-drama-text placeholder:text-drama-muted outline-none focus:border-primary-400/50 transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-pointer"
+              className="flex-1 bg-drama-surface border border-drama-border rounded-lg px-3 py-2 text-sm text-drama-text placeholder:text-drama-muted outline-none focus:border-primary-500 transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-pointer"
             />
             <button
               onClick={handleCommentSubmit}
               disabled={submitting || !commentText.trim()}
-              className="px-4 py-2 bg-primary-500 hover:bg-primary-600 disabled:bg-drama-surface disabled:text-drama-muted text-white text-sm rounded-lg transition-colors flex items-center gap-1"
+              className="px-4 py-2 bg-primary-500 hover:bg-primary-600 disabled:bg-drama-surface disabled:text-drama-muted text-white text-sm rounded-full transition-colors flex items-center gap-1"
             >
               <Send className="w-3.5 h-3.5" />
             </button>
@@ -355,7 +355,7 @@ export default function PlayPage() {
                     onClick={() => handleCommentLike(comment.id)}
                     className={cn(
                       'flex items-center gap-1 text-xs mt-1 transition-colors',
-                      comment.isLiked ? 'text-primary-400' : 'text-drama-muted hover:text-primary-400'
+                      comment.isLiked ? 'text-accent-400' : 'text-drama-muted hover:text-accent-400'
                     )}
                   >
                     <ThumbsUp className="w-3 h-3" />
@@ -368,20 +368,20 @@ export default function PlayPage() {
 
           <Link
             href={`/drama/${dramaId}`}
-            className="flex items-center justify-center gap-1 text-xs text-primary-400 hover:text-primary-300 mt-3 pt-2 border-t border-drama-border/50 transition-colors"
+            className="flex items-center justify-center gap-1 text-xs text-accent-400 hover:text-primary-300 mt-3 pt-2 border-t border-drama-border/50 transition-colors"
           >
             查看全部评论
             <ChevronRight className="w-3 h-3" />
           </Link>
         </div>
 
-        <div className="bg-drama-card rounded-xl p-4">
+        <div className="bg-drama-card rounded-lg p-4">
           <button
             onClick={() => setShowAiPanel(!showAiPanel)}
             className="w-full flex items-center justify-between"
           >
             <h3 className="text-sm font-medium text-drama-text flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-primary-400" />
+              <Sparkles className="w-4 h-4 text-accent-400" />
               AI剧情生成
             </h3>
             <ChevronRight className={cn('w-4 h-4 text-drama-muted transition-transform', showAiPanel && 'rotate-90')} />
@@ -394,13 +394,13 @@ export default function PlayPage() {
                 value={aiPrompt}
                 onChange={(e) => setAiPrompt(e.target.value)}
                 placeholder="输入你想要的剧情方向..."
-                className="w-full bg-drama-surface border border-drama-border rounded-lg px-3 py-2 text-sm text-drama-text placeholder:text-drama-muted outline-none focus:border-primary-400/50 transition-colors"
+                className="w-full bg-drama-surface border border-drama-border rounded-lg px-3 py-2 text-sm text-drama-text placeholder:text-drama-muted outline-none focus:border-primary-500 transition-colors"
               />
               <div className="flex gap-2">
                 <button
                   onClick={() => handleAIGenerate('branch')}
                   disabled={aiLoading || !isLoggedIn}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-primary-500 hover:bg-primary-600 disabled:bg-drama-surface disabled:text-drama-muted text-white text-sm rounded-lg transition-colors"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-primary-500 hover:bg-primary-600 disabled:bg-drama-surface disabled:text-drama-muted text-white text-sm rounded-full transition-colors"
                 >
                   <Wand2 className="w-3.5 h-3.5" />
                   {aiLoading ? '生成中...' : '生成分支'}
@@ -450,7 +450,7 @@ function PlayPageSkeleton() {
             ))}
           </div>
         </div>
-        <div className="bg-drama-card rounded-xl p-4 space-y-3">
+        <div className="bg-drama-card rounded-lg p-4 space-y-3">
           <div className="h-4 w-20 bg-drama-surface rounded" />
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="flex gap-3">
