@@ -31,7 +31,7 @@ export default function Banner({ dramas }: BannerProps) {
 
   if (dramas.length === 0) {
     return (
-      <div className="w-full h-[200px] md:h-[300px] bg-drama-card rounded-xl flex items-center justify-center text-drama-muted">
+      <div className="w-full h-[200px] md:h-[300px] bg-drama-card rounded-lg flex items-center justify-center text-drama-muted">
         暂无推荐
       </div>
     );
@@ -41,7 +41,7 @@ export default function Banner({ dramas }: BannerProps) {
 
   return (
     <div
-      className="relative w-full h-[200px] md:h-[300px] rounded-xl overflow-hidden group cursor-pointer"
+      className="relative w-full h-[200px] md:h-[300px] rounded-lg overflow-hidden group cursor-pointer"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onClick={() => router.push(`/drama/${drama.id}`)}
@@ -52,9 +52,9 @@ export default function Banner({ dramas }: BannerProps) {
         className="w-full h-full object-cover transition-all duration-700"
         key={drama.id}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-drama-bg via-drama-bg/30 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-drama-card via-drama-card/30 to-transparent" />
       <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
-        <span className="inline-block px-2 py-0.5 text-xs bg-primary-500/80 text-white rounded mb-2">
+        <span className="inline-block px-2 py-0.5 text-xs bg-accent-500/80 text-white rounded mb-2">
           {drama.category}
         </span>
         <h2 className="text-lg md:text-2xl font-bold text-white drop-shadow-lg">
@@ -66,13 +66,13 @@ export default function Banner({ dramas }: BannerProps) {
         <>
           <button
             onClick={prev}
-            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/30 hover:bg-black/50 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
           <button
             onClick={next}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/30 hover:bg-black/50 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
           >
             <ChevronRight className="w-5 h-5" />
           </button>
@@ -83,7 +83,7 @@ export default function Banner({ dramas }: BannerProps) {
                 onClick={() => setCurrent(i)}
                 className={`h-2 rounded-full transition-all ${
                   i === current
-                    ? 'bg-primary-400 w-4'
+                    ? 'bg-primary-500 w-4'
                     : 'bg-white/40 hover:bg-white/60 w-2'
                 }`}
               />

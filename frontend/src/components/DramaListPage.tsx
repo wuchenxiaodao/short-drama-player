@@ -126,7 +126,7 @@ export default function DramaListPage() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="w-8 h-8 rounded-full bg-primary-500/90 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-full bg-accent-500/90 flex items-center justify-center">
                       <Play className="w-4 h-4 text-white fill-white" />
                     </div>
                   </div>
@@ -144,27 +144,30 @@ export default function DramaListPage() {
       )}
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hidden">
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-hidden border-b border-drama-border/30">
           {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setCategory(cat)}
-              className={`px-4 py-1.5 text-sm rounded-full whitespace-nowrap transition-colors ${
+              className={`px-4 py-2 text-sm whitespace-nowrap transition-colors relative ${
                 category === cat
-                  ? 'bg-primary-500 text-white'
-                  : 'bg-drama-card text-drama-muted hover:text-drama-text'
+                  ? 'text-primary-500 font-medium'
+                  : 'text-drama-muted hover:text-drama-text'
               }`}
             >
               {cat}
+              {category === cat && (
+                <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary-500 rounded-full" />
+              )}
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-1 bg-drama-card rounded-lg p-1">
+        <div className="flex items-center gap-1 bg-drama-surface rounded-lg p-1">
           <button
             onClick={() => setSort('hot')}
             className={`flex items-center gap-1 px-3 py-1 text-sm rounded transition-colors ${
               sort === 'hot'
-                ? 'bg-drama-surface text-primary-400'
+                ? 'bg-drama-card text-primary-500'
                 : 'text-drama-muted hover:text-drama-text'
             }`}
           >
@@ -175,7 +178,7 @@ export default function DramaListPage() {
             onClick={() => setSort('new')}
             className={`flex items-center gap-1 px-3 py-1 text-sm rounded transition-colors ${
               sort === 'new'
-                ? 'bg-drama-surface text-primary-400'
+                ? 'bg-drama-card text-primary-500'
                 : 'text-drama-muted hover:text-drama-text'
             }`}
           >
@@ -186,9 +189,9 @@ export default function DramaListPage() {
       </div>
 
       {initialLoading ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="rounded-xl bg-drama-card animate-pulse">
+            <div key={i} className="rounded-lg bg-drama-card animate-pulse">
               <div className="aspect-video" />
               <div className="p-3 space-y-2">
                 <div className="h-4 bg-drama-surface rounded w-3/4" />
@@ -203,7 +206,7 @@ export default function DramaListPage() {
           <div ref={observerRef} className="h-10" />
           {loading && (
             <div className="flex justify-center py-4">
-              <div className="w-6 h-6 border-2 border-primary-400 border-t-transparent rounded-full animate-spin" />
+              <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
             </div>
           )}
           {!hasMore && dramas.length > 0 && (

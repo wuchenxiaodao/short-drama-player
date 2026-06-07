@@ -2,22 +2,23 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Menu, X, User, LogOut, ChevronDown } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Menu, X, User, LogOut, ChevronDown, Search } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth';
 
 const navLinks = [
-  { href: '/', label: '首页' },
-  { href: '/search', label: '搜索' },
+  { href: '/?list=true', label: '首页' },
   { href: '/eggs', label: '彩蛋图鉴' },
 ];
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const { isLoggedIn, user, logout } = useAuthStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -43,34 +44,44 @@ export default function Header() {
     setUserMenuOpen(false);
   }
 
+  function handleSearch(e?: React.FormEvent) {
+    e?.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+    }
+  }
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-drama-bg/80 backdrop-blur-lg border-b border-drama-border/50">
-      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-8">
-          <Link
-            href="/"
-            className="text-xl font-bold bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent"
-          >
-            短剧TV
-          </Link>
-          <nav className="hidden md:flex items-center gap-6">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`text-sm transition-colors ${
-                  pathname === link.href
-                    ? 'text-primary-400 font-medium'
-                    : 'text-drama-muted hover:text-drama-text'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-        </div>
+      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-4">
+        <Link href="/" className="text-xl font-bold text-primary-500 flex-shrink-0">
+          短剧TV
+        </Link>
 
-        <div className="flex items-center gap-4">
+        <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-auto">
+          <div className="relative w-full">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="搜索短剧..."
+              className="w-full h-9 pl-4 pr-10 rounded-full bg-drama-surface border border-drama-border text-sm text-drama-text placeholder-drama-muted outline-none transition-colors focus:border-primary-500"
+            />
+            <button
+              type="submit"
+              className="absolute right-1 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center text-drama-muted hover:text-primary-500 transition-colors"
+            >
+              <Search className="w-4 h-4" />
+            </button>
+          </div>
+        </form>
+
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <Link href="/search" className="md:hidden text-drama-muted hover:text-drama-text">
+            <Search className="w-5 h-5" />
+          </Link>
+
           {mounted && (
             <>
               {isLoggedIn ? (
@@ -86,8 +97,8 @@ export default function Header() {
                         className="w-8 h-8 rounded-full object-cover"
                       />
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-primary-500/20 flex items-center justify-center">
-                        <User className="w-4 h-4 text-primary-400" />
+                      <div className="w-8 h-8 rounded-full bg-primary-500/10 flex items-center justify-center">
+                        <User className="w-4 h-4 text-primary-500" />
                       </div>
                     )}
                     <ChevronDown
@@ -135,6 +146,34 @@ export default function Header() {
         </div>
       </div>
 
+      <div className="hidden md:block border-t border-drama-border/30">
+        <div className="max-w-7xl mx-auto px-4">
+          <nav className="flex items-center gap-6 h-10">
+            {navLinks.map((link) => {
+              const isActive = link.href === '/?list=true'
+                ? pathname === '/' && typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('list')
+                : pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`text-sm whitespace-nowrap transition-colors relative h-full flex items-center ${
+                    isActive
+                      ? 'text-primary-500 font-medium'
+                      : 'text-drama-muted hover:text-drama-text'
+                  }`}
+                >
+                  {link.label}
+                  {isActive && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-500 rounded-full" />
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+      </div>
+
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-drama-border/50 bg-drama-bg/95 backdrop-blur-lg">
           <nav className="px-4 py-3 space-y-1">
@@ -144,7 +183,7 @@ export default function Header() {
                 href={link.href}
                 className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
                   pathname === link.href
-                    ? 'text-primary-400 bg-primary-500/10 font-medium'
+                    ? 'text-primary-500 bg-primary-500/10 font-medium'
                     : 'text-drama-muted hover:text-drama-text hover:bg-drama-surface'
                 }`}
               >
@@ -154,7 +193,7 @@ export default function Header() {
             {mounted && !isLoggedIn && (
               <Link
                 href="/login"
-                className="block px-3 py-2 rounded-lg text-sm text-primary-400 hover:bg-drama-surface transition-colors"
+                className="block px-3 py-2 rounded-lg text-sm text-primary-500 hover:bg-drama-surface transition-colors"
               >
                 登录
               </Link>

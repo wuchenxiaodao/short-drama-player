@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { Flame } from 'lucide-react';
+import { Play } from 'lucide-react';
 import type { Drama } from '@/lib/types';
-import { formatNumber, truncateText } from '@/lib/utils';
+import { formatNumber } from '@/lib/utils';
 import { resolveUrl } from '@/lib/api-client';
 
 interface DramaCardProps {
@@ -21,7 +21,7 @@ export default function DramaCard({ drama }: DramaCardProps) {
 
   return (
     <Link href={`/drama/${drama.id}`} className="block group">
-      <div className="relative rounded-xl overflow-hidden bg-drama-card transition-transform duration-200 group-hover:scale-105 group-hover:shadow-lg group-hover:shadow-primary-500/10">
+      <div className="rounded-lg overflow-hidden bg-drama-card transition-all duration-200 group-hover:scale-[1.02] group-hover:shadow-lg group-hover:shadow-black/20">
         <div className="relative aspect-video">
           <img
             src={resolveUrl(drama.coverUrl)}
@@ -33,21 +33,20 @@ export default function DramaCard({ drama }: DramaCardProps) {
           >
             {badge.text}
           </span>
-          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-drama-card to-transparent" />
+          <span className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 text-[11px] text-white bg-black/70 rounded">
+            {drama.totalEpisodes}集
+          </span>
         </div>
-        <div className="p-3 space-y-1">
+        <div className="p-3 space-y-1.5">
           <h3 className="text-sm font-medium text-drama-text truncate">
             {drama.title}
           </h3>
-          <p className="text-xs text-drama-muted">
-            {drama.category} · {drama.totalEpisodes}集
-          </p>
-          <p className="text-xs text-drama-muted line-clamp-2">
-            {truncateText(drama.description, 50)}
-          </p>
-          <div className="flex items-center gap-1 text-xs text-drama-muted">
-            <Flame className="w-3 h-3 text-orange-400" />
-            <span>{formatNumber(drama.viewCount)}</span>
+          <div className="flex items-center gap-2 text-xs text-drama-muted">
+            <span>{drama.category}</span>
+            <span className="flex items-center gap-0.5">
+              <Play className="w-3 h-3" />
+              {formatNumber(drama.viewCount)}
+            </span>
           </div>
         </div>
       </div>

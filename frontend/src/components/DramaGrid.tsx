@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { LayoutGrid, List, Flame } from 'lucide-react';
+import { LayoutGrid, List, Play } from 'lucide-react';
 import type { Drama } from '@/lib/types';
 import { cn, formatNumber, truncateText } from '@/lib/utils';
 import { resolveUrl } from '@/lib/api-client';
@@ -24,7 +24,7 @@ function DramaListItem({ drama }: { drama: Drama }) {
 
   return (
     <Link href={`/drama/${drama.id}`} className="block group">
-      <div className="flex gap-4 p-3 rounded-xl bg-drama-card hover:bg-drama-surface transition-colors">
+      <div className="flex gap-4 p-3 rounded-lg bg-drama-card hover:bg-drama-surface/80 transition-colors">
         <div className="relative w-32 md:w-40 flex-shrink-0 aspect-video rounded-lg overflow-hidden">
           <img
             src={resolveUrl(drama.coverUrl)}
@@ -48,7 +48,7 @@ function DramaListItem({ drama }: { drama: Drama }) {
             {truncateText(drama.description, 80)}
           </p>
           <div className="flex items-center gap-1 text-xs text-drama-muted">
-            <Flame className="w-3 h-3 text-orange-400" />
+            <Play className="w-3 h-3" />
             <span>{formatNumber(drama.viewCount)}</span>
           </div>
         </div>
@@ -78,13 +78,13 @@ export default function DramaGrid({ dramas, loading }: DramaGridProps) {
   return (
     <div>
       <div className="flex justify-end mb-4">
-        <div className="flex items-center gap-1 bg-drama-card rounded-lg p-1">
+        <div className="flex items-center gap-1 bg-drama-surface rounded-lg p-1">
           <button
             onClick={() => setLayout('grid')}
             className={cn(
               'p-1.5 rounded transition-colors',
               layout === 'grid'
-                ? 'bg-drama-surface text-primary-400'
+                ? 'bg-drama-card text-primary-500'
                 : 'text-drama-muted hover:text-drama-text'
             )}
           >
@@ -95,7 +95,7 @@ export default function DramaGrid({ dramas, loading }: DramaGridProps) {
             className={cn(
               'p-1.5 rounded transition-colors',
               layout === 'list'
-                ? 'bg-drama-surface text-primary-400'
+                ? 'bg-drama-card text-primary-500'
                 : 'text-drama-muted hover:text-drama-text'
             )}
           >
@@ -105,7 +105,7 @@ export default function DramaGrid({ dramas, loading }: DramaGridProps) {
       </div>
 
       {layout === 'grid' ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {dramas.map((drama) => (
             <DramaCard key={drama.id} drama={drama} />
           ))}
