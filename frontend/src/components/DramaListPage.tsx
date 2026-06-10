@@ -3,13 +3,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { Flame, Clock, Play } from 'lucide-react';
-import { getRecommendDramas, getHotDramas, getNewDramas, getDramasByCategory, getContinueWatching, resolveUrl } from '@/lib/api-client';
+import { getRecommendDramas, getHotDramas, getNewDramas, getDramasByCategory, getContinueWatching, getCategories, resolveUrl } from '@/lib/api-client';
 import type { Drama } from '@/lib/types';
 import { useAuthStore } from '@/lib/auth';
 import Banner from '@/components/Banner';
 import DramaGrid from '@/components/DramaGrid';
 
-const categories = ['全部', '都市', '甜宠', '古装', '悬疑'];
+const defaultCategories = ['全部', '都市', '甜宠', '古装', '悬疑'];
 type SortType = 'hot' | 'new';
 
 export default function DramaListPage() {
@@ -21,6 +21,7 @@ export default function DramaListPage() {
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [categories, setCategories] = useState<string[]>(defaultCategories);
   const observerRef = useRef<HTMLDivElement>(null);
 
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
@@ -30,6 +31,14 @@ export default function DramaListPage() {
     getRecommendDramas(0, 5)
       .then((res: any) => setRecommendDramas(res.content || []))
       .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    getCategories().then((cats) => {
+      if (Array.isArray(cats) && cats.length > 0) {
+        setCategories(['全部', ...cats]);
+      }
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {

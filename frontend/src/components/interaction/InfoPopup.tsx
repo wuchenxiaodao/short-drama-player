@@ -2,6 +2,7 @@
 
 import { BookOpen, User, Lightbulb } from 'lucide-react';
 import type { InteractionPoint, InfoCategory } from '@/lib/types';
+import { resolveUrl } from '@/lib/api-client';
 
 interface InfoPopupProps {
   interaction: InteractionPoint;
@@ -33,7 +34,7 @@ export default function InfoPopup({ interaction }: InfoPopupProps) {
 
       {info.imageUrl && (
         <div className="mt-2 rounded-lg overflow-hidden">
-          <img src={info.imageUrl} alt={info.title} className="w-full h-auto object-cover rounded-lg" />
+          <img src={resolveUrl(info.imageUrl)} alt={info.title} className="w-full h-auto object-cover rounded-lg" />
         </div>
       )}
     </div>

@@ -9,10 +9,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 const EMOJI_CONFIG = {
   /** How long a single floating emoji animates (seconds) */
   floatDuration: { min: 3, max: 5 },
-  /** Bottom bar visible duration (ms) */
-  barDurationMs: 5000,
-  /** Bar show/hide transition duration (ms) */
-  barTransitionMs: 300,
   /** Like flash duration (ms) */
   likeFlashMs: 400,
   /** Particle burst duration (ms) */
@@ -45,10 +41,8 @@ interface EmojiRainLayerProps {
   onLikeEmoji?: (emoji: string) => void;
   /** The single emoji to display right now (from danmaku sentiment analysis) */
   currentEmoji?: string;
-  /** Whether the bottom bar should show (controlled by parent: once per episode) */
+  /** Whether the FAB should show (controlled by parent: once per episode) */
   showBar?: boolean;
-  /** Auto-hide bar after this many ms (default from config) */
-  barDurationMs?: number;
 }
 
 /* ------------------------------------------------------------------ */
@@ -95,19 +89,19 @@ export default function EmojiRainLayer({
   onLikeEmoji,
   currentEmoji,
   showBar = true,
-  barDurationMs = EMOJI_CONFIG.barDurationMs,
 }: EmojiRainLayerProps) {
   const [floatingEmojis, setFloatingEmojis] = useState<FloatingEmoji[]>([]);
   const [emojiCounts, setEmojiCounts] = useState<Map<string, number>>(() =>
     loadCounts(episodeId, emojis),
   );
   const [barVisible, setBarVisible] = useState(false);
-  const [barHiding, setBarHiding] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
   const [likedIds, setLikedIds] = useState<Set<number>>(new Set());
   const [likeFlashIds, setLikeFlashIds] = useState<Set<number>>(new Set());
   const [particles, setParticles] = useState<
     { id: number; emoji: string; cx: number; cy: number; dx: number; dy: number }[]
   >([]);
+  const [fabPulse, setFabPulse] = useState(false);
 
   const nextId = useRef(0);
   const particleId = useRef(0);
@@ -115,7 +109,7 @@ export default function EmojiRainLayer({
   const removeTimers = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
   const flashTimers = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
   const particleTimers = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
-  const barShownOnce = useRef(false);
+  const panelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ---- Spawn a single floating emoji ----
   const spawnEmoji = useCallback(
@@ -153,26 +147,39 @@ export default function EmojiRainLayer({
     spawnEmoji(currentEmoji);
   }, [currentEmoji, spawnEmoji]);
 
-  // ---- Show bottom bar once, auto-hide after barDurationMs ----
+  // ---- Show FAB when first emoji appears ----
   useEffect(() => {
-    if (!showBar || barShownOnce.current) return;
-    barShownOnce.current = true;
+    if (!showBar || barVisible) return;
     setBarVisible(true);
+  }, [showBar, barVisible]);
 
-    barTimer.current = setTimeout(() => {
-      setBarHiding(true);
-      setTimeout(() => setBarVisible(false), EMOJI_CONFIG.barTransitionMs);
-    }, barDurationMs);
+  // ---- Pulse FAB when new emoji spawns ----
+  useEffect(() => {
+    if (!currentEmoji) return;
+    setFabPulse(true);
+    const t = setTimeout(() => setFabPulse(false), 600);
+    return () => clearTimeout(t);
+  }, [currentEmoji]);
 
-    return () => {
-      if (barTimer.current) clearTimeout(barTimer.current);
-    };
-  }, [showBar, barDurationMs]);
+  // ---- Auto-close panel after inactivity ----
+  const resetPanelTimer = useCallback(() => {
+    if (panelTimer.current) clearTimeout(panelTimer.current);
+    panelTimer.current = setTimeout(() => setPanelOpen(false), 4000);
+  }, []);
+
+  const togglePanel = useCallback(() => {
+    setPanelOpen(prev => {
+      const next = !prev;
+      if (next) resetPanelTimer();
+      return next;
+    });
+  }, [resetPanelTimer]);
 
   // ---- Cleanup on unmount ----
   useEffect(() => {
     return () => {
       if (barTimer.current) clearTimeout(barTimer.current);
+      if (panelTimer.current) clearTimeout(panelTimer.current);
       removeTimers.current.forEach(t => clearTimeout(t));
       flashTimers.current.forEach(t => clearTimeout(t));
       particleTimers.current.forEach(t => clearTimeout(t));
@@ -236,11 +243,13 @@ export default function EmojiRainLayer({
     [likedIds, episodeId, onLikeEmoji],
   );
 
-  // ---- Send emoji from bar ----
+  // ---- Send emoji from panel ----
   const handleSend = useCallback(
     (emoji: string) => {
       spawnEmoji(emoji);
       onSendEmoji?.(emoji);
+      setPanelOpen(false);
+      if (panelTimer.current) clearTimeout(panelTimer.current);
     },
     [spawnEmoji, onSendEmoji],
   );
@@ -301,30 +310,55 @@ export default function EmojiRainLayer({
         </div>
       ))}
 
-      {/* Bottom quick button bar — shows once per episode */}
+      {/* FAB 浮动按钮 — 始终显示，点击展开 emoji 面板 */}
       {barVisible && (
-        <div
-          style={{
-            ...styles.bar,
-            animation: barHiding
-              ? `emojiRainSlideDown ${EMOJI_CONFIG.barTransitionMs / 1000}s ease forwards`
-              : `emojiRainSlideUp ${EMOJI_CONFIG.barTransitionMs / 1000}s ease forwards`,
-          }}
-        >
-          {emojis.map((emoji, i) => (
-            <button
-              key={i}
-              onClick={() => handleSend(emoji)}
-              onContextMenu={e => e.preventDefault()}
-              style={styles.barBtn}
-            >
-              <span style={styles.barBtnEmoji}>{emoji}</span>
-              <span style={styles.barBtnCount}>
-                {emojiCounts.get(emoji) ?? 0}
-              </span>
-            </button>
-          ))}
-        </div>
+        <>
+          {/* 半透明遮罩（面板打开时） */}
+          {panelOpen && (
+            <div
+              style={styles.overlay}
+              onClick={() => setPanelOpen(false)}
+            />
+          )}
+
+          {/* Emoji 选择面板 */}
+          <div
+            style={{
+              ...styles.panel,
+              opacity: panelOpen ? 1 : 0,
+              transform: panelOpen ? 'translateX(-50%) translateY(0) scale(1)' : 'translateX(-50%) translateY(8px) scale(0.9)',
+              pointerEvents: panelOpen ? 'auto' : 'none',
+            }}
+          >
+            {emojis.map((emoji, i) => (
+              <button
+                key={i}
+                onClick={() => handleSend(emoji)}
+                onContextMenu={e => e.preventDefault()}
+                style={styles.panelBtn}
+              >
+                <span style={styles.panelBtnEmoji}>{emoji}</span>
+                <span style={styles.panelBtnCount}>
+                  {emojiCounts.get(emoji) ?? 0}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* FAB 按钮 */}
+          <button
+            onClick={togglePanel}
+            style={{
+              ...styles.fab,
+              animation: fabPulse ? 'emojiFabPulse 0.6s ease' : undefined,
+              background: panelOpen ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.45)',
+            }}
+          >
+            <span style={{ fontSize: '22px', lineHeight: 1 }}>
+              {panelOpen ? '✕' : emojis[0] || '🔥'}
+            </span>
+          </button>
+        </>
       )}
 
       <style dangerouslySetInnerHTML={{ __html: keyframesCSS }} />
@@ -360,43 +394,72 @@ const styles: Record<string, React.CSSProperties> = {
     zIndex: 12,
     lineHeight: 1,
   },
-  bar: {
+  overlay: {
     position: 'absolute',
-    bottom: '60px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    display: 'flex',
-    gap: '8px',
-    padding: '8px 16px',
-    background: 'rgba(0, 0, 0, 0.5)',
-    backdropFilter: 'blur(8px)',
-    WebkitBackdropFilter: 'blur(8px)',
-    borderRadius: '24px',
-    zIndex: 12,
+    inset: 0,
+    background: 'rgba(0,0,0,0.15)',
+    zIndex: 13,
     pointerEvents: 'auto',
   },
-  barBtn: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'center',
-    background: 'rgba(255, 255, 255, 0.1)',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
-    borderRadius: '16px',
-    padding: '6px 12px',
+  fab: {
+    position: 'absolute',
+    bottom: '72px',
+    right: '12px',
+    width: '44px',
+    height: '44px',
+    borderRadius: '50%',
+    border: 'none',
+    backdropFilter: 'blur(8px)',
+    WebkitBackdropFilter: 'blur(8px)',
     color: '#fff',
     cursor: 'pointer',
-    transition: 'all 0.2s ease',
+    zIndex: 15,
+    pointerEvents: 'auto',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'background 0.2s ease, transform 0.15s ease',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+  },
+  panel: {
+    position: 'absolute',
+    bottom: '124px',
+    right: '12px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '6px',
+    padding: '10px 8px',
+    background: 'rgba(0, 0, 0, 0.6)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    borderRadius: '20px',
+    zIndex: 14,
+    pointerEvents: 'auto',
+    transition: 'opacity 0.25s ease, transform 0.25s ease',
+    boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
+  },
+  panelBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    background: 'rgba(255, 255, 255, 0.08)',
+    border: 'none',
+    borderRadius: '14px',
+    padding: '6px 14px 6px 10px',
+    color: '#fff',
+    cursor: 'pointer',
+    transition: 'background 0.15s ease, transform 0.1s ease',
     touchAction: 'none',
   },
-  barBtnEmoji: {
-    fontSize: '24px',
+  panelBtnEmoji: {
+    fontSize: '22px',
     lineHeight: 1,
   },
-  barBtnCount: {
-    fontSize: '11px',
-    color: 'rgba(255, 255, 255, 0.7)',
-    marginTop: '2px',
-    transition: 'transform 0.2s ease',
+  panelBtnCount: {
+    fontSize: '12px',
+    color: 'rgba(255, 255, 255, 0.6)',
+    minWidth: '16px',
+    textAlign: 'center' as const,
   },
 };
 
@@ -436,25 +499,9 @@ const keyframesCSS = `
   }
 }
 
-@keyframes emojiRainSlideUp {
-  from {
-    transform: translateX(-50%) translateY(20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(-50%) translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes emojiRainSlideDown {
-  from {
-    transform: translateX(-50%) translateY(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateX(-50%) translateY(20px);
-    opacity: 0;
-  }
+@keyframes emojiFabPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+  100% { transform: scale(1); }
 }
 `;

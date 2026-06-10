@@ -7,20 +7,33 @@ interface EggPopupProps {
     id: number;
     questionText: string;
     hint: string;
+    points?: number;
   };
+  onClose?: () => void;
 }
 
-export default function EggPopup({ interaction }: EggPopupProps) {
+export default function EggPopup({ interaction, onClose }: EggPopupProps) {
   const [showPoints, setShowPoints] = useState(false);
+  const points = interaction.points ?? 5;
 
   useEffect(() => {
     const pointsTimer = setTimeout(() => setShowPoints(true), 400);
-    return () => clearTimeout(pointsTimer);
-  }, []);
+    const closeTimer = setTimeout(() => onClose?.(), 3000);
+    return () => {
+      clearTimeout(pointsTimer);
+      clearTimeout(closeTimer);
+    };
+  }, [onClose]);
 
   return (
-    <div className="bg-drama-card/95 backdrop-blur-md border border-primary-400/30 rounded-2xl p-6 text-center mx-2 mb-2 animate-in slide-in-from-bottom duration-300">
+    <div className="bg-drama-card/95 backdrop-blur-md border border-primary-400/30 rounded-2xl p-6 text-center mx-2 mb-2 animate-in slide-in-from-bottom duration-300 relative">
       <EmojiRainEffect />
+      <button
+        onClick={() => onClose?.()}
+        className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/30 hover:bg-black/50 flex items-center justify-center text-white/60 hover:text-white text-xs transition-colors"
+      >
+        ✕
+      </button>
       <div className="text-5xl mb-3">🥚</div>
       <h4 className="text-base font-bold text-drama-text mb-1">发现彩蛋！</h4>
       <p className="text-sm text-drama-muted mb-2">{interaction.questionText || interaction.hint}</p>
@@ -31,7 +44,7 @@ export default function EggPopup({ interaction }: EggPopupProps) {
             animation: 'pointsFloat 1s ease-out forwards',
           }}
         >
-          +5积分
+          +{points}积分
         </div>
       )}
       <style jsx>{`

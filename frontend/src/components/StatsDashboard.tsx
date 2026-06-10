@@ -75,8 +75,8 @@ export default function StatsDashboard({ dramaId }: StatsDashboardProps) {
     async function fetchStats() {
       try {
         const path = dramaId
-          ? `/api/interactions/stats?dramaId=${dramaId}`
-          : '/api/interactions/stats';
+          ? `/api/interaction/stats/drama/${dramaId}`
+          : '/api/interaction/stats/overview';
         const data = await apiGet<InteractionStats>(path);
         setStats(data);
       } catch {

@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, X, TrendingUp } from 'lucide-react';
-import { searchDramas } from '@/lib/api-client';
+import { searchDramas, getHotDramas, resolveUrl } from '@/lib/api-client';
 import type { Drama } from '@/lib/types';
 import DramaGrid from '@/components/DramaGrid';
+import Link from 'next/link';
 
 const HOT_SEARCHES = ['北派寻宝', '天下第一', '十八岁太奶奶'];
 const MAX_HISTORY = 15;
@@ -32,12 +33,24 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [history, setHistory] = useState<string[]>([]);
+  const [hotSearches, setHotSearches] = useState<string[]>(HOT_SEARCHES);
+  const [suggestions, setSuggestions] = useState<Drama[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setHistory(getSearchHistory());
     inputRef.current?.focus();
+    getHotDramas(0, 8)
+      .then((data: any) => {
+        const list = Array.isArray(data) ? data : (data?.content || []);
+        if (list.length > 0) {
+          const titles = list.map((d: any) => d?.title).filter(Boolean) as string[];
+          if (titles.length > 0) setHotSearches(titles);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const doSearch = useCallback(async (kw: string) => {
@@ -63,15 +76,40 @@ export default function SearchPage() {
     if (!keyword.trim()) {
       setResults([]);
       setSearched(false);
+      setSuggestions([]);
+      setShowSuggestions(false);
       return;
     }
+    // 搜索建议（200ms 防抖）
+    const suggestTimer = setTimeout(async () => {
+      try {
+        const data = await searchDramas(keyword.trim());
+        const list = Array.isArray(data) ? data : (data?.content || []);
+        setSuggestions(list.slice(0, 5));
+        setShowSuggestions(true);
+      } catch {}
+    }, 200);
+    // 完整搜索（300ms 防抖）
     timerRef.current = setTimeout(() => {
       doSearch(keyword);
+      setShowSuggestions(false);
     }, 300);
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
+      clearTimeout(suggestTimer);
     };
   }, [keyword, doSearch]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      if (!target.closest('[data-search-box]')) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   function handleSearch(kw: string) {
     const trimmed = kw.trim();
@@ -96,7 +134,7 @@ export default function SearchPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
       <div className="flex gap-3">
-        <div className="flex-1 relative">
+        <div className="flex-1 relative" data-search-box>
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-drama-muted" />
           <input
             ref={inputRef}
@@ -104,6 +142,7 @@ export default function SearchPage() {
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch(keyword)}
+            onFocus={() => { if (suggestions.length > 0 && keyword.trim()) setShowSuggestions(true); }}
             placeholder="搜索短剧名称..."
             className="w-full pl-10 pr-4 py-3 bg-drama-surface border border-drama-border rounded-full text-drama-text placeholder:text-drama-muted focus:outline-none focus:border-primary-500 transition-colors"
           />
@@ -114,6 +153,24 @@ export default function SearchPage() {
             >
               <X className="w-4 h-4" />
             </button>
+          )}
+          {showSuggestions && suggestions.length > 0 && !searched && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-drama-card border border-drama-border rounded-lg shadow-xl z-20 overflow-hidden">
+              {suggestions.map((d) => (
+                <Link
+                  key={d.id}
+                  href={`/drama/${d.id}`}
+                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-drama-surface transition-colors"
+                  onClick={() => { setShowSuggestions(false); saveSearchHistory(d.title); }}
+                >
+                  <img src={resolveUrl(d.coverUrl)} alt="" className="w-10 h-7 rounded object-cover" loading="lazy" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-drama-text truncate">{d.title}</p>
+                    <p className="text-xs text-drama-muted">{d.category} · {d.totalEpisodes}集</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
           )}
         </div>
         <button
@@ -166,7 +223,7 @@ export default function SearchPage() {
               <h3 className="text-sm font-medium text-drama-text">热门搜索</h3>
             </div>
             <div className="flex flex-wrap gap-2">
-              {HOT_SEARCHES.map((item) => (
+              {hotSearches.map((item) => (
                 <span
                   key={item}
                   onClick={() => handleSearch(item)}
@@ -188,7 +245,7 @@ export default function SearchPage() {
               <p className="text-drama-muted">未找到相关短剧</p>
             </div>
           ) : (
-            <DramaGrid dramas={results} loading={loading} />
+            <DramaGrid dramas={results} loading={loading} highlightKeyword={keyword} />
           )}
         </div>
       )}

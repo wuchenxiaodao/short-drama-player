@@ -38,14 +38,15 @@ export default function CommentSection({ dramaId }: CommentSectionProps) {
     async (pageNum: number, sortType: SortType, append: boolean) => {
       setLoading(true);
       try {
-        const sortBy = sortType === 'hot' ? 'likeCount' : 'createdAt';
-        const data = await getComments(dramaId, pageNum, 20);
+        const sortBy = sortType === 'hot' ? 'hot' : 'new';
+        const data = await getComments(dramaId, pageNum, 20, sortBy);
+        const list: Comment[] = Array.isArray(data) ? data : (data?.comments ?? []);
         if (append) {
-          setComments((prev) => [...prev, ...data]);
+          setComments((prev) => [...prev, ...list]);
         } else {
-          setComments(data);
+          setComments(list);
         }
-        setHasMore(data.length >= 20);
+        setHasMore(list.length >= 20);
       } catch {
         setHasMore(false);
       } finally {

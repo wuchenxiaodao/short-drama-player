@@ -2,6 +2,7 @@
 
 import { ExternalLink } from 'lucide-react';
 import type { InteractionPoint } from '@/lib/types';
+import { resolveUrl } from '@/lib/api-client';
 
 interface LinkCardProps {
   interaction: InteractionPoint;
@@ -16,7 +17,7 @@ export default function LinkCard({ interaction }: LinkCardProps) {
       <div className="flex gap-3">
         {link.coverUrl && (
           <div className="w-20 h-14 flex-shrink-0 rounded-lg overflow-hidden">
-            <img src={link.coverUrl} alt={link.title} className="w-full h-full object-cover" />
+            <img src={resolveUrl(link.coverUrl)} alt={link.title} className="w-full h-full object-cover" />
           </div>
         )}
         <div className="flex-1 min-w-0">

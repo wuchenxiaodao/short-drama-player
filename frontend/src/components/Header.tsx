@@ -8,6 +8,8 @@ import { useAuthStore } from '@/lib/auth';
 
 const navLinks = [
   { href: '/?list=true', label: '首页' },
+  { href: '/?list=clips', label: '短视频' },
+  { href: '/ranking', label: '排行榜' },
   { href: '/eggs', label: '彩蛋图鉴' },
 ];
 
@@ -116,6 +118,12 @@ export default function Header() {
                       >
                         <User className="w-4 h-4" />
                         个人中心
+                      </Link>
+                      <Link href="/profile/favorites" onClick={() => setUserMenuOpen(false)} className="block px-4 py-2 text-sm text-drama-text hover:bg-drama-surface transition-colors">
+                        我的追剧
+                      </Link>
+                      <Link href="/profile/history" onClick={() => setUserMenuOpen(false)} className="block px-4 py-2 text-sm text-drama-text hover:bg-drama-surface transition-colors">
+                        观看历史
                       </Link>
                       <button
                         onClick={handleLogout}

@@ -19,6 +19,8 @@ export default function RegisterPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [touched, setTouched] = useState({ username: false, nickname: false, password: false, confirmPassword: false });
+  const [showWelcome, setShowWelcome] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -45,7 +47,7 @@ export default function RegisterPage() {
       setAuth(data.token, data.userId || data.user?.id);
       const user = await getMe();
       setUser(user);
-      router.push('/');
+      setShowWelcome(true);
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
@@ -81,9 +83,11 @@ export default function RegisterPage() {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                onBlur={() => setTouched((t) => ({ ...t, username: true }))}
                 placeholder="请输入用户名"
-                className="w-full px-4 py-3 bg-drama-surface border border-drama-border rounded-lg text-drama-text placeholder:text-drama-muted focus:outline-none focus:border-primary-500 transition-colors"
+                className={`w-full px-4 py-3 bg-drama-surface border ${touched.username && !username.trim() ? 'border-red-500 focus:border-red-500' : 'border-drama-border focus:border-primary-500'} rounded-lg text-drama-text placeholder:text-drama-muted focus:outline-none transition-colors`}
               />
+              {touched.username && !username.trim() && <p className="text-xs text-red-400 mt-1">请输入用户名</p>}
             </div>
 
             <div>
@@ -104,9 +108,11 @@ export default function RegisterPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onBlur={() => setTouched((t) => ({ ...t, password: true }))}
                   placeholder="请输入密码（至少6位）"
-                  className="w-full px-4 py-3 pr-12 bg-drama-surface border border-drama-border rounded-lg text-drama-text placeholder:text-drama-muted focus:outline-none focus:border-primary-500 transition-colors"
+                  className={`w-full px-4 py-3 pr-12 bg-drama-surface border ${touched.password && password.length < 6 ? 'border-red-500 focus:border-red-500' : 'border-drama-border focus:border-primary-500'} rounded-lg text-drama-text placeholder:text-drama-muted focus:outline-none transition-colors`}
                 />
+                {touched.password && password.length < 6 && <p className="text-xs text-red-400 mt-1">密码长度至少6位</p>}
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
@@ -124,9 +130,11 @@ export default function RegisterPage() {
                   type={showConfirm ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
+                  onBlur={() => setTouched((t) => ({ ...t, confirmPassword: true }))}
                   placeholder="请再次输入密码"
-                  className="w-full px-4 py-3 pr-12 bg-drama-surface border border-drama-border rounded-lg text-drama-text placeholder:text-drama-muted focus:outline-none focus:border-primary-500 transition-colors"
+                  className={`w-full px-4 py-3 pr-12 bg-drama-surface border ${touched.confirmPassword && confirmPassword !== password ? 'border-red-500 focus:border-red-500' : 'border-drama-border focus:border-primary-500'} rounded-lg text-drama-text placeholder:text-drama-muted focus:outline-none transition-colors`}
                 />
+                {touched.confirmPassword && confirmPassword !== password && <p className="text-xs text-red-400 mt-1">两次输入的密码不一致</p>}
                 <button
                   type="button"
                   onClick={() => setShowConfirm(!showConfirm)}
@@ -164,6 +172,26 @@ export default function RegisterPage() {
           </div>
         </div>
       </div>
+
+      {showWelcome && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-drama-card rounded-xl p-6 mx-4 max-w-sm w-full border border-drama-border/50 shadow-xl text-center">
+            <div className="text-4xl mb-3">🎉</div>
+            <h3 className="text-lg font-medium text-drama-text mb-2">注册成功！</h3>
+            <p className="text-sm text-drama-muted mb-5">欢迎加入短剧TV，开始你的互动追剧之旅</p>
+            <div className="space-y-2">
+              <Link href="/" className="block w-full py-2.5 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
+                onClick={() => setShowWelcome(false)}>
+                开始浏览
+              </Link>
+              <Link href="/eggs" className="block w-full py-2.5 bg-drama-surface text-drama-text rounded-lg hover:bg-drama-border transition-colors"
+                onClick={() => setShowWelcome(false)}>
+                查看彩蛋图鉴
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

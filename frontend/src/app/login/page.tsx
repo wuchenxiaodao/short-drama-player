@@ -16,6 +16,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [touched, setTouched] = useState({ username: false, password: false });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -68,9 +69,11 @@ export default function LoginPage() {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                onBlur={() => setTouched((t) => ({ ...t, username: true }))}
                 placeholder="请输入用户名"
-                className="w-full px-4 py-3 bg-drama-surface border border-drama-border rounded-lg text-drama-text placeholder:text-drama-muted focus:outline-none focus:border-primary-500 transition-colors"
+                className={`w-full px-4 py-3 bg-drama-surface border ${touched.username && !username.trim() ? 'border-red-500 focus:border-red-500' : 'border-drama-border focus:border-primary-500'} rounded-lg text-drama-text placeholder:text-drama-muted focus:outline-none transition-colors`}
               />
+              {touched.username && !username.trim() && <p className="text-xs text-red-400 mt-1">请输入用户名</p>}
             </div>
 
             <div>
@@ -80,9 +83,11 @@ export default function LoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onBlur={() => setTouched((t) => ({ ...t, password: true }))}
                   placeholder="请输入密码"
-                  className="w-full px-4 py-3 pr-12 bg-drama-surface border border-drama-border rounded-lg text-drama-text placeholder:text-drama-muted focus:outline-none focus:border-primary-500 transition-colors"
+                  className={`w-full px-4 py-3 pr-12 bg-drama-surface border ${touched.password && !password.trim() ? 'border-red-500 focus:border-red-500' : 'border-drama-border focus:border-primary-500'} rounded-lg text-drama-text placeholder:text-drama-muted focus:outline-none transition-colors`}
                 />
+                {touched.password && !password.trim() && <p className="text-xs text-red-400 mt-1">请输入密码</p>}
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}

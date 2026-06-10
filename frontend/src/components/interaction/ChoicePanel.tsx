@@ -7,9 +7,10 @@ import type { InteractionPoint } from '@/lib/types';
 interface ChoicePanelProps {
   interaction: InteractionPoint;
   onAnswer: (optionId: number) => void;
+  onClose?: () => void;
 }
 
-export default function ChoicePanel({ interaction, onAnswer }: ChoicePanelProps) {
+export default function ChoicePanel({ interaction, onAnswer, onClose }: ChoicePanelProps) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const options = interaction.options || [];
@@ -23,7 +24,13 @@ export default function ChoicePanel({ interaction, onAnswer }: ChoicePanelProps)
   const selectedOption = options.find((o) => o.id === selectedId);
 
   return (
-    <div className="bg-drama-card/95 backdrop-blur-md border-t border-drama-border p-4 mx-2 mb-2 rounded-xl animate-in slide-in-from-bottom duration-300">
+    <div className="bg-drama-card/95 backdrop-blur-md border-t border-drama-border p-4 mx-2 mb-2 rounded-xl animate-in slide-in-from-bottom duration-300 relative">
+      <button
+        onClick={onClose}
+        className="absolute top-2 right-2 px-2 py-1 text-drama-muted text-xs rounded-full hover:text-drama-text hover:bg-drama-surface/50 transition-colors z-10"
+      >
+        跳过
+      </button>
       <div className="flex items-start justify-between mb-3">
         <h4 className="text-sm font-medium text-drama-text flex-1">{interaction.questionText}</h4>
       </div>

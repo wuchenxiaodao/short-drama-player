@@ -15,7 +15,6 @@ import { sentimentAnalyzer } from '@/lib/danmaku-sentiment';
 const EMOJI_DISPLAY_CONFIG = {
   danmakuEmojiIntervalMs: 5000,
   danmakuWindowMs: 15000,
-  barDurationMs: 5000,
   minSentimentWeight: 0.2,
 };
 
@@ -88,6 +87,16 @@ export default function InteractionOverlay({
 
   const triggeredRef = useRef<Set<number>>(new Set());
   const chosenOptionsRef = useRef<Map<number, number>>(new Map());
+
+  // 切换集数时重置触发状态
+  useEffect(() => {
+    triggeredRef.current = new Set();
+    chosenOptionsRef.current = new Map();
+    setActiveInteraction(null);
+    setActivePanel(null);
+    setCurrentBranchId(null);
+    setBranchHistory([]);
+  }, [interactions]);
   const autoCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeInteractionRef = useRef<InteractionPoint | null>(null);
@@ -304,7 +313,6 @@ export default function InteractionOverlay({
           episodeId={episodeId || 0}
           currentEmoji={currentEmoji || undefined}
           showBar={showBar}
-          barDurationMs={EMOJI_DISPLAY_CONFIG.barDurationMs}
           onSendEmoji={(emoji) => {
             const emojiInteraction = interactions.find(i => i.interactionType === 'EMOJI');
             if (emojiInteraction) onAnswer(emojiInteraction.id, 0, emoji, true);
@@ -328,6 +336,7 @@ export default function InteractionOverlay({
                 processAnswer(current.id, optionId, opt);
               }
             }}
+            onClose={closePanel}
             {...(activePanel.interactionType === 'QUIZ' ? { userId, onSlowDown, onRestoreSpeed } : {})}
           />
         </div>
@@ -340,6 +349,16 @@ export default function InteractionOverlay({
             className="absolute inset-0 bg-black/20"
             onClick={closeActiveInteraction}
           />
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              closeActiveInteraction();
+              closePanel();
+            }}
+            className="absolute top-3 right-3 z-30 px-3 py-1.5 bg-drama-card/80 backdrop-blur-sm text-drama-muted text-xs rounded-full hover:text-drama-text transition-colors"
+          >
+            跳过 ✕
+          </button>
           <div className="absolute bottom-4 right-4 z-20 max-w-[280px]">
             <OverlayComponent
               interaction={activeInteraction}

@@ -9,6 +9,7 @@ interface ClipCardProps {
   clip: HighlightClip;
   isActive: boolean;
   onWatchFull?: (clip: HighlightClip) => void;
+  onClipEnded?: () => void;
 }
 
 const TAG_COLORS: Record<string, string> = {
@@ -20,12 +21,13 @@ const TAG_COLORS: Record<string, string> = {
   SAD: 'bg-blue-400',
 };
 
-export default function ClipCard({ clip, isActive, onWatchFull }: ClipCardProps) {
+export default function ClipCard({ clip, isActive, onWatchFull, onClipEnded }: ClipCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [countdown, setCountdown] = useState(0);
   const [liked, setLiked] = useState(false);
+  const [likeAnimating, setLikeAnimating] = useState(false);
   const [hasReportedView, setHasReportedView] = useState(false);
 
   const videoSrc = resolveUrl(clip.clipUrl);
@@ -38,12 +40,12 @@ export default function ClipCard({ clip, isActive, onWatchFull }: ClipCardProps)
     const video = videoRef.current;
     if (!video) return;
     if (isActive) {
-      video.currentTime = start;
+      video.currentTime = clip.startTime;
+      video.play().catch(() => {});
     } else {
       video.pause();
-      setPlaying(false);
     }
-  }, [isActive, start]);
+  }, [isActive, clip.startTime]);
 
   const handleTimeUpdate = useCallback(() => {
     const video = videoRef.current;
@@ -58,7 +60,8 @@ export default function ClipCard({ clip, isActive, onWatchFull }: ClipCardProps)
     }
     if (end > 0 && video.currentTime >= end) {
       video.pause();
-      setPlaying(false);
+      onClipEnded?.();
+      return;
     }
   }, [start, end, duration]);
 
@@ -84,9 +87,12 @@ export default function ClipCard({ clip, isActive, onWatchFull }: ClipCardProps)
   }, [clip.id, start, end, hasReportedView]);
 
   const handleLike = useCallback(() => {
+    if (liked) return;
     setLiked(true);
+    setLikeAnimating(true);
+    setTimeout(() => setLikeAnimating(false), 600);
     recordClipLike(clip.id).catch(() => {});
-  }, [clip.id]);
+  }, [clip.id, liked]);
 
   const handleClickThrough = useCallback(() => {
     recordClipClick(clip.id).catch(() => {});
@@ -142,13 +148,17 @@ export default function ClipCard({ clip, isActive, onWatchFull }: ClipCardProps)
       <div className="clip-actions" onClick={(e) => e.stopPropagation()}>
         <button className="btn-watch-full" onClick={handleClickThrough}>
           <Film className="w-4 h-4" />
-          从第1集看
+          看完整剧
         </button>
         <button
           className={`btn-action ${liked ? 'liked' : ''}`}
           onClick={handleLike}
+          style={likeAnimating ? { transform: 'scale(1.25)', transition: 'transform 0.15s ease' } : { transition: 'transform 0.3s ease' }}
         >
           <Heart className={`w-5 h-5 ${liked ? 'fill-current' : ''}`} />
+          {likeAnimating && (
+            <span className="absolute -top-2 -right-2 text-xs font-bold text-pink-500 animate-ping">+1</span>
+          )}
         </button>
         <button className="btn-action" onClick={handleShare}>
           <Share2 className="w-5 h-5" />

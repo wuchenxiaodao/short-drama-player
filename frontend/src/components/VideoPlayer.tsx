@@ -12,6 +12,9 @@ import {
   Settings,
   ChevronUp,
   RotateCcw,
+  PictureInPicture2,
+  Lock,
+  Unlock,
 } from 'lucide-react';
 import type { Stream } from '@/lib/types';
 
@@ -48,6 +51,8 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
   const containerRef = useRef<HTMLDivElement>(null);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastClickRef = useRef<number>(0);
+  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const lastTapRef = useRef<number>(0);
 
   useImperativeHandle(ref, () => ({
     slowDown: () => {
@@ -82,6 +87,8 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
   const [isMobile, setIsMobile] = useState(false);
   const [isPortrait, setIsPortrait] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [buffering, setBuffering] = useState(false);
+  const [locked, setLocked] = useState(false);
 
   useEffect(() => {
     const check = () => {
@@ -122,12 +129,18 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
       setPlaying(false);
       onEnded?.();
     }
+    const onWaiting = () => setBuffering(true);
+    const onCanplay = () => setBuffering(false);
+    const onPlaying = () => setBuffering(false);
 
     video.addEventListener('play', handlePlay);
     video.addEventListener('pause', handlePause);
     video.addEventListener('timeupdate', handleTimeUpdate);
     video.addEventListener('loadedmetadata', handleLoadedMetadata);
     video.addEventListener('ended', handleEnded);
+    video.addEventListener('waiting', onWaiting);
+    video.addEventListener('canplay', onCanplay);
+    video.addEventListener('playing', onPlaying);
 
     return () => {
       video.removeEventListener('play', handlePlay);
@@ -135,6 +148,9 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
       video.removeEventListener('timeupdate', handleTimeUpdate);
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
       video.removeEventListener('ended', handleEnded);
+      video.removeEventListener('waiting', onWaiting);
+      video.removeEventListener('canplay', onCanplay);
+      video.removeEventListener('playing', onPlaying);
     };
   }, [onTimeUpdate, onEnded]);
 
@@ -159,6 +175,61 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
     }
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const togglePlay = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused) {
+      video.play().catch(() => {});
+    } else {
+      video.pause();
+    }
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    } else {
+      container.requestFullscreen().catch(() => {});
+    }
+  }, []);
+
+  const togglePiP = useCallback(async () => {
+    const video = videoRef.current;
+    if (!video) return;
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+      } else {
+        await video.requestPictureInPicture();
+      }
+    } catch (err) {
+      console.warn('PiP not supported');
+    }
+  }, []);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - touchStartRef.current.x;
+    const dy = touch.clientY - touchStartRef.current.y;
+    const dt = Date.now() - touchStartRef.current.time;
+
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5 && dt < 500) {
+      const video = videoRef.current;
+      if (!video) return;
+      const seekAmount = dx > 0 ? SEEK_STEP : -SEEK_STEP;
+      video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + seekAmount));
+    }
+    touchStartRef.current = null;
   }, []);
 
   useEffect(() => {
@@ -202,7 +273,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  });
+  }, [togglePlay, toggleFullscreen]);
 
   const resetHideTimer = useCallback(() => {
     setShowControls(true);
@@ -227,26 +298,6 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
       if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
     };
   }, [playing, resetHideTimer]);
-
-  function togglePlay() {
-    const video = videoRef.current;
-    if (!video) return;
-    if (video.paused) {
-      video.play().catch(() => {});
-    } else {
-      video.pause();
-    }
-  }
-
-  function toggleFullscreen() {
-    const container = containerRef.current;
-    if (!container) return;
-    if (document.fullscreenElement) {
-      document.exitFullscreen().catch(() => {});
-    } else {
-      container.requestFullscreen().catch(() => {});
-    }
-  }
 
   function handleResume() {
     const video = videoRef.current;
@@ -302,6 +353,35 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
     document.addEventListener('mouseup', onMouseUp);
   }
 
+  const handleProgressTouchStart = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    const bar = e.currentTarget;
+    const rect = bar.getBoundingClientRect();
+    const x = e.touches[0].clientX - rect.left;
+    const ratio = Math.max(0, Math.min(1, x / rect.width));
+    const video = videoRef.current;
+    if (video?.duration) {
+      video.currentTime = ratio * video.duration;
+    }
+    setDragging(true);
+
+    const handleTouchMove = (ev: TouchEvent) => {
+      ev.preventDefault();
+      const newX = ev.touches[0].clientX - rect.left;
+      const newRatio = Math.max(0, Math.min(1, newX / rect.width));
+      if (video?.duration) {
+        video.currentTime = newRatio * video.duration;
+      }
+    };
+    const handleTouchEnd = () => {
+      setDragging(false);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd);
+  }, []);
+
   function handleSpeedChange(s: number) {
     setSpeed(s);
     setShowSpeedMenu(false);
@@ -326,6 +406,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
   }
 
   function handleVideoClick() {
+    if (locked) return;
     const now = Date.now();
     if (now - lastClickRef.current < 300) {
       toggleFullscreen();
@@ -354,6 +435,8 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
       className="video-player-container relative bg-black select-none"
       onMouseMove={resetHideTimer}
       onMouseLeave={() => { if (playing) setShowControls(false); }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
       <video
         ref={videoRef}
@@ -362,6 +445,19 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
         playsInline
         onClick={handleVideoClick}
       />
+
+      {/* 字幕渲染层（预留） */}
+      {currentTime > 0 && (
+        <div className="absolute bottom-12 left-0 right-0 text-center pointer-events-none z-[5]">
+          {/* 字幕内容将从此处渲染，需要后端提供 SRT/VTT 数据 */}
+        </div>
+      )}
+
+      {buffering && (
+        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+          <div className="w-10 h-10 border-[3px] border-white/30 border-t-white rounded-full animate-spin" />
+        </div>
+      )}
 
       {showResume && initialPosition && initialPosition > 0 && (
         <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/70 to-transparent p-3 flex items-center justify-between">
@@ -387,15 +483,18 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
       )}
 
       <div
-        className={`video-controls transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        className={`video-controls transition-opacity duration-300 ${showControls && !locked ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
         onClick={(e) => e.stopPropagation()}
       >
+        {!locked && (
+        <>
         <div
           className="video-progress-bar mb-2 group"
           onClick={handleProgressClick}
           onMouseMove={handleProgressHover}
           onMouseLeave={() => setHoverTime(null)}
           onMouseDown={handleProgressMouseDown}
+          onTouchStart={handleProgressTouchStart}
         >
           <div
             className="absolute top-0 left-0 h-full bg-white/20 rounded-l"
@@ -417,6 +516,13 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
 
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setLocked(!locked)}
+              className={`text-white hover:text-primary-400 transition-colors ${locked ? 'text-primary-400' : ''}`}
+              title={locked ? '解锁' : '锁定'}
+            >
+              {locked ? <Lock className="w-5 h-5" /> : <Unlock className="w-5 h-5" />}
+            </button>
             <button onClick={togglePlay} className="text-white hover:text-primary-400 transition-colors">
               {playing ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
             </button>
@@ -447,66 +553,99 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
           </div>
 
           <div className="flex items-center gap-2">
-            {!simplified && (
-              <>
-                <div className="relative">
-                  <button
-                    onClick={() => { setShowSpeedMenu(!showSpeedMenu); setShowQualityMenu(false); }}
-                    className="text-xs text-white/80 hover:text-white px-1.5 py-0.5 rounded transition-colors"
-                  >
-                    {speed}x
-                  </button>
-                  {showSpeedMenu && (
-                    <div className="absolute bottom-full right-0 mb-2 bg-drama-card/95 backdrop-blur-md border border-drama-border rounded-lg py-1 min-w-[80px]">
-                      {SPEED_OPTIONS.map((s) => (
-                        <button
-                          key={s}
-                          onClick={() => handleSpeedChange(s)}
-                          className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${
-                            speed === s ? 'text-primary-400 bg-primary-500/10' : 'text-drama-text hover:bg-drama-surface'
-                          }`}
-                        >
-                          {s}x
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {streams && streams.length > 1 && (
-                  <div className="relative">
+            {/* 倍速：竖屏也显示 */}
+            <div className="relative">
+              <button
+                onClick={() => { setShowSpeedMenu(!showSpeedMenu); setShowQualityMenu(false); }}
+                className="text-xs text-white/80 hover:text-white px-1.5 py-0.5 rounded transition-colors"
+              >
+                {speed}x
+              </button>
+              {showSpeedMenu && (
+                <div className="absolute bottom-full right-0 mb-2 bg-drama-card/95 backdrop-blur-md border border-drama-border rounded-lg py-1 min-w-[80px]">
+                  {SPEED_OPTIONS.map((s) => (
                     <button
-                      onClick={() => { setShowQualityMenu(!showQualityMenu); setShowSpeedMenu(false); }}
-                      className="text-xs text-white/80 hover:text-white px-1.5 py-0.5 rounded transition-colors"
+                      key={s}
+                      onClick={() => handleSpeedChange(s)}
+                      className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${
+                        speed === s ? 'text-primary-400 bg-primary-500/10' : 'text-drama-text hover:bg-drama-surface'
+                      }`}
                     >
-                      {quality}
+                      {s}x
                     </button>
-                    {showQualityMenu && (
-                      <div className="absolute bottom-full right-0 mb-2 bg-drama-card/95 backdrop-blur-md border border-drama-border rounded-lg py-1 min-w-[80px]">
-                        {QUALITY_OPTIONS.filter((q) => streams.some((s) => s.quality === q)).map((q) => (
-                          <button
-                            key={q}
-                            onClick={() => handleQualityChange(q)}
-                            className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${
-                              quality === q ? 'text-primary-400 bg-primary-500/10' : 'text-drama-text hover:bg-drama-surface'
-                            }`}
-                          >
-                            {q}
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* 音量：仅非竖屏 */}
+            {!simplified && (
+              <div className="flex items-center gap-1 group/vol">
+                <button
+                  onClick={() => setMuted((m) => !m)}
+                  className="text-white hover:text-primary-400 transition-colors"
+                >
+                  <VolumeIcon className="w-4 h-4" />
+                </button>
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  value={muted ? 0 : volume}
+                  onChange={handleVolumeSlider}
+                  className="w-16 h-1 accent-primary-500 cursor-pointer opacity-0 group-hover/vol:opacity-100 transition-opacity"
+                />
+              </div>
+            )}
+
+            {/* 画质：仅非竖屏 */}
+            {!simplified && streams && streams.length > 1 && (
+              <div className="relative">
+                <button
+                  onClick={() => { setShowQualityMenu(!showQualityMenu); setShowSpeedMenu(false); }}
+                  className="text-xs text-white/80 hover:text-white px-1.5 py-0.5 rounded transition-colors"
+                >
+                  {quality}
+                </button>
+                {showQualityMenu && (
+                  <div className="absolute bottom-full right-0 mb-2 bg-drama-card/95 backdrop-blur-md border border-drama-border rounded-lg py-1 min-w-[80px]">
+                    {QUALITY_OPTIONS.filter((q) => streams.some((s) => s.quality === q)).map((q) => (
+                      <button
+                        key={q}
+                        onClick={() => handleQualityChange(q)}
+                        className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${
+                          quality === q ? 'text-primary-400 bg-primary-500/10' : 'text-drama-text hover:bg-drama-surface'
+                        }`}
+                      >
+                        {q}
+                      </button>
+                    ))}
                   </div>
                 )}
-              </>
+              </div>
             )}
+
+            <button onClick={togglePiP} className="text-white hover:text-primary-400 transition-colors" title="画中画">
+              <PictureInPicture2 className="w-5 h-5" />
+            </button>
 
             <button onClick={toggleFullscreen} className="text-white hover:text-primary-400 transition-colors">
               {fullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
             </button>
           </div>
         </div>
+        </>
+        )}
       </div>
+
+      {locked && (
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 z-30">
+          <button onClick={() => setLocked(false)} className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center text-primary-400">
+            <Unlock className="w-5 h-5" />
+          </button>
+        </div>
+      )}
 
       {!playing && !showResume && (
         <div

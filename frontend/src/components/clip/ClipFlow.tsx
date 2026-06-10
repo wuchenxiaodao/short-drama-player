@@ -150,7 +150,10 @@ export default function ClipFlow() {
             </button>
           ))}
         </div>
-        <a href="/" className="text-xl" title="剧列表">📺</a>
+        <a href="/?list=true" className="flex items-center gap-1 text-sm text-drama-muted hover:text-drama-text transition-colors" title="短剧列表">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+          <span>短剧</span>
+        </a>
       </nav>
 
       <div
@@ -165,6 +168,13 @@ export default function ClipFlow() {
             clip={clip}
             isActive={index === currentIndex}
             onWatchFull={handleWatchFull}
+            onClipEnded={() => {
+              if (currentIndex < clips.length - 1) {
+                showClip(currentIndex + 1);
+              } else if (hasMore) {
+                loadClips(currentTag, page + 1, true);
+              }
+            }}
           />
         ))}
         {loading && (

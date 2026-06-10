@@ -11,6 +11,7 @@ interface QuizPanelProps {
   userId?: number;
   onSlowDown?: () => void;
   onRestoreSpeed?: () => void;
+  onClose?: () => void;
 }
 
 interface StatsData {
@@ -18,7 +19,7 @@ interface StatsData {
   optionStats: Record<string, { count: number; percentage: number }>;
 }
 
-export default function QuizPanel({ interaction, onAnswer, userId, onSlowDown, onRestoreSpeed }: QuizPanelProps) {
+export default function QuizPanel({ interaction, onAnswer, userId, onSlowDown, onRestoreSpeed, onClose }: QuizPanelProps) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [hintText, setHintText] = useState<string | null>(null);
@@ -68,7 +69,13 @@ export default function QuizPanel({ interaction, onAnswer, userId, onSlowDown, o
   const correctOption = options.find((o) => o.isCorrect);
 
   return (
-    <div className="bg-drama-card/95 backdrop-blur-md border-t border-drama-border p-4 mx-2 mb-2 rounded-xl animate-in slide-in-from-bottom duration-300">
+    <div className="bg-drama-card/95 backdrop-blur-md border-t border-drama-border p-4 mx-2 mb-2 rounded-xl animate-in slide-in-from-bottom duration-300 relative">
+      <button
+        onClick={onClose}
+        className="absolute top-2 right-2 px-2 py-1 text-drama-muted text-xs rounded-full hover:text-drama-text hover:bg-drama-surface/50 transition-colors z-10"
+      >
+        跳过
+      </button>
       {emojiRain && <EmojiRainEffect />}
       <div className="flex items-start justify-between mb-3">
         <h4 className="text-sm font-medium text-drama-text flex-1">{interaction.questionText}</h4>

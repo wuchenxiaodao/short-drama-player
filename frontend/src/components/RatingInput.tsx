@@ -22,7 +22,7 @@ export default function RatingInput({ dramaId, currentRating, onRate }: RatingIn
   useEffect(() => {
     getRatingStats(dramaId)
       .then((res: any) => {
-        setAvgRating(res.averageScore ?? 0);
+        setAvgRating(res.avgRating ?? res.averageScore ?? 0);
         setRatingCount(res.ratingCount ?? 0);
       })
       .catch(() => {});
@@ -40,78 +40,66 @@ export default function RatingInput({ dramaId, currentRating, onRate }: RatingIn
   }, [dramaId, isLoggedIn]);
 
   const handleClick = useCallback(
-    async (score: number) => {
-      if (!isLoggedIn || submitting) return;
+    async (starIndex: number) => {
+      if (submitting) return;
+      const score = (starIndex + 1) * 2; // 转为10分制：1星=2分, 5星=10分
       setSubmitting(true);
       try {
         await submitRating(dramaId, score);
         setUserScore(score);
-        onRate?.(score);
         const stats = await getRatingStats(dramaId);
-        setAvgRating(stats.averageScore ?? 0);
-        setRatingCount(stats.ratingCount ?? 0);
-      } catch {} finally {
-        setSubmitting(false);
+        if (stats) {
+          setAvgRating(stats.avgRating ?? stats.averageScore ?? 0);
+          setRatingCount(stats.ratingCount ?? 0);
+        }
+        onRate?.(score);
+      } catch {
+        // 静默处理
       }
+      setSubmitting(false);
     },
-    [dramaId, isLoggedIn, submitting, onRate]
+    [dramaId, submitting, onRate]
   );
-
-  const displayScore = hoverScore ?? userScore ?? 0;
-
-  const stars = Array.from({ length: 5 }, (_, i) => {
-    const starBase = (i + 1) * 2;
-    const prevBase = i * 2;
-    const fill = displayScore >= starBase ? 'full' : displayScore >= prevBase + 1 ? 'half' : 'empty';
-    return { index: i, fill };
-  });
 
   return (
     <div className="bg-drama-card rounded-xl p-4">
       <h3 className="text-sm font-medium text-drama-text mb-3">评分</h3>
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-1">
-          {stars.map(({ index, fill }) => (
-            <div
-              key={index}
-              className="relative cursor-pointer"
-              onMouseEnter={() => setHoverScore((index + 1) * 2)}
-              onMouseLeave={() => setHoverScore(null)}
-              onClick={() => handleClick((index + 1) * 2)}
-            >
-              <Star
-                className="w-7 h-7 text-drama-muted/30"
-                fill="currentColor"
-                strokeWidth={0}
-              />
-              {fill === 'full' && (
+          {Array.from({ length: 5 }, (_, i) => {
+            const score = (i + 1) * 2;
+            const filled = userScore
+              ? score <= userScore
+              : score <= (hoverScore || 0);
+            return (
+              <button
+                key={i}
+                onClick={() => handleClick(i)}
+                onMouseEnter={() => setHoverScore(score)}
+                onMouseLeave={() => setHoverScore(null)}
+                className="transition-transform hover:scale-110"
+                disabled={submitting}
+              >
                 <Star
-                  className="absolute inset-0 w-7 h-7 text-yellow-400"
-                  fill="currentColor"
-                  strokeWidth={0}
+                  className={`w-7 h-7 transition-colors ${
+                    filled ? 'text-yellow-400 fill-yellow-400' : 'text-drama-muted'
+                  }`}
                 />
-              )}
-              {fill === 'half' && (
-                <div className="absolute inset-0 w-1/2 overflow-hidden">
-                  <Star
-                    className="w-7 h-7 text-yellow-400"
-                    fill="currentColor"
-                    strokeWidth={0}
-                  />
-                </div>
-              )}
-            </div>
-          ))}
+              </button>
+            );
+          })}
         </div>
         <div className="flex flex-col">
           <span className="text-2xl font-bold text-drama-text">
-            {avgRating > 0 ? avgRating.toFixed(1) : '--'}
+            {avgRating > 0 ? (avgRating / 2).toFixed(1) : '--'}
           </span>
           <span className="text-xs text-drama-muted">{ratingCount}人评分</span>
         </div>
       </div>
-      {userScore != null && (
-        <p className="text-xs text-primary-400 mt-2">我的评分：{userScore}分</p>
+      {userScore !== null && (
+        <span className="text-sm text-primary-400 mt-2 block">
+          我的评分：{userScore / 2}星
+        </span>
       )}
       {!isLoggedIn && (
         <p className="text-xs text-drama-muted mt-2">登录后即可评分</p>

@@ -11,6 +11,7 @@ import DramaCard from './DramaCard';
 interface DramaGridProps {
   dramas: Drama[];
   loading: boolean;
+  highlightKeyword?: string;
 }
 
 function getBadge(drama: Drama) {
@@ -57,7 +58,7 @@ function DramaListItem({ drama }: { drama: Drama }) {
   );
 }
 
-export default function DramaGrid({ dramas, loading }: DramaGridProps) {
+export default function DramaGrid({ dramas, loading, highlightKeyword }: DramaGridProps) {
   const [layout, setLayout] = useState<'grid' | 'list'>(() => {
     if (typeof window !== 'undefined') {
       return (localStorage.getItem('drama-layout') as 'grid' | 'list') || 'grid';
@@ -107,7 +108,7 @@ export default function DramaGrid({ dramas, loading }: DramaGridProps) {
       {layout === 'grid' ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {dramas.map((drama) => (
-            <DramaCard key={drama.id} drama={drama} />
+            <DramaCard key={drama.id} drama={drama} highlightKeyword={highlightKeyword} />
           ))}
         </div>
       ) : (

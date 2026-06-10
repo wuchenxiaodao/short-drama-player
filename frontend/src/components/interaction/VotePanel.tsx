@@ -7,6 +7,7 @@ import { getInteractionStats } from '@/lib/api-client';
 interface VotePanelProps {
   interaction: InteractionPoint;
   onAnswer: (optionId: number) => void;
+  onClose?: () => void;
 }
 
 interface StatsData {
@@ -14,7 +15,7 @@ interface StatsData {
   optionStats: Record<string, { count: number; percentage: number }>;
 }
 
-export default function VotePanel({ interaction, onAnswer }: VotePanelProps) {
+export default function VotePanel({ interaction, onAnswer, onClose }: VotePanelProps) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [stats, setStats] = useState<StatsData | null>(null);
 
@@ -43,7 +44,13 @@ export default function VotePanel({ interaction, onAnswer }: VotePanelProps) {
   }
 
   return (
-    <div className="bg-drama-card/95 backdrop-blur-md border-t border-drama-border p-4 mx-2 mb-2 rounded-xl animate-in slide-in-from-bottom duration-300">
+    <div className="bg-drama-card/95 backdrop-blur-md border-t border-drama-border p-4 mx-2 mb-2 rounded-xl animate-in slide-in-from-bottom duration-300 relative">
+      <button
+        onClick={onClose}
+        className="absolute top-2 right-2 px-2 py-1 text-drama-muted text-xs rounded-full hover:text-drama-text hover:bg-drama-surface/50 transition-colors z-10"
+      >
+        跳过
+      </button>
       <div className="flex items-start justify-between mb-3">
         <h4 className="text-sm font-medium text-drama-text flex-1">{interaction.questionText}</h4>
       </div>
@@ -67,7 +74,7 @@ export default function VotePanel({ interaction, onAnswer }: VotePanelProps) {
               {selectedId !== null && (
                 <div
                   className={`absolute inset-0 ${isSelected ? 'bg-primary-500/20' : 'bg-drama-surface/50'}`}
-                  style={{ width: `${percent}%`, transition: 'width 0.5s ease' }}
+                  style={{ clipPath: `inset(0 ${100 - percent}% 0 0)`, transition: 'clip-path 0.5s ease' }}
                 />
               )}
               <div className="relative px-3 py-2 flex items-center justify-between">

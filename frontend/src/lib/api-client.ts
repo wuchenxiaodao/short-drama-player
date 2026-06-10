@@ -64,28 +64,38 @@ async function request<T>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${getApiBaseUrl()}${path}`, {
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
+  try {
+    const res = await fetch(`${getApiBaseUrl()}${path}`, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
 
-  if (res.status === 401) {
-    handleUnauthorized();
-    throw new ApiError(401, '未授权，请重新登录');
+    if (res.status === 401) {
+      handleUnauthorized();
+      throw new ApiError(401, '未授权，请重新登录');
+    }
+
+    if (res.status === 403) {
+      throw new ApiError(403, '没有权限访问');
+    }
+
+    const json: ApiResponse<T> = await res.json();
+
+    if (json.code !== 0 && json.code !== 200) {
+      throw new ApiError(json.code, json.message);
+    }
+
+    return json.data;
+  } catch (err) {
+    if (err instanceof ApiError) throw err;
+    if (typeof window !== 'undefined') {
+      import('./toast-store').then(({ useToastStore }) => {
+        useToastStore.getState().showToast('网络异常，请稍后重试', 'error');
+      }).catch(() => {});
+    }
+    throw err;
   }
-
-  if (res.status === 403) {
-    throw new ApiError(403, '没有权限访问');
-  }
-
-  const json: ApiResponse<T> = await res.json();
-
-  if (json.code !== 0 && json.code !== 200) {
-    throw new ApiError(json.code, json.message);
-  }
-
-  return json.data;
 }
 
 async function apiGet<T>(path: string): Promise<T> {
@@ -239,11 +249,15 @@ export async function getDramasByCategory(category: string, page = 0, size = 10)
 }
 
 export async function getContinueWatching() {
-  return apiGet<any>('/api/progress/continue-watching');
+  return apiGet<any>('/api/drama/continue');
 }
 
 export async function getOnlineCount(episodeId: number) {
   return apiGet<number>(`/api/online/episode/${episodeId}/count`);
+}
+
+export async function sendHeartbeat(episodeId: number) {
+  return apiPost<any>('/api/online/heartbeat', { episodeId });
 }
 
 export async function generateBranch(episodeId: number, prompt: string) {
@@ -278,4 +292,12 @@ export async function recordClipLike(clipId: number) {
 
 export async function getDramaClips(dramaId: number, page = 0, size = 10) {
   return apiGet<any>(`/api/clips/drama/${dramaId}?page=${page}&size=${size}`);
+}
+
+export async function getMedals(userId: number) {
+  return apiGet<any>(`/api/user/${userId}/medals`);
+}
+
+export async function getPointsHistory() {
+  return apiGet<any>('/api/points/history');
 }

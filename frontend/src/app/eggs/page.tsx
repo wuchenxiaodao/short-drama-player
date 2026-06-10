@@ -129,6 +129,12 @@ export default function EggsPage() {
           <span className="text-drama-muted">/{totalEggs}</span>
         </div>
       </div>
+      <div className="w-full bg-drama-surface rounded-full h-2 mt-2">
+        <div className="bg-primary-500 h-2 rounded-full transition-all" style={{ width: `${totalEggs > 0 ? (collectedEggs / totalEggs) * 100 : 0}%` }} />
+      </div>
+      <p className="text-xs text-drama-muted mt-1">
+        {collectedEggs >= totalEggs ? '已收集全部彩蛋！' : `再收集${totalEggs - collectedEggs}个即可解锁全部彩蛋`}
+      </p>
 
       {loading ? (
         <div className="space-y-8">
@@ -188,6 +194,7 @@ export default function EggsPage() {
                       >
                         <Lock className="w-6 h-6 text-drama-muted mb-2" />
                         <p className="text-drama-muted text-sm font-medium">???</p>
+                        <p className="text-[10px] text-drama-muted/60 mt-0.5">在{group.dramaTitle}中探索</p>
                       </div>
                     )
                   )}

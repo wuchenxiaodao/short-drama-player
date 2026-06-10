@@ -11,25 +11,22 @@ import {
   Eye,
   ChevronDown,
   ChevronUp,
-  MessageCircle,
-  ThumbsUp,
-  Send,
 } from 'lucide-react';
-import type { Drama, Comment } from '@/lib/types';
+import type { Drama } from '@/lib/types';
 import {
   getDramaDetail,
   getDramasByCategory,
-  getComments,
-  postComment,
-  toggleCommentLike,
   toggleFavorite,
   checkFavorite,
   resolveUrl,
+  getContinueWatching,
 } from '@/lib/api-client';
-import { formatNumber, formatTimeAgo, cn } from '@/lib/utils';
+import { formatNumber, cn } from '@/lib/utils';
 import { useAuthStore } from '@/lib/auth';
+import { useToastStore } from '@/lib/toast-store';
 import DramaCard from '@/components/DramaCard';
 import RatingInput from '@/components/RatingInput';
+import CommentSection from '@/components/CommentSection';
 
 export default function DramaDetailPage() {
   const params = useParams();
@@ -43,11 +40,7 @@ export default function DramaDetailPage() {
   const [isFavorited, setIsFavorited] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
   const [relatedDramas, setRelatedDramas] = useState<Drama[]>([]);
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [commentPage, setCommentPage] = useState(1);
-  const [commentText, setCommentText] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [commentSort, setCommentSort] = useState<'hot' | 'newest'>('hot');
+  const [continueInfo, setContinueInfo] = useState<{ episodeNumber: number; positionMs: number } | null>(null);
 
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
 
@@ -68,14 +61,17 @@ export default function DramaDetailPage() {
         }
       })
       .finally(() => setLoading(false));
+    getContinueWatching().then((data: any) => {
+      const items = data?.content || data || [];
+      const item = items.find((d: any) => d.id === Number(dramaId) || d.dramaId === Number(dramaId));
+      if (item) {
+        setContinueInfo({
+          episodeNumber: item.lastEpisodeNumber || item.episodeNumber || 1,
+          positionMs: item.lastPositionMs || item.positionMs || 0,
+        });
+      }
+    }).catch(() => {});
   }, [dramaId]);
-
-  useEffect(() => {
-    if (!dramaId) return;
-    getComments(dramaId, 0, 20, commentSort)
-      .then((res: any) => setComments(res.content || []))
-      .catch(() => {});
-  }, [dramaId, commentPage, commentSort]);
 
   const handleFavorite = useCallback(async () => {
     if (!isLoggedIn) {
@@ -84,8 +80,14 @@ export default function DramaDetailPage() {
     }
     try {
       await toggleFavorite(dramaId);
-      setIsFavorited((prev) => !prev);
-    } catch {}
+      setIsFavorited((prev) => {
+        const next = !prev;
+        useToastStore.getState().showToast(next ? '已加入追剧' : '已取消追剧', 'success');
+        return next;
+      });
+    } catch {
+      useToastStore.getState().showToast('操作失败，请稍后重试', 'error');
+    }
   }, [dramaId, isLoggedIn, router]);
 
   const handleShare = useCallback(async () => {
@@ -101,40 +103,12 @@ export default function DramaDetailPage() {
     } else {
       try {
         await navigator.clipboard.writeText(window.location.href);
-        alert('链接已复制到剪贴板');
-      } catch {}
+        useToastStore.getState().showToast('链接已复制到剪贴板', 'success');
+      } catch {
+        useToastStore.getState().showToast('复制失败，请手动复制', 'error');
+      }
     }
   }, [drama]);
-
-  const handleCommentSubmit = useCallback(async () => {
-    if (!commentText.trim() || submitting) return;
-    if (!isLoggedIn) {
-      router.push('/login');
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const newComment = await postComment(dramaId, commentText.trim());
-      setComments((prev) => [newComment, ...prev]);
-      setCommentText('');
-    } catch {} finally {
-      setSubmitting(false);
-    }
-  }, [commentText, submitting, dramaId, isLoggedIn, router]);
-
-  const handleCommentLike = useCallback(async (commentId: number) => {
-    if (!isLoggedIn) return;
-    try {
-      await toggleCommentLike(commentId);
-      setComments((prev) =>
-        prev.map((c) =>
-          c.id === commentId
-            ? { ...c, isLiked: !c.isLiked, likeCount: c.isLiked ? c.likeCount - 1 : c.likeCount + 1 }
-            : c
-        )
-      );
-    } catch {}
-  }, [isLoggedIn]);
 
   if (loading) {
     return <DramaDetailSkeleton />;
@@ -183,13 +157,23 @@ export default function DramaDetailPage() {
 
       <div className="max-w-4xl mx-auto px-4 -mt-4 relative z-10 space-y-6">
         <div className="flex items-center gap-3">
-          <Link
-            href={`/drama/${drama.id}/play`}
-            className="flex-1 flex items-center justify-center gap-2 py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-full font-medium transition-colors"
-          >
-            <Play className="w-5 h-5 fill-white" />
-            立即播放
-          </Link>
+          {continueInfo ? (
+            <Link
+              href={`/drama/${dramaId}/play?ep=${continueInfo.episodeNumber}`}
+              className="flex-1 flex items-center justify-center gap-2 py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-full font-medium transition-colors"
+            >
+              <Play className="w-5 h-5 fill-white" />
+              继续播放 第{continueInfo.episodeNumber}集
+            </Link>
+          ) : (
+            <Link
+              href={`/drama/${drama.id}/play`}
+              className="flex-1 flex items-center justify-center gap-2 py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-full font-medium transition-colors"
+            >
+              <Play className="w-5 h-5 fill-white" />
+              立即播放
+            </Link>
+          )}
           <button
             onClick={handleFavorite}
             className={cn(
@@ -254,17 +238,9 @@ export default function DramaDetailPage() {
           </div>
         </div>
 
-        <CommentSection
-          comments={comments}
-          commentText={commentText}
-          onCommentTextChange={setCommentText}
-          onSubmit={handleCommentSubmit}
-          onLike={handleCommentLike}
-          submitting={submitting}
-          isLoggedIn={isLoggedIn}
-          sort={commentSort}
-          onSortChange={setCommentSort}
-        />
+        <div className="mt-6">
+          <CommentSection dramaId={dramaId} />
+        </div>
 
         {relatedDramas.length > 0 && (
           <div>
@@ -279,121 +255,6 @@ export default function DramaDetailPage() {
             </div>
           </div>
         )}
-      </div>
-    </div>
-  );
-}
-
-interface CommentSectionProps {
-  comments: Comment[];
-  commentText: string;
-  onCommentTextChange: (text: string) => void;
-  onSubmit: () => void;
-  onLike: (commentId: number) => void;
-  submitting: boolean;
-  isLoggedIn: boolean;
-  sort: 'hot' | 'newest';
-  onSortChange: (sort: 'hot' | 'newest') => void;
-}
-
-function CommentSection({
-  comments,
-  commentText,
-  onCommentTextChange,
-  onSubmit,
-  onLike,
-  submitting,
-  isLoggedIn: isLoggedInProp,
-  sort,
-  onSortChange,
-}: CommentSectionProps) {
-  return (
-    <div className="bg-drama-card rounded-lg p-4">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-medium text-drama-text flex items-center gap-1.5">
-          <MessageCircle className="w-4 h-4" />
-          评论 ({comments.length})
-        </h3>
-        <div className="flex items-center gap-1 bg-drama-surface rounded-lg p-0.5">
-          <button
-            onClick={() => onSortChange('hot')}
-            className={cn(
-              'px-2.5 py-1 text-xs rounded transition-colors',
-              sort === 'hot' ? 'bg-drama-card text-primary-500' : 'text-drama-muted hover:text-drama-text'
-            )}
-          >
-            最热
-          </button>
-          <button
-            onClick={() => onSortChange('newest')}
-            className={cn(
-              'px-2.5 py-1 text-xs rounded transition-colors',
-              sort === 'newest' ? 'bg-drama-card text-primary-500' : 'text-drama-muted hover:text-drama-text'
-            )}
-          >
-            最新
-          </button>
-        </div>
-      </div>
-
-      <div className="flex gap-2 mb-4">
-        <input
-          type="text"
-          value={commentText}
-          onChange={(e) => onCommentTextChange(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && onSubmit()}
-          placeholder={isLoggedInProp ? '说点什么...' : '登录后评论'}
-          disabled={!isLoggedInProp}
-          className="flex-1 bg-drama-surface border border-drama-border rounded-lg px-3 py-2 text-sm text-drama-text placeholder:text-drama-muted outline-none focus:border-primary-500 transition-colors disabled:opacity-50"
-        />
-        <button
-          onClick={() => {
-            if (!isLoggedInProp) {
-              return;
-            }
-            onSubmit();
-          }}
-          disabled={submitting || !commentText.trim()}
-          className="px-4 py-2 bg-primary-500 hover:bg-primary-600 disabled:bg-drama-surface disabled:text-drama-muted text-white text-sm rounded-full transition-colors flex items-center gap-1"
-        >
-          <Send className="w-3.5 h-3.5" />
-          发送
-        </button>
-      </div>
-
-      <div className="space-y-3">
-        {comments.length === 0 && (
-          <p className="text-center text-drama-muted text-sm py-6">暂无评论，快来抢沙发</p>
-        )}
-        {comments.map((comment) => (
-          <div key={comment.id} className="flex gap-3 py-2">
-            <div className="w-8 h-8 rounded-full bg-drama-surface flex items-center justify-center flex-shrink-0 text-xs text-drama-muted">
-              {comment.username.charAt(0).toUpperCase()}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-xs font-medium text-drama-text">{comment.username}</span>
-                <span className="text-xs text-drama-muted">{formatTimeAgo(comment.createdAt)}</span>
-              </div>
-              <p className="text-sm text-drama-text/90 leading-relaxed">{comment.content}</p>
-              <div className="flex items-center gap-3 mt-1">
-                <button
-                  onClick={() => onLike(comment.id)}
-                  className={cn(
-                    'flex items-center gap-1 text-xs transition-colors',
-                    comment.isLiked ? 'text-accent-400' : 'text-drama-muted hover:text-accent-400'
-                  )}
-                >
-                  <ThumbsUp className="w-3 h-3" />
-                  {comment.likeCount > 0 && comment.likeCount}
-                </button>
-                {comment.replyCount > 0 && (
-                  <span className="text-xs text-drama-muted">{comment.replyCount}回复</span>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   );
