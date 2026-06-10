@@ -14,13 +14,20 @@ interface FloatingEmoji {
 export default function EmojiFloat() {
   const [emojis, setEmojis] = useState<FloatingEmoji[]>([])
   const [showPicker, setShowPicker] = useState(false)
+  const [pressing, setPressing] = useState(false)
+  const [pressPos, setPressPos] = useState({ x: 0, y: 0 })
   const longPressTimer = useRef<NodeJS.Timeout | null>(null)
   const nextId = useRef(0)
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     const target = e.target as HTMLElement
     if (target.closest('button, a, [data-interaction], [data-emoji-picker]')) return
-    const timer = setTimeout(() => setShowPicker(true), 500)
+    setPressing(true)
+    setPressPos({ x: e.clientX, y: e.clientY })
+    const timer = setTimeout(() => {
+      setPressing(false)
+      setShowPicker(true)
+    }, 500)
     longPressTimer.current = timer
   }, [])
 
@@ -29,6 +36,7 @@ export default function EmojiFloat() {
       clearTimeout(longPressTimer.current)
       longPressTimer.current = null
     }
+    setPressing(false)
   }, [])
 
   const handleEmojiSelect = useCallback((emoji: string) => {
@@ -41,7 +49,7 @@ export default function EmojiFloat() {
 
   const handleLikeEmoji = useCallback((id: number) => {
     setEmojis(prev => prev.map(e => e.id === id ? { ...e, likes: e.likes + 1, liked: true } : e))
-    setTimeout(() => setEmojis(prev => prev.map(e => e.id === id ? { ...e, liked: false } : e)), 300)
+    setTimeout(() => setEmojis(prev => prev.map(e => e.id === id ? { ...e, liked: false } : e)), 350)
   }, [])
 
   return (
@@ -52,6 +60,15 @@ export default function EmojiFloat() {
       className="absolute inset-0 z-30"
       style={{ touchAction: 'none' }}
     >
+      {pressing && !showPicker && (
+        <div
+          className="absolute animate-press-hint pointer-events-none"
+          style={{ left: pressPos.x, top: pressPos.y, transform: 'translate(-50%, -50%)' }}
+        >
+          <div className="w-16 h-16 rounded-full bg-primary/30" />
+        </div>
+      )}
+
       {emojis.map(e => (
         <div
           key={e.id}
@@ -63,10 +80,13 @@ export default function EmojiFloat() {
             {e.emoji}
           </span>
           {e.likes > 0 && (
-            <span className="absolute -top-3 -right-4 text-xs text-primary font-bold">+{e.likes}</span>
+            <span className="absolute -top-3 -right-4 text-xs text-primary font-bold animate-like-pop">
+              +{e.likes}
+            </span>
           )}
         </div>
       ))}
+
       {showPicker && (
         <div data-emoji-picker>
           <EmojiPicker onSelect={handleEmojiSelect} onClose={() => setShowPicker(false)} />
