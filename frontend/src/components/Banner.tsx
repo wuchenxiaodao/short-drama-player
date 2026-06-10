@@ -38,16 +38,6 @@ export default function Banner({ dramas }: BannerProps) {
     return () => clearInterval(timer);
   }, [isPaused, next, dramas.length]);
 
-  if (dramas.length === 0) {
-    return (
-      <div className="w-full h-[200px] md:h-[300px] bg-drama-card rounded-lg flex items-center justify-center text-drama-muted">
-        暂无推荐
-      </div>
-    );
-  }
-
-  const drama = dramas[current];
-
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartRef.current = e.touches[0].clientX;
   }, []);
@@ -60,6 +50,16 @@ export default function Banner({ dramas }: BannerProps) {
     if (diff < 0) next();
     else prev();
   }, [next, prev]);
+
+  if (dramas.length === 0) {
+    return (
+      <div className="w-full h-[200px] md:h-[300px] bg-drama-card rounded-lg flex items-center justify-center text-drama-muted">
+        暂无推荐
+      </div>
+    );
+  }
+
+  const drama = dramas[current];
 
   return (
     <div
