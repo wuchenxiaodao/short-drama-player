@@ -27,6 +27,7 @@ import {
   resolveUrl,
   getEpisodeInteractions,
   getOnlineCount,
+  sendHeartbeat,
   generateBranch,
   generateContinue,
 } from '@/lib/api-client';
@@ -36,7 +37,17 @@ import VideoPlayer from '@/components/VideoPlayer';
 import type { VideoPlayerHandle } from '@/components/VideoPlayer';
 import InteractionOverlay from '@/components/InteractionOverlay';
 import DanmakuLayer from '@/components/danmaku/DanmakuLayer';
+import EmojiFloat from '@/components/EmojiFloat';
 import { sentimentAnalyzer } from '@/lib/danmaku-sentiment';
+
+function formatOnlineCount(count: number): string {
+  if (count <= 0) return '';
+  if (count < 10) return '少量观众在看';
+  if (count < 100) return `${Math.floor(count / 10) * 10}+人在线`;
+  if (count < 1000) return `${Math.floor(count / 100) * 100}+人在线`;
+  if (count < 10000) return `${(count / 1000).toFixed(1)}千人在看`;
+  return `${(count / 10000).toFixed(1)}万人在看`;
+}
 
 export default function PlayPage() {
   const params = useParams();
@@ -61,12 +72,36 @@ export default function PlayPage() {
   const [aiResult, setAiResult] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [showAiPanel, setShowAiPanel] = useState(false);
+  const [displayedResult, setDisplayedResult] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [showNextEpisode, setShowNextEpisode] = useState(false);
+  const [nextCountdown, setNextCountdown] = useState(5);
+
+  useEffect(() => {
+    if (!aiResult) { setDisplayedResult(''); return; }
+    setIsTyping(true);
+    let i = 0;
+    const timer = setInterval(() => {
+      if (i < aiResult.length) {
+        setDisplayedResult(aiResult.slice(0, i + 1));
+        i++;
+      } else {
+        clearInterval(timer);
+        setIsTyping(false);
+      }
+    }, 30);
+    return () => clearInterval(timer);
+  }, [aiResult]);
 
   const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const currentTimeMsRef = useRef<number>(0);
   const videoPlayerRef = useRef<VideoPlayerHandle>(null);
+  const preloadedRef = useRef<Set<number>>(new Set());
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
 
   const [episodeTitle, setEpisodeTitle] = useState('');
+  const [episodeList, setEpisodeList] = useState<{episodeNumber: number; title: string}[]>([]);
+  const episodeScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!dramaId) return;
@@ -74,6 +109,12 @@ export default function PlayPage() {
     getDramaDetail(dramaId)
       .then((detail: any) => {
         setDrama(detail);
+        if (detail?.episodes) {
+          setEpisodeList(detail.episodes.map((e: any) => ({
+            episodeNumber: e.episodeNumber,
+            title: e.title || `第${e.episodeNumber}集`,
+          })));
+        }
         const epInfo = detail?.episodes?.find(
           (e: any) => e.episodeNumber === episodeNumber
         );
@@ -85,6 +126,12 @@ export default function PlayPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [dramaId, episodeNumber]);
+
+  useEffect(() => {
+    if (!episodeScrollRef.current) return;
+    const activeBtn = episodeScrollRef.current.querySelector('[data-active="true"]');
+    activeBtn?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }, [episodeNumber]);
 
   async function loadEpisodeData(episodeId: number) {
     try {
@@ -122,37 +169,75 @@ export default function PlayPage() {
         .then((count) => setOnlineCount(typeof count === 'number' ? count : 0))
         .catch(() => {});
     };
+    const sendHB = () => {
+      if (isLoggedIn) {
+        sendHeartbeat(episode.id).catch(() => {});
+      }
+    };
     fetchOnline();
-    const timer = setInterval(fetchOnline, 30000);
+    sendHB();
+    const timer = setInterval(() => { fetchOnline(); sendHB(); }, 30000);
     return () => clearInterval(timer);
-  }, [episode]);
+  }, [episode, isLoggedIn]);
 
   const handleTimeUpdate = useCallback((timeMs: number) => {
     setCurrentTimeMs(timeMs);
+    currentTimeMsRef.current = timeMs;
   }, []);
+
+  useEffect(() => {
+    if (!drama || !episode) return;
+    const progress = currentTimeMs / (episode.durationSeconds * 1000);
+    if (progress > 0.8 && episodeNumber < drama.totalEpisodes) {
+      const nextEp = episodeNumber + 1;
+      if (!preloadedRef.current.has(nextEp)) {
+        preloadedRef.current.add(nextEp);
+        const nextEpInfo = (drama as any).episodes?.find((e: any) => e.episodeNumber === nextEp);
+        if (nextEpInfo?.videoUrl) {
+          const link = document.createElement('link');
+          link.rel = 'prefetch';
+          link.href = resolveUrl(nextEpInfo.videoUrl);
+          link.as = 'video';
+          document.head.appendChild(link);
+        }
+      }
+    }
+  }, [currentTimeMs, drama, episode, episodeNumber]);
 
   useEffect(() => {
     if (!episode || !isLoggedIn) return;
 
     if (progressTimerRef.current) clearInterval(progressTimerRef.current);
     progressTimerRef.current = setInterval(() => {
-      reportProgress(episode.id, currentTimeMs, false).catch(() => {});
+      reportProgress(episode.id, currentTimeMsRef.current, false).catch(() => {});
     }, 15000);
 
     return () => {
       if (progressTimerRef.current) clearInterval(progressTimerRef.current);
     };
-  }, [episode, isLoggedIn, currentTimeMs]);
+  }, [episode, isLoggedIn]);
 
   const handleEnded = useCallback(() => {
     if (!episode || !drama) return;
 
-    reportProgress(episode.id, currentTimeMs, true).catch(() => {});
+    reportProgress(episode.id, currentTimeMsRef.current, true).catch(() => {});
 
     if (episodeNumber < drama.totalEpisodes) {
-      router.push(`/drama/${dramaId}/play?ep=${episodeNumber + 1}`);
+      setShowNextEpisode(true);
+      setNextCountdown(5);
     }
-  }, [episode, drama, episodeNumber, dramaId, currentTimeMs, router]);
+  }, [episode, drama, episodeNumber]);
+
+  useEffect(() => {
+    if (!showNextEpisode) return;
+    if (nextCountdown <= 0) {
+      router.push(`/drama/${dramaId}/play?ep=${episodeNumber + 1}`);
+      setShowNextEpisode(false);
+      return;
+    }
+    const timer = setTimeout(() => setNextCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [showNextEpisode, nextCountdown, episodeNumber, dramaId, router]);
 
   const handleInteractionAnswer = useCallback(
     (interactionId: number, optionId: number, emojiReaction?: string, isSend?: boolean) => {
@@ -164,13 +249,13 @@ export default function PlayPage() {
   const handleSendDanmaku = useCallback(
     (content: string) => {
       if (!episode || !isLoggedIn) return;
-      sendDanmakuApi(episode.id, content, currentTimeMs)
+      sendDanmakuApi(episode.id, content, currentTimeMsRef.current)
         .then((newDanmaku) => {
           setDanmakuList((prev) => [...prev, newDanmaku]);
         })
         .catch(() => {});
     },
-    [episode, isLoggedIn, currentTimeMs]
+    [episode, isLoggedIn]
   );
 
   const handleCommentSubmit = useCallback(async () => {
@@ -217,6 +302,13 @@ export default function PlayPage() {
     }
   }, [episode, isLoggedIn, aiLoading, aiPrompt]);
 
+  const handleEpisodeChange = useCallback(async (newEp: number) => {
+    if (episode && isLoggedIn) {
+      await reportProgress(episode.id, currentTimeMsRef.current, false).catch(() => {});
+    }
+    router.push(`/drama/${dramaId}/play?ep=${newEp}`, { scroll: false });
+  }, [episode, isLoggedIn, dramaId, router]);
+
   if (loading) {
     return <PlayPageSkeleton />;
   }
@@ -229,7 +321,9 @@ export default function PlayPage() {
     );
   }
 
-  const episodes = Array.from({ length: drama.totalEpisodes }, (_, i) => i + 1);
+  const episodeItems = episodeList.length > 0
+    ? episodeList
+    : Array.from({ length: drama.totalEpisodes }, (_, i) => ({ episodeNumber: i + 1, title: `第${i + 1}集` }));
 
   return (
     <div className="min-h-screen pb-12">
@@ -245,6 +339,7 @@ export default function PlayPage() {
                 onEnded={handleEnded}
                 initialPosition={resumePositionMs}
               />
+              <EmojiFloat />
               <DanmakuLayer
                 danmakuList={danmakuList}
                 currentTimeMs={currentTimeMs}
@@ -261,6 +356,24 @@ export default function PlayPage() {
                 onSlowDown={() => videoPlayerRef.current?.slowDown()}
                 onRestoreSpeed={() => videoPlayerRef.current?.restoreSpeed()}
               />
+              {showNextEpisode && (
+                <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-30 bg-drama-card/95 backdrop-blur-md rounded-xl px-5 py-3 flex items-center gap-3 shadow-lg border border-drama-border/50">
+                  <span className="text-drama-text text-sm">下一集：第{episodeNumber + 1}集</span>
+                  <span className="text-primary-500 font-bold text-lg">{nextCountdown}s</span>
+                  <button
+                    onClick={() => router.push(`/drama/${dramaId}/play?ep=${episodeNumber + 1}`)}
+                    className="px-3 py-1 bg-primary-500 text-white text-sm rounded-full hover:bg-primary-600 transition-colors"
+                  >
+                    立即播放
+                  </button>
+                  <button
+                    onClick={() => setShowNextEpisode(false)}
+                    className="px-3 py-1 bg-drama-surface text-drama-muted text-sm rounded-full hover:text-drama-text transition-colors"
+                  >
+                    取消
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -283,7 +396,7 @@ export default function PlayPage() {
               {onlineCount > 0 && (
                 <span className="ml-2 inline-flex items-center gap-0.5">
                   <Users className="w-3 h-3" />
-                  {onlineCount}人在线
+                  {formatOnlineCount(onlineCount)}
                 </span>
               )}
             </p>
@@ -292,20 +405,24 @@ export default function PlayPage() {
 
         <div>
           <h3 className="text-sm font-medium text-drama-text mb-2">选集</h3>
-          <div className="flex gap-2 overflow-x-auto scrollbar-hidden pb-2">
-            {episodes.map((ep) => (
-              <Link
-                key={ep}
-                href={`/drama/${dramaId}/play?ep=${ep}`}
+          <div ref={episodeScrollRef} className="flex gap-2 overflow-x-auto scrollbar-hidden pb-2">
+            {episodeItems.map((ep) => (
+              <button
+                key={ep.episodeNumber}
+                onClick={() => handleEpisodeChange(ep.episodeNumber)}
+                data-active={ep.episodeNumber === episodeNumber}
                 className={cn(
                   'flex-shrink-0 px-4 py-2 rounded text-sm transition-colors',
-                  ep === episodeNumber
+                  ep.episodeNumber === episodeNumber
                     ? 'bg-primary-500 text-white font-medium'
                     : 'bg-drama-surface text-drama-muted hover:text-drama-text hover:bg-drama-surface/80'
                 )}
               >
-                {ep}
-              </Link>
+                {ep.episodeNumber}
+                {ep.title && ep.title !== `第${ep.episodeNumber}集` && (
+                  <span className="text-xs ml-1 opacity-70 hidden sm:inline">{ep.title}</span>
+                )}
+              </button>
             ))}
           </div>
         </div>
@@ -387,7 +504,7 @@ export default function PlayPage() {
             <ChevronRight className={cn('w-4 h-4 text-drama-muted transition-transform', showAiPanel && 'rotate-90')} />
           </button>
 
-          {showAiPanel && (
+          <div className={`overflow-hidden transition-all duration-300 ${showAiPanel ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
             <div className="mt-3 space-y-3">
               <input
                 type="text"
@@ -417,13 +534,14 @@ export default function PlayPage() {
               {!isLoggedIn && (
                 <p className="text-xs text-drama-muted text-center">登录后可使用AI剧情生成</p>
               )}
-              {aiResult && (
+              {displayedResult && (
                 <div className="bg-drama-surface rounded-lg p-3 text-sm text-drama-text/90 whitespace-pre-wrap leading-relaxed">
-                  {aiResult}
+                  {displayedResult}
+                  {isTyping && <span className="animate-pulse">|</span>}
                 </div>
               )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>
