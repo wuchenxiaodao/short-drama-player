@@ -339,7 +339,6 @@ export default function PlayPage() {
                 onEnded={handleEnded}
                 initialPosition={resumePositionMs}
               />
-              <EmojiFloat />
               <DanmakuLayer
                 danmakuList={danmakuList}
                 currentTimeMs={currentTimeMs}
@@ -376,6 +375,7 @@ export default function PlayPage() {
               )}
             </>
           )}
+          <EmojiFloat />
         </div>
       </div>
 
