@@ -43,6 +43,34 @@ public class VideoController {
         log.info("VideoController base path: {}", videoBasePath);
     }
 
+    @GetMapping("/api/video/placeholder/{episodeNumber}")
+    public void placeholderVideo(@PathVariable int episodeNumber, HttpServletResponse response) throws IOException {
+        response.setContentType("video/mp4");
+        response.setHeader("Accept-Ranges", "bytes");
+        response.setStatus(HttpServletResponse.SC_OK);
+
+        // 返回一个最小的有效 MP4 文件（黑色画面 + 时长标记），让浏览器不会报错
+        byte[] placeholderMp4 = generatePlaceholderMp4();
+        response.setContentLength(placeholderMp4.length);
+        response.getOutputStream().write(placeholderMp4);
+        response.getOutputStream().flush();
+    }
+
+    private byte[] generatePlaceholderMp4() {
+        // 最小有效 MP4 (ftyp + moov)，浏览器能正常解析但不显示内容
+        String hex = "0000001c6674797069736f6d0000000069736f6d69736f32"
+                   + "6d7034310000000866726565000000546d6f6f760000004c"
+                   + "6d76686400000000000000000000000000000000000003e8"
+                   + "000000010000000000000000000000000001000000000000"
+                   + "000000000000000000010000000000000000000000000000"
+                   + "00010000000000000000000000";
+        byte[] data = new byte[hex.length() / 2];
+        for (int i = 0; i < data.length; i++) {
+            data[i] = (byte) Integer.parseInt(hex.substring(i * 2, i * 2 + 2), 16);
+        }
+        return data;
+    }
+
     @GetMapping("/videos/**")
     public void streamVideo(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String fullPath = request.getRequestURI();
