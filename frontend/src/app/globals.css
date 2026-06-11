@@ -372,7 +372,7 @@ iframe[src*="__nextjs"] {
 
 .clip-info {
   position: absolute;
-  bottom: 160px;
+  bottom: 170px;
   left: 16px;
   right: 80px;
   z-index: 15;
@@ -407,13 +407,13 @@ iframe[src*="__nextjs"] {
 
 .clip-actions {
   position: absolute;
-  bottom: 60px;
+  bottom: 80px;
   left: 16px;
   right: 16px;
   display: flex;
   align-items: center;
   gap: 12px;
-  z-index: 55;
+  z-index: 25;
 }
 
 .btn-watch-full {

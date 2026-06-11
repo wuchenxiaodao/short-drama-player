@@ -109,8 +109,13 @@ export default function ClipCard({ clip, isActive, onWatchFull, onClipEnded }: C
     }
   }, [clip]);
 
+  const handleCardClick = useCallback((e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('.clip-actions')) return;
+    togglePlay();
+  }, [togglePlay]);
+
   return (
-    <div className="clip-card" onClick={togglePlay}>
+    <div className="clip-card" onClick={handleCardClick}>
       <video
         ref={videoRef}
         src={videoSrc}

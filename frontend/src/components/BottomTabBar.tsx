@@ -25,6 +25,9 @@ function BottomTabBarInner() {
     return pathname.startsWith(tab.href.split('?')[0]);
   };
 
+  const isClipFlow = pathname === '/' && !searchParams.has('list');
+  if (isClipFlow) return null;
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-drama-bg/95 backdrop-blur-lg border-t border-drama-border/50">
       <div className="flex items-center justify-around h-14">
