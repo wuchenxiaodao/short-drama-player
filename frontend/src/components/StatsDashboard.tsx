@@ -20,7 +20,7 @@ import {
   Tooltip,
 } from 'recharts';
 import { apiGet } from '@/lib/api-client';
-import type { InteractionStats, InteractionType } from '@/lib/types';
+import type { InteractionOverviewStats, InteractionType } from '@/lib/types';
 
 interface StatsDashboardProps {
   dramaId?: number;
@@ -68,7 +68,7 @@ function SkeletonChart() {
 }
 
 export default function StatsDashboard({ dramaId }: StatsDashboardProps) {
-  const [stats, setStats] = useState<InteractionStats | null>(null);
+  const [stats, setStats] = useState<InteractionOverviewStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -77,7 +77,7 @@ export default function StatsDashboard({ dramaId }: StatsDashboardProps) {
         const path = dramaId
           ? `/api/interaction/stats/drama/${dramaId}`
           : '/api/interaction/stats/overview';
-        const data = await apiGet<InteractionStats>(path);
+        const data = await apiGet<InteractionOverviewStats>(path);
         setStats(data);
       } catch {
       } finally {

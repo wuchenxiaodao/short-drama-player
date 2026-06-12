@@ -24,9 +24,13 @@ export default function VotePanel({ interaction, onAnswer, onClose }: VotePanelP
   useEffect(() => {
     if (selectedId === null) return;
     getInteractionStats(interaction.id)
-      .then((res: any) => {
-        const data = res?.data || res;
-        if (data) setStats(data as StatsData);
+      .then((data) => {
+        if (data && data.totalParticipants !== undefined) {
+          setStats({
+            totalParticipants: data.totalParticipants,
+            optionStats: data.optionStats || {},
+          });
+        }
       })
       .catch(() => {});
   }, [selectedId, interaction.id]);

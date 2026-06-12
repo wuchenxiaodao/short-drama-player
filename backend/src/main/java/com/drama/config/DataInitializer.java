@@ -262,7 +262,7 @@ public class DataInitializer implements CommandLineRunner {
 
     private void initShibasuiGrandma() {
         Drama d = new Drama();
-        d.setTitle("十八岁太奶奶驾到重整家族荣耀第三部");
+        d.setTitle("十八岁太奶奶驾到，重整家族荣耀第三部");
         d.setDescription("太奶奶穿越回现代，凭借过人的智慧和胆识，带领家族走向新的辉煌。这一部，更大的挑战等着她...");
         d.setCoverUrl("/covers/clean_grandma.webp");
         d.setCategory("都市");
@@ -377,7 +377,7 @@ public class DataInitializer implements CommandLineRunner {
 
     private void initHuangnian() {
         Drama d = new Drama();
-        d.setTitle("荒年全村啃树皮我有系统满仓肉");
+        d.setTitle("荒年全村啃树皮，我有系统满仓肉");
         d.setDescription("穿越到饥荒年代，获得囤货系统的她，凭借一己之力带领全村人度过荒年。从被嘲笑到被仰望，她的逆袭之路开始了。");
         d.setCoverUrl("/covers/clean_huangnian_v2.webp");
         d.setCategory("古装");
@@ -488,8 +488,6 @@ public class DataInitializer implements CommandLineRunner {
         ep.setEpisodeNumber(number);
         ep.setTitle(title);
 
-        // Check for actual video file: videos/{dramaTitle}/第N集.mp4
-        String videoPath = "/videos/" + drama.getTitle() + "/第" + number + "集.mp4";
         String userDir = System.getProperty("user.dir");
         String[] candidates = {
             userDir + File.separator + "videos",
@@ -497,37 +495,62 @@ public class DataInitializer implements CommandLineRunner {
             userDir + File.separator + "short-drama-player" + File.separator + "videos"
         };
 
-        boolean videoExists = false;
+        String videoPath = null;
+
+        // Try exact match first: videos/{dramaTitle}/第N集.mp4
         for (String basePath : candidates) {
             File file = new File(basePath, drama.getTitle() + "/第" + number + "集.mp4");
             if (file.exists()) {
-                videoExists = true;
+                videoPath = "/videos/" + drama.getTitle() + "/第" + number + "集.mp4";
                 break;
             }
         }
 
-        // If exact episode file not found, try to find the Nth mp4 file sorted by name
-        if (!videoExists) {
+        // Try fuzzy match: find directory that contains the drama title (or vice versa)
+        if (videoPath == null) {
+            for (String basePath : candidates) {
+                File videosDir = new File(basePath);
+                if (!videosDir.isDirectory()) continue;
+                File[] dramaDirs = videosDir.listFiles(File::isDirectory);
+                if (dramaDirs == null) continue;
+                for (File dramaDir : dramaDirs) {
+                    String dirName = dramaDir.getName();
+                    if (dirName.contains(drama.getTitle()) || drama.getTitle().contains(dirName)) {
+                        File[] files = dramaDir.listFiles((dir, name) -> name.endsWith(".mp4"));
+                        if (files != null && files.length > 0) {
+                            java.util.Arrays.sort(files);
+                            int idx = Math.min(number - 1, files.length - 1);
+                            if (idx >= 0) {
+                                videoPath = "/videos/" + dirName + "/" + files[idx].getName();
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (videoPath != null) break;
+            }
+        }
+
+        // If still no video found, try Nth file in any matching directory
+        if (videoPath == null) {
             for (String basePath : candidates) {
                 File dramaDir = new File(basePath, drama.getTitle());
                 if (dramaDir.isDirectory()) {
                     File[] files = dramaDir.listFiles((dir, name) -> name.endsWith(".mp4"));
                     if (files != null && files.length > 0) {
                         java.util.Arrays.sort(files);
-                        // Use the Nth file (1-indexed), or the last file if N exceeds count
                         int idx = Math.min(number - 1, files.length - 1);
                         if (idx >= 0) {
                             videoPath = "/videos/" + drama.getTitle() + "/" + files[idx].getName();
-                            videoExists = true;
+                            break;
                         }
-                        break;
                     }
                 }
             }
         }
 
         // If still no video found, use episode-specific placeholder
-        if (!videoExists) {
+        if (videoPath == null) {
             videoPath = "/api/video/placeholder/" + number;
         }
 

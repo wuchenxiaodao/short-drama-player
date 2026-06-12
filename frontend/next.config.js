@@ -8,7 +8,7 @@ const nextConfig = {
     appIsrStatus: false,
   },
   async rewrites() {
-    const backendUrl = process.env.BACKEND_URL || 'http://127.0.0.1:8080';
+    const backendUrl = process.env.BACKEND_URL || 'http://127.0.0.1:8081';
     return [
       {
         source: '/api/:path*',

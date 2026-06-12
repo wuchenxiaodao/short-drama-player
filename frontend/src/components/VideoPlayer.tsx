@@ -130,7 +130,10 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
       onEnded?.();
     }
     const onWaiting = () => setBuffering(true);
-    const onCanplay = () => setBuffering(false);
+    const onCanplay = () => {
+      setBuffering(false);
+      video.play().catch(() => {});
+    };
     const onPlaying = () => setBuffering(false);
 
     video.addEventListener('play', handlePlay);

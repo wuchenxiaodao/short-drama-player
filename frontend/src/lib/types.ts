@@ -146,11 +146,16 @@ export interface ApiResponse<T> {
 }
 
 export interface InteractionStats {
+  interactionId: number;
+  totalParticipants: number;
+  optionStats: Record<string, { count: number; percentage: number }>;
+}
+
+export interface InteractionOverviewStats {
   totalInteractions: number;
   participationRate: number;
   topInteractions: { interactionId: number; count: number }[];
   typeDistribution: Record<InteractionType, number>;
-  hourlyDistribution: { hour: number; count: number }[];
 }
 
 export interface HighlightClip {

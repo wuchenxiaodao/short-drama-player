@@ -41,9 +41,10 @@ export default function ClipCard({ clip, isActive, onWatchFull, onClipEnded }: C
     if (!video) return;
     if (isActive) {
       video.currentTime = clip.startTime;
-      video.play().catch(() => {});
+      video.play().then(() => setPlaying(true)).catch(() => {});
     } else {
       video.pause();
+      setPlaying(false);
     }
   }, [isActive, clip.startTime]);
 

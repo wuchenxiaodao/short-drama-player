@@ -4,10 +4,12 @@ import com.drama.dto.AnswerRequest;
 import com.drama.dto.InteractionStats;
 import com.drama.model.InteractionAnswer;
 import com.drama.model.InteractionPoint;
+import com.drama.model.InteractionStatsEntity;
 import com.drama.model.User;
 import com.drama.model.UserEgg;
 import com.drama.repository.InteractionAnswerRepository;
 import com.drama.repository.InteractionPointRepository;
+import com.drama.repository.InteractionStatsRepository;
 import com.drama.repository.UserEggRepository;
 import com.drama.repository.UserRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -21,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,6 +32,7 @@ public class InteractionService {
 
     private final InteractionPointRepository interactionPointRepository;
     private final InteractionAnswerRepository answerRepository;
+    private final InteractionStatsRepository statsRepository;
     private final UserRepository userRepository;
     private final UserEggRepository userEggRepository;
 
@@ -45,7 +49,7 @@ public class InteractionService {
         User user = getUser(userId);
 
         saveAnswer(request, point, userId);
-        updateRedisStats(request);
+        updateStats(request);
         processRewards(point, request, user);
 
         // Emoji processing
@@ -58,6 +62,7 @@ public class InteractionService {
     }
 
     private boolean isAlreadyAnswered(Long userId, Long interactionId) {
+        if (userId == null) return false;
         return answerRepository.findByUserIdAndInteractionPointId(userId, interactionId).isPresent();
     }
 
@@ -67,11 +72,13 @@ public class InteractionService {
     }
 
     private User getUser(Long userId) {
+        if (userId == null) return null;
         return userRepository.findById(userId)
                 .orElseThrow(() -> new com.drama.common.BusinessException(404, "用户不存在"));
     }
 
     private void saveAnswer(AnswerRequest request, InteractionPoint point, Long userId) {
+        if (userId == null) return;  // 未登录用户不保存答案，但仍更新统计
         InteractionAnswer answer = new InteractionAnswer();
         answer.setUserId(userId);
         answer.setInteractionPoint(point);
@@ -79,17 +86,42 @@ public class InteractionService {
         answerRepository.save(answer);
     }
 
+    private void updateStats(AnswerRequest request) {
+        Optional<InteractionStatsEntity> existing = statsRepository.findByInteractionIdAndOptionId(
+                request.getInteractionId(), request.getChoiceId());
+        
+        if (existing.isPresent()) {
+            statsRepository.incrementCount(request.getInteractionId(), request.getChoiceId());
+        } else {
+            InteractionStatsEntity newStats = new InteractionStatsEntity();
+            newStats.setInteractionId(request.getInteractionId());
+            newStats.setOptionId(request.getChoiceId());
+            newStats.setCount(1L);
+            statsRepository.save(newStats);
+        }
+
+        if (redisTemplate != null) {
+            String redisKey = "interaction:count:" + request.getInteractionId();
+            redisTemplate.opsForHash().increment(redisKey, String.valueOf(request.getChoiceId()), 1);
+
+            String totalKey = "interaction:total:" + request.getInteractionId();
+            redisTemplate.opsForValue().increment(totalKey);
+        }
+    }
+
     private void updateRedisStats(AnswerRequest request) {
-        if (redisTemplate == null) return;
+        if (redisTemplate != null) {
+            String redisKey = "interaction:count:" + request.getInteractionId();
+            redisTemplate.opsForHash().increment(redisKey, String.valueOf(request.getChoiceId()), 1);
 
-        String redisKey = "interaction:count:" + request.getInteractionId();
-        redisTemplate.opsForHash().increment(redisKey, String.valueOf(request.getChoiceId()), 1);
-
-        String totalKey = "interaction:total:" + request.getInteractionId();
-        redisTemplate.opsForValue().increment(totalKey);
+            String totalKey = "interaction:total:" + request.getInteractionId();
+            redisTemplate.opsForValue().increment(totalKey);
+        }
     }
 
     private void processRewards(InteractionPoint point, AnswerRequest request, User user) {
+        if (user == null) return;
+        
         if (isCorrectAnswer(point, request.getChoiceId())) {
             addPoints(user, 10);
         }
@@ -170,8 +202,9 @@ public class InteractionService {
     }
 
     private InteractionStats getStatsFromDatabase(Long interactionId) {
-        List<Object[]> dbCounts = answerRepository.countByOption(interactionId);
-        long total = answerRepository.countByInteractionPointId(interactionId);
+        List<Object[]> dbCounts = statsRepository.findCountsByInteractionId(interactionId);
+        Long totalObj = statsRepository.sumCountsByInteractionId(interactionId);
+        long total = totalObj != null ? totalObj : 0L;
 
         InteractionStats stats = new InteractionStats();
         stats.setInteractionId(interactionId);

@@ -59,6 +59,7 @@ public class SecurityConfig {
                     .requestMatchers("/api/episode/*/streams").permitAll()
                     .requestMatchers("/api/interaction/*/stats").permitAll()
                     .requestMatchers("/api/interaction/episode/**").permitAll()
+                    .requestMatchers("/api/interaction/answer").permitAll()
                     .requestMatchers("/api/interaction/stats/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/comment/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/danmaku/episode/**").permitAll()

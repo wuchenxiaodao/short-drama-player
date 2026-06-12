@@ -22,7 +22,7 @@ function getApiBaseUrl(): string {
     // Use same-origin API proxy via Next.js rewrites — works in any network (emulator, LAN, etc.)
     return '';
   }
-  return 'http://localhost:8080';
+  return 'http://localhost:8081';
 }
 
 export function resolveUrl(url: string | undefined | null): string {
@@ -153,7 +153,7 @@ export async function submitAnswer(interactionId: number, choiceId: number, emoj
 }
 
 export async function getInteractionStats(interactionId: number) {
-  return apiGet<any>(`/api/interaction/${interactionId}/stats`);
+  return apiGet<InteractionStats>(`/api/interaction/${interactionId}/stats`);
 }
 
 export async function getInteractionOverview() {

@@ -24,7 +24,7 @@ public class InteractionController {
 
     @PostMapping("/answer")
     public ApiResponse<Object> answer(@Valid @RequestBody AnswerRequest request) {
-        Long userId = AuthUtils.requireUserId();
+        Long userId = AuthUtils.getCurrentUserId();
         boolean success = interactionService.submitAnswer(request, userId);
         if (success) {
             InteractionStats stats = interactionService.getStats(request.getInteractionId());
