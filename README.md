@@ -34,9 +34,65 @@ npx next dev -p 3000 -H 0.0.0.0
 
 ### Docker 部署
 
+#### 1. 环境准备
+
+- 安装 [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- 确保 Docker Desktop 正在运行
+
+#### 2. 配置镜像加速器（国内网络必选）
+
+编辑 `~/.docker/daemon.json`（Windows 路径：`C:\Users\<用户名>\.docker\daemon.json`）：
+
+```json
+{
+  "registry-mirrors": [
+    "https://docker.1ms.run",
+    "https://docker.xuanyuan.me"
+  ]
+}
+```
+
+保存后重启 Docker Desktop。
+
+#### 3. 配置环境变量
+
 ```bash
-cp .env.example .env  # 编辑密码配置
+cp .env.example .env
+```
+
+编辑 `.env` 文件，修改数据库密码等配置（可选，有默认值）：
+
+```env
+MYSQL_ROOT_PASSWORD=drama_root_2024
+MYSQL_DATABASE=short_drama
+MYSQL_USER=drama
+MYSQL_PASSWORD=drama_pass_2024
+REDIS_PASSWORD=drama_redis_2024
+JWT_SECRET=mySecretKeyForJwtTokenGeneration2024
+```
+
+#### 4. 启动服务
+
+```bash
 docker-compose up -d
+```
+
+首次启动需要下载镜像，约 10-20 分钟。
+
+#### 5. 访问
+
+- 本地：http://localhost
+- 安卓模拟器：http://172.16.8.117（使用本机 IP）
+- Android Studio 模拟器：http://10.0.2.2
+
+#### 常用命令
+
+```bash
+docker-compose ps              # 查看状态
+docker-compose logs -f         # 查看日志
+docker-compose down            # 停止服务
+docker-compose down -v         # 停止并清空数据
+docker-compose up -d --build   # 重新构建启动
 ```
 
 ## 核心功能
